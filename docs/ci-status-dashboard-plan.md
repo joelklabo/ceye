@@ -139,7 +139,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Add `--demo` / `--demo-runs` flags so anyone can start the dashboard with synthetic runs without editing config.
 59. - [x] **Step 59 – Demo make target** (`commit: 6c3594e`, `push: yes`)
     - Add `make demo` to run the CLI in demo mode (with docs) so validating the UI is one command.
-60. - [ ] **Step 60 – Demo diagnostics loop** (`commit: pending`, `push: pending`)
+60. - [x] **Step 60 – Demo diagnostics loop** (`commit: 6dcbc0d`, `push: yes`)
     - Provide `--demo-duration` / `--log-events` flags plus a `make snapshot` target that captures the TUI output for screenshots/logging.
 
 ## Tracking Updates
