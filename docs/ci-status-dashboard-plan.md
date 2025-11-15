@@ -172,7 +172,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Add UI controls or CLI helpers so operators can add, update, or disable providers without editing the primary config file.
     - Persist provider metadata (credentials, filters, notification hooks) to disk so the dashboard can reload the dynamic list across restarts.
     - Write tests for the manager that ensure the in-memory provider registry reflects added/removed entries and the UI updates when the list changes.
-75. - [x] **Step 75 – Provider store overlay** (`commit: f304034`, `push: pending`)
+75. - [x] **Step 75 – Provider store overlay** (`commit: f304034`, `push: yes`)
     - Surface runtime provider store data in a Bubble Tea overlay (key `P`), listing each stored entry with ID, friendly name, and enabled state.
     - Keep the overlay entries synchronized with the manager via `RunUpdatedMsg` payloads and ensure it handles keyboard navigation/closing.
     - Add tests that verify the overlay toggle key and message handling so the UI stays in sync even as new entries appear.
