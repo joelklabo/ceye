@@ -39,7 +39,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
    - Implement `ParseAzureRuns` to satisfy Step 7 tests.
 9. - [x] **Step 9 – GitHub Provider Start Test** (`commit: 8c8eee7`, `push: yes`)
    - Test provider polling loop with stub client + context cancellation.
-10. - [ ] **Step 10 – GitHub Provider Start Implementation** (`commit: pending`, `push: pending`)
+10. - [x] **Step 10 – GitHub Provider Start Implementation** (`commit: cb00000`, `push: yes`)
     - Implement adaptive polling loop, auth, and event emission for GitHub.
 11. - [ ] **Step 11 – Azure Provider Start Test** (`commit: pending`, `push: pending`)
     - Stub-client test mirroring Step 9 for Azure pipelines.
