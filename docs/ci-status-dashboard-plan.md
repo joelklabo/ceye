@@ -97,6 +97,8 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Provide an on-screen summary of keybindings or toggleable help dialog.
 38. - [x] **Step 38 – Text filter** (`commit: 2115f57`, `push: yes`)
     - Add substring filter to show runs matching a query (e.g., `/` to enter search).
+39. - [x] **Step 39 – Aggregated stats** (`commit: c80f212`, `push: yes`)
+    - Display counts of running/failed/successful runs in header or summary line.
 39. - [ ] **Step 39 – Aggregated stats** (`commit: pending`, `push: pending`)
     - Display counts of running/failed/successful runs in header or summary line.
 
