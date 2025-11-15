@@ -1190,15 +1190,15 @@ func applyTheme(dark bool) {
 		baseTextColor = lipgloss.Color("#e4e5f1")
 		rowHighlightBg = lipgloss.Color("#373257")
 	} else {
-		accentColor = lipgloss.Color("#5e2ca5")
-		accentDarkColor = lipgloss.Color("#dcd2f8")
-		subtleColor = lipgloss.Color("#605483")
-		borderColor = lipgloss.Color("#c3b7e5")
-		successColor = lipgloss.Color("#0f5f2a")
-		warningColor = lipgloss.Color("#a96500")
-		errorColor = lipgloss.Color("#b00020")
-		baseTextColor = lipgloss.Color("#1a1832")
-		rowHighlightBg = lipgloss.Color("#f0e9ff")
+		accentColor = lipgloss.Color("#36236b")
+		accentDarkColor = lipgloss.Color("#cec6f2")
+		subtleColor = lipgloss.Color("#4a4370")
+		borderColor = lipgloss.Color("#3b3660")
+		successColor = lipgloss.Color("#065229")
+		warningColor = lipgloss.Color("#8a5b00")
+		errorColor = lipgloss.Color("#8b0b2b")
+		baseTextColor = lipgloss.Color("#0b0a15")
+		rowHighlightBg = lipgloss.Color("#d9d4f5")
 	}
 
 	headerStyle = lipgloss.NewStyle().Background(accentColor).Foreground(lipgloss.Color("#0e0d19")).Bold(true).Padding(0, 2)
@@ -1212,8 +1212,8 @@ func applyTheme(dark bool) {
 	tagWarn = tag.Copy().Background(lipgloss.Color("#4f3a10"))
 	tagErr = tag.Copy().Background(lipgloss.Color("#4f1424"))
 	if !dark {
-		tagWarn = tag.Copy().Background(lipgloss.Color("#f4c069")).Foreground(lipgloss.Color("#3f2b00"))
-		tagErr = tag.Copy().Background(lipgloss.Color("#fbb6ce")).Foreground(lipgloss.Color("#5a0012"))
+		tagWarn = tag.Copy().Background(lipgloss.Color("#f1c27d")).Foreground(lipgloss.Color("#2f1a00"))
+		tagErr = tag.Copy().Background(lipgloss.Color("#f4a2bc")).Foreground(lipgloss.Color("#48000e"))
 	}
 	sectionTitleStyle = lipgloss.NewStyle().Foreground(accentColor).Bold(true)
 	bodyTextStyle = lipgloss.NewStyle().Foreground(baseTextColor)
@@ -1233,7 +1233,7 @@ func applyTheme(dark bool) {
 	branchDevStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#f6e58d")).Bold(true)
 	branchReleaseStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#ffb3d1")).Bold(true)
 	if !dark {
-		branchDevStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#c28c0e")).Bold(true)
+		branchDevStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#8b5b00")).Bold(true)
 		branchReleaseStyle = lipgloss.NewStyle().Foreground(errorColor).Bold(true)
 	}
 	branchDefaultStyle = lipgloss.NewStyle().Foreground(baseTextColor)
