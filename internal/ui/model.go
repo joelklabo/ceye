@@ -29,6 +29,8 @@ type Model struct {
 	Refresh        func()
 	openURL        func(string)
 	helpVisible    bool
+	searchActive   bool
+	searchQuery    string
 	Statuses       map[string]string
 	visibleRuns    []core.Run
 	lastUpdate     time.Time
@@ -68,6 +70,8 @@ func NewModel(store *core.Store, providers []string, refresh func(), openURL fun
 		Refresh:        refresh,
 		openURL:        openURL,
 		helpVisible:    false,
+		searchActive:   false,
+		searchQuery:    "",
 		Statuses:       statusMap,
 		headerStyle:    lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("205")),
 		footerStyle:    lipgloss.NewStyle().Foreground(lipgloss.Color("241")),
@@ -95,6 +99,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.refreshTable()
 		return m, nil
 	case tea.KeyMsg:
+		if m.handleSearchInput(msg) {
+			return m, nil
+		}
 		switch {
 		case msg.Type == tea.KeyCtrlC:
 			return m, tea.Quit
@@ -118,6 +125,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "f":
 				m.cycleStatus()
 				m.refreshTable()
+				return m, nil
+			case "/":
+				m.startSearch()
 				return m, nil
 			case "?":
 				m.helpVisible = !m.helpVisible
@@ -184,6 +194,9 @@ func (m *Model) refreshTable() {
 		if !matchesStatusFilter(run, statusFilter) {
 			continue
 		}
+		if !matchesSearch(run, m.searchQuery) {
+			continue
+		}
 		rows = append(rows, table.Row{run.Provider, run.WorkflowName, m.formatStatus(run), run.Branch})
 		filtered = append(filtered, run)
 	}
@@ -231,19 +244,29 @@ func (m *Model) cycleStatus() {
 	m.statusIndex = (m.statusIndex + 1) % len(m.statusFilters)
 }
 
+func (m *Model) startSearch() {
+	m.searchActive = true
+	m.searchQuery = ""
+}
+
 func (m Model) renderDetails() string {
 	filterLabel := fmt.Sprintf("Status filter: %s", titleCase(m.statusFilters[m.statusIndex]))
+	searchLabel := ""
+	if m.searchQuery != "" {
+		searchLabel = fmt.Sprintf(" | Search: %s", m.searchQuery)
+	}
 	if len(m.visibleRuns) == 0 {
-		return filterLabel + " | Details: no runs"
+		return filterLabel + searchLabel + " | Details: no runs"
 	}
 	idx := m.Table.Cursor()
 	if idx < 0 || idx >= len(m.visibleRuns) {
-		return filterLabel + " | Details: select a run"
+		return filterLabel + searchLabel + " | Details: select a run"
 	}
 	run := m.visibleRuns[idx]
 	return fmt.Sprintf(
-		"%s | Details: %s | %s | SHA %s | %s",
+		"%s%s | Details: %s | %s | SHA %s | %s",
 		filterLabel,
+		searchLabel,
 		run.Repo,
 		run.Branch,
 		shortSHA(run.CommitSHA),
@@ -276,11 +299,60 @@ func (m Model) openSelectedURL() {
 func (m Model) renderHelp() string {
 	if m.helpVisible {
 		return lipgloss.JoinVertical(lipgloss.Left,
-			m.footerStyle.Render("Help: Tab provider, f filter, r refresh, o open URL, q quit"),
-			m.footerStyle.Render("Use ↑/↓ or j/k to move, pgup/pgdn to page, ? hide help"),
+			m.footerStyle.Render("Help: Tab provider, f status, / search, r refresh, o open, q quit"),
+			m.footerStyle.Render("Use ↑/↓ or j/k to move, pgup/pgdn to page, Enter to select, ? hide help"),
 		)
 	}
-	return m.footerStyle.Render("Press ? for help | Tab: provider, f: status, r: refresh, o: open")
+	return m.footerStyle.Render("Press ? for help | Tab provider, f status, / search, r refresh, o open")
+}
+
+func (m *Model) handleSearchInput(msg tea.KeyMsg) bool {
+	if !m.searchActive {
+		return false
+	}
+	switch msg.Type {
+	case tea.KeyEscape:
+		m.searchActive = false
+		m.searchQuery = ""
+		m.refreshTable()
+	case tea.KeyEnter:
+		m.searchActive = false
+		m.refreshTable()
+	case tea.KeyBackspace, tea.KeyCtrlH:
+		if len(m.searchQuery) > 0 {
+			runes := []rune(m.searchQuery)
+			m.searchQuery = string(runes[:len(runes)-1])
+			m.refreshTable()
+		}
+	default:
+		if len(msg.Runes) > 0 {
+			m.searchQuery += string(msg.Runes)
+			m.refreshTable()
+		}
+	}
+	return true
+}
+
+func matchesSearch(run core.Run, query string) bool {
+	q := strings.TrimSpace(strings.ToLower(query))
+	if q == "" {
+		return true
+	}
+	fields := []string{
+		strings.ToLower(run.Provider),
+		strings.ToLower(run.Repo),
+		strings.ToLower(run.WorkflowName),
+		strings.ToLower(run.Branch),
+		strings.ToLower(string(run.Status)),
+		strings.ToLower(run.Conclusion),
+		strings.ToLower(run.URL),
+	}
+	for _, f := range fields {
+		if strings.Contains(f, q) {
+			return true
+		}
+	}
+	return false
 }
 
 func matchesStatusFilter(run core.Run, filter string) bool {
