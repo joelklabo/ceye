@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -36,11 +38,12 @@ func main() {
 	var eventLogPath string
 	var notify bool
 	var historyPath string
+	var webhookURL string
 	rootCmd := &cobra.Command{
 		Use:   "ci-dash",
 		Short: "CI Status Dashboard TUI",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return run(ctx, cfgPath, demo, demoRuns, demoDuration, eventLogPath, notify, historyPath)
+			return run(ctx, cfgPath, demo, demoRuns, demoDuration, eventLogPath, notify, historyPath, webhookURL)
 		},
 	}
 	rootCmd.PersistentFlags().StringVar(&cfgPath, "config", "", "Path to config file (defaults to ceye.yaml search paths)")
@@ -49,6 +52,7 @@ func main() {
 	rootCmd.PersistentFlags().DurationVar(&demoDuration, "demo-duration", 0, "Automatically exit demo mode after this duration (e.g. 5s)")
 	rootCmd.PersistentFlags().StringVar(&eventLogPath, "log-events", "", "Write RunEvent JSON lines to the given file")
 	rootCmd.PersistentFlags().BoolVar(&notify, "notify", false, "Emit desktop notifications when providers error")
+	rootCmd.PersistentFlags().StringVar(&webhookURL, "webhook-url", "", "POST provider errors to this webhook URL")
 	rootCmd.PersistentFlags().StringVar(&historyPath, "history-path", "", "Persist run history to this JSON file (defaults to ~/.config/ceye/run-history.json)")
 
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
@@ -56,7 +60,7 @@ func main() {
 	}
 }
 
-func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, demoDuration time.Duration, eventLogPath string, notify bool, historyPath string) error {
+func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, demoDuration time.Duration, eventLogPath string, notify bool, historyPath string, webhookURL string) error {
 	ctx, cancel := context.WithCancel(parentCtx)
 	defer cancel()
 
@@ -237,6 +241,11 @@ func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, dem
 						fmt.Fprintf(os.Stderr, "notify: %v\n", err)
 					}
 				}
+				if webhookURL != "" && event.Err != nil {
+					if err := sendWebhook(ctx, webhookURL, event.Provider, event.Err.Error(), ts); err != nil {
+						fmt.Fprintf(os.Stderr, "webhook: %v\n", err)
+					}
+				}
 				program.Send(ui.RunUpdatedMsg{
 					Timestamp: ts,
 					Status:    copyStatus(providerStatus),
@@ -357,6 +366,36 @@ func sendNotification(title, message string) error {
 		// no-op on unsupported platforms
 		return nil
 	}
+}
+
+func sendWebhook(ctx context.Context, url, provider, message string, timestamp time.Time) error {
+	if url == "" {
+		return nil
+	}
+	event := map[string]interface{}{
+		"provider":  provider,
+		"message":   message,
+		"timestamp": timestamp.Format(time.RFC3339),
+	}
+	data, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(data))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 300 {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("webhook %s returned %d: %s", url, resp.StatusCode, string(body))
+	}
+	return nil
 }
 
 func openURL(link string) {
