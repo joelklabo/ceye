@@ -196,6 +196,14 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Render provider-specific details (owner/repo, org/project, pipelines) beneath each entry in the overlay so operators can recall configuration at a glance.
     - Share helpers that build those detail strings so the overlay, logs, or future UI components can reuse the same summary logic.
     - Write tests for the helper to ensure detail strings include the expected data for each provider type.
+81. - [x] **Step 81 – Store overlay config editing** (`commit: f2e6210`, `push: yes`)
+    - Extend the overlay so `E` opens an inline editor for repo/project fields and writes the validated configuration back to the manager.
+    - Surface instructions and validation errors in the overlay so users know how to format edits.
+    - Expand tests (and docs) to cover the new fields and ensure `RunUpdatedMsg` refreshes show the updated values.
+82. - [x] **Step 82 – Store import/export** (`commit: b4d6253`, `push: yes`)
+    - Add `ci-dash provider export --file` to dump the store to JSON so the configuration can be shared.
+    - Add `ci-dash provider import` with optional `--replace` so backed-up entries can be reapplied.
+    - Document the commands and write tests (unit or integration) that verify JSON import/export behavior.
 81. - [ ] **Step 81 – Store overlay config editing** (`commit: pending`, `push: pending`)
     - Extend the overlay so `E` opens a simple editor that can modify the stored provider’s core fields (repo owner, project, pipelines) instead of just the display name.
     - Validate updates via the provider factory and persist them through the manager, then refresh the overlay with the updated entry.

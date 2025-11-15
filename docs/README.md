@@ -95,6 +95,8 @@ Dynamic providers added at runtime are kept in `~/.config/ceye/providers.json` b
 Stored providers are merged with your static `ceye.yaml` providers on startup, and their friendly names appear as provider tabs in the UI. Adjust `--provider-store` to point at another file when sharing dynamic lists across machines.
 
 - Press `P` while the dashboard is running to view a provider store overlay (showing each stored entry and its enabled/disabled state) without leaving the TUI; press `Space` to toggle an entry’s enabled flag while the overlay is active, `d` to remove it, `e` to duplicate the configuration, or `E` to edit its key fields (owner/repo for GitHub, org/project[:pipelines] for Azure, or `gitlab_project` for GitLab).
+ - `ci-dash provider export --file providers.json`: dump stored entries so you can share them as JSON.
+ - `ci-dash provider import --file providers.json`: append entries from JSON (use `--replace` to overwrite the current store).
 
 ### Demo/diagnostic flags
 - `--demo` / `--demo-runs`: start with synthetic runs only.

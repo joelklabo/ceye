@@ -51,6 +51,14 @@ func (s *Store) List() []ProviderRecord {
 	return records
 }
 
+// Replace replaces the store entries with the provided list, writing new data.
+func (s *Store) Replace(entries []ProviderRecord) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.entries = append([]ProviderRecord(nil), entries...)
+	return s.save()
+}
+
 // EnabledRecords returns the records that are currently enabled.
 func (s *Store) EnabledRecords() []ProviderRecord {
 	s.mu.RLock()

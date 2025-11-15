@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -22,6 +23,75 @@ func providerCmd() *cobra.Command {
 	cmd.AddCommand(providerEnableCmd(true))
 	cmd.AddCommand(providerEnableCmd(false))
 	cmd.AddCommand(providerRemoveCmd())
+	cmd.AddCommand(providerExportCmd())
+	cmd.AddCommand(providerImportCmd())
+	return cmd
+}
+
+func providerExportCmd() *cobra.Command {
+	var filePath string
+	cmd := &cobra.Command{
+		Use:   "export",
+		Short: "Export stored providers to JSON",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if filePath == "" {
+				return fmt.Errorf("--file is required")
+			}
+			store, err := manager.New(resolveProviderStorePath(providerStoreFlag))
+			if err != nil {
+				return err
+			}
+			data, err := json.MarshalIndent(store.List(), "", "  ")
+			if err != nil {
+				return err
+			}
+			if err := os.WriteFile(filePath, data, 0o644); err != nil {
+				return err
+			}
+			fmt.Printf("exported %d providers to %s\n", len(store.List()), filePath)
+			return nil
+		},
+	}
+	cmd.Flags().StringVar(&filePath, "file", "", "Path to write provider export")
+	return cmd
+}
+
+func providerImportCmd() *cobra.Command {
+	var filePath string
+	var replace bool
+	cmd := &cobra.Command{
+		Use:   "import",
+		Short: "Import providers from JSON into the store",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if filePath == "" {
+				return fmt.Errorf("--file is required")
+			}
+			store, err := manager.New(resolveProviderStorePath(providerStoreFlag))
+			if err != nil {
+				return err
+			}
+			data, err := os.ReadFile(filePath)
+			if err != nil {
+				return err
+			}
+			var entries []manager.ProviderRecord
+			if err := json.Unmarshal(data, &entries); err != nil {
+				return err
+			}
+			if replace {
+				return store.Replace(entries)
+			}
+			for _, entry := range entries {
+				if _, err := store.Add(entry.Config); err != nil {
+					return err
+				}
+			}
+			fmt.Printf("imported %d providers into store\n", len(entries))
+			return nil
+		},
+	}
+	cmd.Flags().StringVar(&filePath, "file", "", "Path to read provider data")
+	cmd.Flags().BoolVar(&replace, "replace", false, "Replace existing store instead of appending")
 	return cmd
 }
 
