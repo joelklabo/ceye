@@ -91,6 +91,8 @@ type Model struct {
 	runTotals        map[string]int
 	logEntries       []logEntry
 	lastUpdate       time.Time
+	width            int
+	height           int
 	headerStyle      lipgloss.Style
 	footerStyle      lipgloss.Style
 	bodyBoxStyle     lipgloss.Style
@@ -260,6 +262,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 		}
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
+		m.updateTableSize()
+		return m, nil
 	}
 
 	var cmd tea.Cmd
@@ -277,6 +284,8 @@ func (m Model) View() string {
 	}
 	if m.focusMode {
 		sections = append(sections, m.renderFocusBody())
+	} else if m.compactLayout() {
+		sections = append(sections, m.renderCompactBody())
 	} else {
 		sections = append(sections, m.renderStatuses(), m.renderDashboardBody())
 	}
@@ -334,10 +343,25 @@ func (m Model) renderDashboardBody() string {
 	return lipgloss.JoinHorizontal(lipgloss.Top, table, sidebar)
 }
 
+func (m Model) renderCompactBody() string {
+	return lipgloss.JoinVertical(lipgloss.Left,
+		m.renderStatuses(),
+		m.renderRunsTable(),
+		m.renderDetails(),
+		m.renderLogs(),
+	)
+}
+
 func (m Model) renderFocusBody() string {
 	banner := m.panelStyle.Render(bodyTextStyle.Render("Focus mode: table maximized (press 'v' to return to dashboard view)"))
 	lower := lipgloss.JoinHorizontal(lipgloss.Top, m.renderDetails(), m.renderLogs())
-	return lipgloss.JoinVertical(lipgloss.Left, banner, m.renderRunsTable(), lower, m.renderStatuses())
+	body := []string{banner, m.renderRunsTable()}
+	if m.compactLayout() {
+		body = append(body, m.renderDetails(), m.renderLogs(), m.renderStatuses())
+	} else {
+		body = append(body, lower, m.renderStatuses())
+	}
+	return lipgloss.JoinVertical(lipgloss.Left, body...)
 }
 
 func (m Model) renderStatsBar() string {
@@ -595,6 +619,7 @@ func (m *Model) toggleHelpOverlay() {
 
 func (m *Model) toggleFocusMode() {
 	m.focusMode = !m.focusMode
+	m.updateTableSize()
 }
 
 func (m Model) renderDetails() string {
@@ -776,6 +801,21 @@ func (m *Model) togglePaletteSelection() {
 	m.refreshTable()
 }
 
+func (m *Model) updateTableSize() {
+	if m.width <= 0 {
+		return
+	}
+	margin := 32
+	if m.focusMode || m.compactLayout() {
+		margin = 8
+	}
+	width := m.width - margin
+	if width < 40 {
+		width = 40
+	}
+	m.Table.SetWidth(width)
+}
+
 func (m *Model) togglePalette() {
 	m.paletteVisible = !m.paletteVisible
 	if m.paletteVisible {
@@ -837,6 +877,10 @@ func (m Model) renderHelpOverlay() string {
 		}),
 	}
 	return helpBox.Render(lipgloss.JoinVertical(lipgloss.Left, sections...))
+}
+
+func (m Model) compactLayout() bool {
+	return m.width > 0 && m.width < 120
 }
 
 func renderHelpSection(title string, entries [][2]string) string {
