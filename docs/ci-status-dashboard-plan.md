@@ -113,6 +113,8 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Replace the inline help toggle with a modal overlay mirroring Glow/LazyGit reference patterns so shortcuts are easier to discover; ensure tests keep covering this interaction.
 46. - [x] **Step 46 – Focus view toggle** (`commit: b78fa57`, `push: yes`)
     - Add a keybinding to switch between dashboard/panel layout and a full-width table focus mode so the UI adapts to different workflows.
+47. - [x] **Step 47 – Sort cycling** (`commit: c1bd25c`, `push: yes`)
+    - Allow switching between status, updated-time, and duration orderings so the most relevant runs float to the top.
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.
