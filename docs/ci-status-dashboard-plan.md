@@ -43,7 +43,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Implement adaptive polling loop, auth, and event emission for GitHub.
 11. - [x] **Step 11 – Azure Provider Start Test** (`commit: 36965b8`, `push: yes`)
     - Stub-client test mirroring Step 9 for Azure pipelines.
-12. - [ ] **Step 12 – Azure Provider Start Implementation** (`commit: pending`, `push: pending`)
+12. - [x] **Step 12 – Azure Provider Start Implementation** (`commit: 5d89830`, `push: yes`)
     - Implement Azure polling with adaptive intervals and context handling.
 13. - [ ] **Step 13 – Provider Factory** (`commit: pending`, `push: pending`)
     - Introduce registry/factory to instantiate providers from config + unit tests.
