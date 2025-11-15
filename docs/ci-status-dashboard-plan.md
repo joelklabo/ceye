@@ -200,7 +200,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Extend the overlay so `E` opens an inline editor for repo/project fields and writes the validated configuration back to the manager.
     - Surface instructions and validation errors in the overlay so users know how to format edits.
     - Expand tests (and docs) to cover the new fields and ensure `RunUpdatedMsg` refreshes show the updated values.
-82. - [x] **Step 82 – Store import/export** (`commit: b4d6253`, `push: yes`)
+82. - [x] **Step 82 – Store import/export** (`commit: 17c12d3`, `push: yes`)
     - Add `ci-dash provider export --file` to dump the store to JSON so the configuration can be shared.
     - Add `ci-dash provider import` with optional `--replace` so backed-up entries can be reapplied.
     - Document the commands and write tests (unit or integration) that verify JSON import/export behavior.
