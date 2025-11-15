@@ -2,6 +2,7 @@ package azure
 
 import (
 	"context"
+	"time"
 
 	"github.com/joelklabo/ceye/internal/core"
 )
@@ -18,15 +19,22 @@ type Config struct {
 	Pipelines []int
 }
 
+const (
+	azureFastInterval = 15 * time.Second
+	azureSlowInterval = 60 * time.Second
+)
+
 // Provider polls Azure DevOps builds for configured pipelines.
 type Provider struct {
-	client AzureClient
-	cfg    Config
+	client       AzureClient
+	cfg          Config
+	fastInterval time.Duration
+	slowInterval time.Duration
 }
 
 // NewProvider constructs an Azure provider.
 func NewProvider(client AzureClient, cfg Config) *Provider {
-	return &Provider{client: client, cfg: cfg}
+	return &Provider{client: client, cfg: cfg, fastInterval: azureFastInterval, slowInterval: azureSlowInterval}
 }
 
 // Name implements core.Provider.
@@ -34,8 +42,52 @@ func (p *Provider) Name() string {
 	return "azure"
 }
 
-// Start begins polling Azure for builds. Implementation to follow in Step 12.
+// Start begins polling Azure for builds.
 func (p *Provider) Start(ctx context.Context, out chan<- core.RunEvent) error {
-	<-ctx.Done()
-	return ctx.Err()
+	interval := p.fastInterval
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
+		runs, err := p.client.ListBuilds(p.cfg.Org, p.cfg.Project, p.cfg.Pipelines)
+		if err == nil && len(runs) > 0 {
+			select {
+			case out <- core.RunEvent{Provider: p.Name(), Runs: runs, Timestamp: time.Now()}:
+			case <-ctx.Done():
+				return ctx.Err()
+			}
+		}
+
+		interval = p.nextInterval(runs, interval)
+
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(interval):
+		}
+	}
+}
+
+func (p *Provider) nextInterval(runs []core.Run, current time.Duration) time.Duration {
+	if hasActiveRuns(runs) {
+		return p.fastInterval
+	}
+	if current < p.slowInterval {
+		return p.slowInterval
+	}
+	return current
+}
+
+func hasActiveRuns(runs []core.Run) bool {
+	for _, run := range runs {
+		switch run.Status {
+		case core.RunStatusInProgress, core.RunStatusQueued:
+			return true
+		}
+	}
+	return false
 }
