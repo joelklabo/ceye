@@ -188,7 +188,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Add an inline “edit” or “duplicate” shortcut in the overlay (e.g., press `e` on a stored entry) to spawn a temporary YAML snippet for editing, or trigger `ci-dash provider update` with the current config.
     - Ensure edits respect validation (provider type + required fields) and reuse the existing provider factory/state so changes immediately refresh the list.
     - Write tests that simulate the edit action and confirm the overlay/list updates after `RunUpdatedMsg` events reflecting the edited entry.
-79. - [x] **Step 79 – Store overlay editing workflow** (`commit: adfe6e6`, `push: yes`)
+79. - [x] **Step 79 – Store overlay editing workflow** (`commit: f2e6210`, `push: yes`)
     - Allow the overlay to edit a stored provider’s metadata (display name, etc.) inline and persist the change via the manager.
     - Validate edits and rerender the overlay with the new data so the UI and persisted store stay in sync.
     - Add tests that cover the edit UI and confirm `RunUpdatedMsg` updates refresh the overlay.
