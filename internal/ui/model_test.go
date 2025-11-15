@@ -24,7 +24,7 @@ func TestModelRunUpdatedMsgRefreshesTable(t *testing.T) {
 	})
 	m := NewModel(store, []string{"github"})
 
-	updatedModel, _ := m.Update(RunUpdatedMsg{})
+	updatedModel, _ := m.Update(RunUpdatedMsg{Timestamp: time.Now()})
 	actual := updatedModel.(Model)
 
 	rows := actual.Table.Rows()
@@ -44,7 +44,7 @@ func TestModelRunUpdatedMsgRespectsProviderFilter(t *testing.T) {
 	m := NewModel(store, []string{"github", "azure"})
 	m.ActiveProvider = "github"
 
-	updatedModel, _ := m.Update(RunUpdatedMsg{})
+	updatedModel, _ := m.Update(RunUpdatedMsg{Timestamp: time.Now()})
 	actual := updatedModel.(Model)
 
 	rows := actual.Table.Rows()

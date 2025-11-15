@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
@@ -79,7 +80,7 @@ func run(ctx context.Context, cfgPath string) error {
 				return
 			case event := <-eventCh:
 				store.Merge(event)
-				program.Send(ui.RunUpdatedMsg{})
+				program.Send(ui.RunUpdatedMsg{Timestamp: time.Now()})
 			}
 		}
 	}()

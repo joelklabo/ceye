@@ -71,6 +71,8 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Add Cobra-based CLI entrypoint with `--config` flag and route execution through root command.
 25. - [x] **Step 25 – Example Config** (`commit: 9e89cfd`, `push: yes`)
     - Add `config.example.yaml` plus README note so users can copy/edit quickly.
+26. - [ ] **Step 26 – UI Header & Styling** (`commit: pending`, `push: pending`)
+    - Introduce Lip Gloss-styled header/footer with last update timestamp and key hints.
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.

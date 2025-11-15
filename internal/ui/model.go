@@ -1,16 +1,21 @@
 package ui
 
 import (
+	"fmt"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 
 	"github.com/joelklabo/ceye/internal/core"
 )
 
 // RunUpdatedMsg is emitted when the store receives new data.
-type RunUpdatedMsg struct{}
+type RunUpdatedMsg struct {
+	Timestamp time.Time
+}
 
 // Model represents the Bubble Tea UI state.
 type Model struct {
@@ -18,6 +23,9 @@ type Model struct {
 	Table          table.Model
 	ActiveProvider string
 	Providers      []string
+	lastUpdate     time.Time
+	headerStyle    lipgloss.Style
+	footerStyle    lipgloss.Style
 }
 
 // NewModel constructs a UI model.
@@ -35,6 +43,8 @@ func NewModel(store *core.Store, providers []string) Model {
 		Table:          tbl,
 		ActiveProvider: providerList[0],
 		Providers:      providerList,
+		headerStyle:    lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("205")),
+		footerStyle:    lipgloss.NewStyle().Foreground(lipgloss.Color("241")),
 	}
 	return m
 }
@@ -48,6 +58,7 @@ func (m Model) Init() tea.Cmd {
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case RunUpdatedMsg:
+		m.lastUpdate = msg.Timestamp
 		m.refreshTable()
 		return m, nil
 	case tea.KeyMsg:
@@ -76,7 +87,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View renders the UI.
 func (m Model) View() string {
-	return m.Table.View()
+	last := "never"
+	if !m.lastUpdate.IsZero() {
+		last = m.lastUpdate.Format("15:04:05")
+	}
+	header := m.headerStyle.Render(fmt.Sprintf("Viewing: %s | Last update: %s", titleCase(m.ActiveProvider), last))
+	body := m.Table.View()
+	footer := m.footerStyle.Render("Tab: cycle providers  |  q: quit")
+	return lipgloss.JoinVertical(lipgloss.Left, header, body, footer)
 }
 
 func (m *Model) refreshTable() {
@@ -125,4 +143,11 @@ func (m *Model) currentProviderIndex() int {
 		}
 	}
 	return 0
+}
+
+func titleCase(s string) string {
+	if s == "" {
+		return s
+	}
+	return strings.ToUpper(s[:1]) + s[1:]
 }
