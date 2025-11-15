@@ -46,6 +46,7 @@ type keyMap struct {
 	Sort     key.Binding
 	CopyURL  key.Binding
 	CopyInfo key.Binding
+	Contrast key.Binding
 	Help     key.Binding
 	Quit     key.Binding
 }
@@ -62,20 +63,22 @@ func newKeyMap() keyMap {
 		Sort:     key.NewBinding(key.WithKeys("t"), key.WithHelp("t", "cycle sort")),
 		CopyURL:  key.NewBinding(key.WithKeys("y"), key.WithHelp("y", "copy URL")),
 		CopyInfo: key.NewBinding(key.WithKeys("c"), key.WithHelp("c", "copy summary")),
+		Contrast: key.NewBinding(key.WithKeys("H"), key.WithHelp("H", "toggle high contrast")),
 		Help:     key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "toggle help")),
 		Quit:     key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "quit")),
 	}
 }
 
 func (k keyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Provider, k.Status, k.Sort, k.CopyURL, k.CopyInfo, k.Focus, k.Refresh, k.Help}
+	return []key.Binding{k.Provider, k.Status, k.Sort, k.CopyURL, k.CopyInfo, k.Focus, k.Contrast, k.Refresh, k.Help}
 }
 
 func (k keyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.Provider, k.Status, k.Sort, k.Search},
 		{k.Palette, k.Focus, k.Refresh, k.Open},
-		{k.CopyURL, k.CopyInfo, k.Help, k.Quit},
+		{k.CopyURL, k.CopyInfo, k.Contrast, k.Help},
+		{k.Quit},
 	}
 }
 
@@ -101,6 +104,8 @@ type Model struct {
 	focusMode        bool
 	sortModes        []string
 	sortIndex        int
+	darkBackground   bool
+	contrastMode     bool
 	Statuses         map[string]string
 	ProviderTimes    map[string]time.Time
 	ProviderLag      map[string]time.Duration
@@ -162,6 +167,8 @@ func NewModel(store *core.Store, providers []string, refresh func(), openURL fun
 		statusIndex:      0,
 		sortModes:        []string{"status", "updated", "duration"},
 		sortIndex:        0,
+		darkBackground:   currentDark,
+		contrastMode:     currentHigh,
 		Refresh:          refresh,
 		openURL:          openURL,
 		copyText:         copyText,
@@ -191,6 +198,7 @@ func NewModel(store *core.Store, providers []string, refresh func(), openURL fun
 		failStyle:        lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Bold(true),
 		runningStyle:     lipgloss.NewStyle().Foreground(lipgloss.Color("226")),
 	}
+	m.refreshStyles()
 	return m
 }
 
@@ -288,6 +296,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "c":
 				cmd := m.copyRunSummary()
 				return m, cmd
+			case "H":
+				m.toggleContrast()
+				return m, nil
 			case "t":
 				m.cycleSort()
 				m.refreshTable()
@@ -449,18 +460,18 @@ func (m Model) renderProviderBadges() []string {
 			label = fmt.Sprintf("%s waiting", label)
 			style = m.tagWarningStyle
 		}
-			if health, ok := m.ProviderHealth[name]; ok && health.ErrorCount > 0 {
-				label = fmt.Sprintf("%s (%d errs)", label, health.ErrorCount)
-				style = m.tagErrorStyle
-			} else if health.LastSuccess.After(time.Time{}) {
-				label = fmt.Sprintf("%s [%s]", label, health.LastSuccess.Format("15:04:05"))
+		if health, ok := m.ProviderHealth[name]; ok && health.ErrorCount > 0 {
+			label = fmt.Sprintf("%s (%d errs)", label, health.ErrorCount)
+			style = m.tagErrorStyle
+		} else if health.LastSuccess.After(time.Time{}) {
+			label = fmt.Sprintf("%s [%s]", label, health.LastSuccess.Format("15:04:05"))
+		}
+		if lag, ok := m.ProviderLag[name]; ok && lag > 0 {
+			label = fmt.Sprintf("%s • lag %s", label, formatLag(lag))
+			if lag > 20*time.Second {
+				style = m.tagWarningStyle
 			}
-			if lag, ok := m.ProviderLag[name]; ok && lag > 0 {
-				label = fmt.Sprintf("%s • lag %s", label, formatLag(lag))
-				if lag > 20*time.Second {
-					style = m.tagWarningStyle
-				}
-			}
+		}
 		parts = append(parts, style.Render(label))
 	}
 	return parts
@@ -995,6 +1006,7 @@ func (m Model) renderHelpOverlay() string {
 			{"r", "Force refresh providers"},
 			{"y", "Copy run URL"},
 			{"c", "Copy run summary"},
+			{"H", "Toggle high contrast"},
 			{"v", "Toggle focus/dashboard view"},
 			{"?", "Toggle help overlay"},
 			{"q / ctrl+c", "Quit"},
@@ -1199,6 +1211,8 @@ var (
 	branchDefaultStyle lipgloss.Style
 	rowHighlightBg     lipgloss.Color
 	appStyle           lipgloss.Style
+	currentDark        bool
+	currentHigh        bool
 )
 
 type logEntry struct {
@@ -1208,10 +1222,16 @@ type logEntry struct {
 }
 
 func init() {
-	applyTheme(lipgloss.HasDarkBackground())
+	setTheme(lipgloss.HasDarkBackground(), false)
 }
 
-func applyTheme(dark bool) {
+func setTheme(dark, high bool) {
+	currentDark = dark
+	currentHigh = high
+	applyTheme(dark, high)
+}
+
+func applyTheme(dark, high bool) {
 	if dark {
 		accentColor = lipgloss.Color("#b392f0")
 		accentDarkColor = lipgloss.Color("#342e5c")
@@ -1234,6 +1254,14 @@ func applyTheme(dark bool) {
 		errorColor = lipgloss.Color("#8b0b2b")
 		baseTextColor = lipgloss.Color("#0b0a15")
 		rowHighlightBg = lipgloss.Color("#d9d4f5")
+	}
+
+	if high {
+		accentColor = lipgloss.Color("#ffffff")
+		accentDarkColor = lipgloss.Color("#bfbcff")
+		borderColor = lipgloss.Color("#ffffff")
+		appBackground = lipgloss.Color("#0b0b0b")
+		baseTextColor = lipgloss.Color("#ffffff")
 	}
 
 	headerStyle = lipgloss.NewStyle().Background(accentColor).Foreground(lipgloss.Color("#0e0d19")).Bold(true).Padding(0, 2)
@@ -1289,4 +1317,25 @@ func tableStyles() table.Styles {
 		Background(rowHighlightBg).
 		Bold(true)
 	return styles
+}
+
+func (m *Model) refreshStyles() {
+	m.headerStyle = headerStyle
+	m.footerStyle = footerStyle
+	m.bodyBoxStyle = bodyBox
+	m.panelStyle = panel
+	m.tagStyle = tag
+	m.tagWarningStyle = tagWarn
+	m.tagErrorStyle = tagErr
+}
+
+func (m *Model) toggleContrast() {
+	m.contrastMode = !m.contrastMode
+	setTheme(m.darkBackground, m.contrastMode)
+	m.refreshStyles()
+	if m.contrastMode {
+		m.flashMessage = "High contrast enabled"
+	} else {
+		m.flashMessage = "High contrast disabled"
+	}
 }
