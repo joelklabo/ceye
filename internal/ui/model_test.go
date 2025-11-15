@@ -205,6 +205,40 @@ func TestModelProviderStoreRemoveKey(t *testing.T) {
 	}
 }
 
+func TestModelProviderStoreEditKey(t *testing.T) {
+	m := NewModel(core.NewStore(), nil, nil, nil, nil)
+	m.providerStoreVisible = true
+	m.providerStoreEntries = []manager.ProviderRecord{
+		{ID: "abc", Enabled: true, Config: providers.ProviderConfig{Type: "demo", DisplayName: "demo"}},
+	}
+	called := false
+	m.SetProviderStoreAction(func(entry manager.ProviderRecord, action ProviderStoreActionType) {
+		called = true
+		if action != ProviderStoreActionEdit {
+			t.Fatalf("expected edit action, got %v", action)
+		}
+		if entry.Config.DisplayName != "new display" {
+			t.Fatalf("expected new display name, got %s", entry.Config.DisplayName)
+		}
+	})
+
+	next, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'E'}})
+	m = next.(Model)
+	if !m.providerStoreEditing {
+		t.Fatalf("expected editing mode active")
+	}
+	m.providerStoreTextInput.SetValue("new display")
+	next, _ = m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m = next.(Model)
+
+	if !called {
+		t.Fatalf("expected edit action called")
+	}
+	if m.providerStoreEditing {
+		t.Fatalf("expected editing mode to exit")
+	}
+}
+
 func TestModelProviderStoreDuplicateKey(t *testing.T) {
 	m := NewModel(core.NewStore(), nil, nil, nil, nil)
 	m.providerStoreVisible = true

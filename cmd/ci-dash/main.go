@@ -193,6 +193,27 @@ func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, dem
 						Store:     copyProviderRecords(providerStore.List()),
 					})
 				}
+			case ui.ProviderStoreActionEdit:
+				if err := providerStore.Update(entry.ID, entry.Config); err != nil {
+					fmt.Fprintf(os.Stderr, "provider store: %v\n", err)
+					if program != nil {
+						program.Send(ui.RunUpdatedMsg{
+							Timestamp: time.Now(),
+							Message:   fmt.Sprintf("store update failed: %v", err),
+							Level:     "error",
+							Store:     copyProviderRecords(providerStore.List()),
+						})
+					}
+					return
+				}
+				if program != nil {
+					program.Send(ui.RunUpdatedMsg{
+						Timestamp: time.Now(),
+						Message:   fmt.Sprintf("%s updated", providers.DisplayName(entry.Config)),
+						Level:     "info",
+						Store:     copyProviderRecords(providerStore.List()),
+					})
+				}
 			case ui.ProviderStoreActionRemove:
 				if err := providerStore.Remove(entry.ID); err != nil {
 					fmt.Fprintf(os.Stderr, "provider store: %v\n", err)
