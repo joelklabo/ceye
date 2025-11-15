@@ -131,7 +131,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Sync README/docs with the latest keybindings (focus mode, sorting, copy actions, etc.).
 55. - [x] **Step 55 – Demo provider** (`commit: 2932655`, `push: yes`)
     - Add a built-in demo provider so we can verify the UI without real credentials.
-56. - [ ] **Step 56 – UI polish (status icons & branch colors)** (`commit: pending`, `push: pending`)
+56. - [x] **Step 56 – UI polish (status icons & branch colors)** (`commit: 68d7d4f`, `push: yes`)
     - Incorporate iconified statuses, colored branch badges, and table highlight styles inspired by Glow/LazyGit.
 
 ## Tracking Updates
