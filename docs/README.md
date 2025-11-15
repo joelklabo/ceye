@@ -57,6 +57,7 @@ Once running, the dashboard will start polling providers and updating the table 
 - `Tab`: Cycle provider filter (All → GitHub → Azure → ...)
 - `r`: Force an immediate refresh of all providers
 - `q` or `Ctrl+C`: Quit
+- Highlight a run with the arrow keys (or `j`/`k`) to see its repo/branch/URL details in the pane beneath the table
 - Arrow keys / `j`, `k`: Navigate table rows (handled by Bubbles table component)
 
 ## Architecture Overview

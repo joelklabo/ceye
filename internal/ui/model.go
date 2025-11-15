@@ -26,6 +26,7 @@ type Model struct {
 	Providers      []string
 	Refresh        func()
 	Statuses       map[string]string
+	visibleRuns    []core.Run
 	lastUpdate     time.Time
 	headerStyle    lipgloss.Style
 	footerStyle    lipgloss.Style
@@ -122,9 +123,11 @@ func (m Model) View() string {
 	}
 	header := m.headerStyle.Render(fmt.Sprintf("Viewing: %s | Last update: %s", titleCase(m.ActiveProvider), last))
 	body := m.Table.View()
+	detail := m.renderDetails()
 	statusLine := m.renderStatuses()
 	footer := lipgloss.JoinVertical(lipgloss.Left,
 		m.footerStyle.Render("Tab: cycle providers  |  r: refresh  |  q: quit"),
+		m.footerStyle.Render(detail),
 		m.footerStyle.Render(statusLine),
 	)
 	return lipgloss.JoinVertical(lipgloss.Left, header, body, footer)
@@ -155,6 +158,7 @@ func (m *Model) refreshTable() {
 		filter = m.ActiveProvider
 	}
 	runs := m.Store.ListRuns(filter)
+	m.visibleRuns = runs
 	rows := make([]table.Row, 0, len(runs))
 	for _, run := range runs {
 		rows = append(rows, table.Row{run.Provider, run.WorkflowName, m.formatStatus(run), run.Branch})
@@ -193,6 +197,31 @@ func (m *Model) cycleProvider() {
 	current := m.currentProviderIndex()
 	next := (current + 1) % len(m.Providers)
 	m.ActiveProvider = m.Providers[next]
+}
+
+func (m Model) renderDetails() string {
+	if len(m.visibleRuns) == 0 {
+		return "Details: no runs loaded"
+	}
+	idx := m.Table.Cursor()
+	if idx < 0 || idx >= len(m.visibleRuns) {
+		return "Details: select a run to view more info"
+	}
+	run := m.visibleRuns[idx]
+	return fmt.Sprintf(
+		"Details: %s | %s | SHA %s | %s",
+		run.Repo,
+		run.Branch,
+		shortSHA(run.CommitSHA),
+		run.URL,
+	)
+}
+
+func shortSHA(sha string) string {
+	if len(sha) > 7 {
+		return sha[:7]
+	}
+	return sha
 }
 
 func buildProviderList(names []string) []string {
