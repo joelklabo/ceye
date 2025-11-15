@@ -31,7 +31,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
    - Implement thread-safe store with merge + list logic to satisfy Step 3 tests.
 5. - [x] **Step 5 – GitHub Parser Tests** (`commit: 0ec64cd`, `push: yes`)
    - Add failing tests for parsing GitHub workflow run JSON into normalized `Run`s.
-6. - [ ] **Step 6 – GitHub Parser Implementation** (`commit: pending`, `push: pending`)
+6. - [x] **Step 6 – GitHub Parser Implementation** (`commit: 9d22057`, `push: yes`)
    - Implement `ParseGitHubRuns` to satisfy Step 5 tests.
 7. - [ ] **Step 7 – Azure Parser Tests** (`commit: pending`, `push: pending`)
    - Add failing tests for Azure DevOps builds API -> `Run`s transformation.
