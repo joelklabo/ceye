@@ -67,7 +67,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Expand README with usage, config example, env vars, and architecture overview.
 23. - [x] **Step 23 – Final QA** (`commit: a2b28da`, `push: yes`)
     - `go test ./...`, manual CI provider smoke test, fmt/vet, and final cleanup.
-24. - [ ] **Step 24 – CLI Flags** (`commit: pending`, `push: pending`)
+24. - [x] **Step 24 – CLI Flags** (`commit: da28875`, `push: yes`)
     - Add Cobra-based CLI entrypoint with `--config` flag and route execution through root command.
 
 ## Tracking Updates
