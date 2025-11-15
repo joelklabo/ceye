@@ -21,28 +21,29 @@ type RunUpdatedMsg struct {
 
 // Model represents the Bubble Tea UI state.
 type Model struct {
-	Store          *core.Store
-	Table          table.Model
-	ActiveProvider string
-	Providers      []string
-	statusFilters  []string
-	statusIndex    int
-	Refresh        func()
-	openURL        func(string)
-	helpVisible    bool
-	searchActive   bool
-	searchQuery    string
-	Statuses       map[string]string
-	ProviderTimes  map[string]time.Time
-	visibleRuns    []core.Run
-	runTotals      map[string]int
-	lastUpdate     time.Time
-	headerStyle    lipgloss.Style
-	footerStyle    lipgloss.Style
-	errorStyle     lipgloss.Style
-	successStyle   lipgloss.Style
-	failStyle      lipgloss.Style
-	runningStyle   lipgloss.Style
+	Store            *core.Store
+	Table            table.Model
+	ActiveProvider   string
+	Providers        []string
+	visibleProviders map[string]bool
+	statusFilters    []string
+	statusIndex      int
+	Refresh          func()
+	openURL          func(string)
+	helpVisible      bool
+	searchActive     bool
+	searchQuery      string
+	Statuses         map[string]string
+	ProviderTimes    map[string]time.Time
+	visibleRuns      []core.Run
+	runTotals        map[string]int
+	lastUpdate       time.Time
+	headerStyle      lipgloss.Style
+	footerStyle      lipgloss.Style
+	errorStyle       lipgloss.Style
+	successStyle     lipgloss.Style
+	failStyle        lipgloss.Style
+	runningStyle     lipgloss.Style
 }
 
 // NewModel constructs a UI model.
@@ -57,33 +58,36 @@ func NewModel(store *core.Store, providers []string, refresh func(), openURL fun
 	tbl.Focus()
 	providerList := buildProviderList(providers)
 	statusMap := make(map[string]string)
+	visibleProviders := make(map[string]bool)
 	for _, name := range providerList {
 		if name == "all" {
 			continue
 		}
 		statusMap[name] = ""
+		visibleProviders[name] = true
 	}
 	m := Model{
-		Store:          store,
-		Table:          tbl,
-		ActiveProvider: providerList[0],
-		Providers:      providerList,
-		statusFilters:  []string{"all", "running", "queued", "failed", "success"},
-		statusIndex:    0,
-		Refresh:        refresh,
-		openURL:        openURL,
-		helpVisible:    false,
-		searchActive:   false,
-		searchQuery:    "",
-		Statuses:       statusMap,
-		ProviderTimes:  make(map[string]time.Time),
-		runTotals:      make(map[string]int),
-		headerStyle:    lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("205")),
-		footerStyle:    lipgloss.NewStyle().Foreground(lipgloss.Color("241")),
-		errorStyle:     lipgloss.NewStyle().Foreground(lipgloss.Color("196")),
-		successStyle:   lipgloss.NewStyle().Foreground(lipgloss.Color("46")).Bold(true),
-		failStyle:      lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Bold(true),
-		runningStyle:   lipgloss.NewStyle().Foreground(lipgloss.Color("226")),
+		Store:            store,
+		Table:            tbl,
+		ActiveProvider:   providerList[0],
+		Providers:        providerList,
+		visibleProviders: visibleProviders,
+		statusFilters:    []string{"all", "running", "queued", "failed", "success"},
+		statusIndex:      0,
+		Refresh:          refresh,
+		openURL:          openURL,
+		helpVisible:      false,
+		searchActive:     false,
+		searchQuery:      "",
+		Statuses:         statusMap,
+		ProviderTimes:    make(map[string]time.Time),
+		runTotals:        make(map[string]int),
+		headerStyle:      lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("205")),
+		footerStyle:      lipgloss.NewStyle().Foreground(lipgloss.Color("241")),
+		errorStyle:       lipgloss.NewStyle().Foreground(lipgloss.Color("196")),
+		successStyle:     lipgloss.NewStyle().Foreground(lipgloss.Color("46")).Bold(true),
+		failStyle:        lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Bold(true),
+		runningStyle:     lipgloss.NewStyle().Foreground(lipgloss.Color("226")),
 	}
 	return m
 }
@@ -196,16 +200,30 @@ func (m Model) renderStatuses() string {
 }
 
 func (m *Model) refreshTable() {
-	filter := ""
+	providerFilter := ""
 	if m.ActiveProvider != "all" {
-		filter = m.ActiveProvider
+		providerFilter = m.ActiveProvider
 	}
-	runs := m.Store.ListRuns(filter)
+	runs := m.Store.ListRuns(providerFilter)
 	filtered := make([]core.Run, 0, len(runs))
 	rows := make([]table.Row, 0, len(runs))
 	statusFilter := m.statusFilters[m.statusIndex]
 	m.runTotals = countStatuses(runs)
 	for _, run := range runs {
+		if providerFilter == "" {
+			providerName := strings.ToLower(run.Provider)
+			if allowed, ok := m.visibleProviders[providerName]; ok {
+				if !allowed {
+					continue
+				}
+			} else {
+				// default visible providers added at init, but ensure new providers remain visible
+				m.visibleProviders[providerName] = true
+			}
+		}
+		if providerFilter == "" && !m.visibleProviders[strings.ToLower(run.Provider)] {
+			continue
+		}
 		if !matchesStatusFilter(run, statusFilter) {
 			continue
 		}
