@@ -147,6 +147,8 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Surface provider lag/failures in the UI (badges, notifications, or logs) and record metrics for slow polls.
 63. - [x] **Step 63 – CI snapshots** (`commit: 25ef8b7`, `push: yes`)
     - Run `make snapshot` as part of CI so every push captures the latest demo screen + event log for regression evidence.
+64. - [x] **Step 64 – Additional providers** (`commit: 3dd1b97`, `push: pending`)
+    - Add support (config, factory, docs, tests) for a new provider such as GitLab so the dashboard can expand beyond GitHub/Azure.
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.
