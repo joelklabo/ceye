@@ -112,6 +112,7 @@ func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, dem
 	providerHealth := make(map[string]core.ProviderHealth)
 	providerLastPoll := make(map[string]time.Time)
 	providerLag := make(map[string]time.Duration)
+	providerHistory := make(map[string][]string)
 	for _, pCfg := range cfg.Providers {
 		provider, err := providers.CreateProvider(pCfg, deps)
 		if err != nil {
@@ -186,6 +187,20 @@ func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, dem
 						health.LastSuccess = ts
 						health.ErrorCount = 0
 						providerHealth[event.Provider] = health
+						if len(event.Runs) > 0 {
+							hist := providerHistory[event.Provider]
+							for _, run := range event.Runs {
+								summary := fmt.Sprintf("%s • %s • %s", run.WorkflowName, run.Status, run.Branch)
+								if run.Conclusion != "" {
+									summary = fmt.Sprintf("%s (%s)", summary, run.Conclusion)
+								}
+								hist = append([]string{summary}, hist...)
+							}
+							if len(hist) > 5 {
+								hist = hist[:5]
+							}
+							providerHistory[event.Provider] = hist
+						}
 						if last, ok := providerLastPoll[event.Provider]; ok && last.After(time.Time{}) {
 							delta := ts.Sub(last)
 							providerLag[event.Provider] = delta
@@ -210,15 +225,16 @@ func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, dem
 						fmt.Fprintf(os.Stderr, "notify: %v\n", err)
 					}
 				}
-				program.Send(ui.RunUpdatedMsg{
-					Timestamp: ts,
-					Status:    copyStatus(providerStatus),
-					Times:     copyTimes(providerTimes),
-					Message:   message,
-					Level:     level,
-					Health:    copyHealth(providerHealth),
-					Lag:       copyLag(providerLag),
-				})
+					program.Send(ui.RunUpdatedMsg{
+						Timestamp: ts,
+						Status:    copyStatus(providerStatus),
+						Times:     copyTimes(providerTimes),
+						Message:   message,
+						Level:     level,
+						Health:    copyHealth(providerHealth),
+						Lag:       copyLag(providerLag),
+						History:   copyHistory(providerHistory),
+					})
 			}
 		}
 	}()
@@ -271,6 +287,14 @@ func copyLag(in map[string]time.Duration) map[string]time.Duration {
 	out := make(map[string]time.Duration, len(in))
 	for k, v := range in {
 		out[k] = v
+	}
+	return out
+}
+
+func copyHistory(in map[string][]string) map[string][]string {
+	out := make(map[string][]string, len(in))
+	for k, v := range in {
+		out[k] = append([]string(nil), v...)
 	}
 	return out
 }

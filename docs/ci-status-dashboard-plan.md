@@ -155,6 +155,8 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Show a transient alert when a provider errors so regressions are obvious without scanning logs.
 67. - [x] **Step 67 – Desktop alerts** (`commit: a0e2a71`, `push: pending`)
     - Emit a desktop notification (via `osascript`/`notify-send`) whenever a provider reports an error so failures surface even if a terminal isn’t visible.
+68. - [ ] **Step 68 – Run history panel** (`commit: pending`, `push: pending`)
+    - Track each provider’s last few run summaries and expose them in a dedicated sidebar panel for quick inspection.
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.
