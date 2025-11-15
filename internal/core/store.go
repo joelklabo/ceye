@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"sort"
+	"strings"
 	"sync"
 )
 
@@ -61,6 +62,10 @@ func (s *Store) ListRuns(providerFilter string) []Run {
 	}
 
 	sort.Slice(out, func(i, j int) bool {
+		si, sj := statusRank(out[i]), statusRank(out[j])
+		if si != sj {
+			return si < sj
+		}
 		switch {
 		case out[i].UpdatedAt.After(out[j].UpdatedAt):
 			return true
@@ -76,4 +81,22 @@ func (s *Store) ListRuns(providerFilter string) []Run {
 
 func storeKey(provider, id string) string {
 	return fmt.Sprintf("%s:%s", provider, id)
+}
+
+func statusRank(run Run) int {
+	switch run.Status {
+	case RunStatusInProgress:
+		return 0
+	case RunStatusQueued:
+		return 1
+	case RunStatusFailed, RunStatusCancelled:
+		return 2
+	case RunStatusCompleted:
+		if strings.EqualFold(run.Conclusion, "success") || strings.EqualFold(run.Conclusion, "succeeded") || run.Conclusion == "" {
+			return 3
+		}
+		return 2
+	default:
+		return 4
+	}
 }

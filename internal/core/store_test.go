@@ -128,7 +128,7 @@ func TestStoreListRunsFiltersAndSorts(t *testing.T) {
 	if len(allRuns) != 3 {
 		t.Fatalf("expected 3 runs when no filter, got %d", len(allRuns))
 	}
-	if allRuns[0].ID != "g2" || allRuns[1].ID != "g1" || allRuns[2].ID != "a1" {
+	if allRuns[0].ID != "g2" || allRuns[1].ID != "a1" || allRuns[2].ID != "g1" {
 		t.Fatalf("unexpected order for all runs: %s %s %s", allRuns[0].ID, allRuns[1].ID, allRuns[2].ID)
 	}
 }
