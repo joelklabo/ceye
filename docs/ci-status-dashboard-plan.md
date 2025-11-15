@@ -49,7 +49,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Introduce registry/factory to instantiate providers from config + unit tests.
 14. - [x] **Step 14 – Config Parsing Test** (`commit: 467678f`, `push: yes`)
     - Write failing test loading sample YAML via Viper into config structs.
-15. - [ ] **Step 15 – Config Parsing Implementation** (`commit: pending`, `push: pending`)
+15. - [x] **Step 15 – Config Parsing Implementation** (`commit: c97f43e`, `push: yes`)
     - Implement `LoadConfig` to satisfy Step 14 test.
 16. - [ ] **Step 16 – Main Wiring** (`commit: pending`, `push: pending`)
     - Integrate config, provider factory, store, aggregator goroutine, and Bubble Tea bootstrap.
