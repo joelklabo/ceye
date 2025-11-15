@@ -16,6 +16,7 @@ import (
 
 	"github.com/joelklabo/ceye/internal/core"
 	"github.com/joelklabo/ceye/internal/providers"
+	githubprovider "github.com/joelklabo/ceye/internal/providers/github"
 	"github.com/joelklabo/ceye/internal/providers/manager"
 )
 
@@ -105,61 +106,63 @@ func (k keyMap) FullHelp() [][]key.Binding {
 
 // Model represents the Bubble Tea UI state.
 type Model struct {
-	Store                  *core.Store
-	Table                  table.Model
-	ActiveProvider         string
-	Providers              []string
-	visibleProviders       map[string]bool
-	statusFilters          []string
-	statusIndex            int
-	Refresh                func()
-	openURL                func(string)
-	copyText               func(string)
-	providerStoreAction    func(manager.ProviderRecord, ProviderStoreActionType)
-	helpModel              help.Model
-	keys                   keyMap
-	searchActive           bool
-	searchQuery            string
-	paletteVisible         bool
-	paletteCursor          int
-	helpVisible            bool
-	focusMode              bool
-	sortModes              []string
-	sortIndex              int
-	darkBackground         bool
-	contrastMode           bool
-	Statuses               map[string]string
-	ProviderTimes          map[string]time.Time
-	ProviderLag            map[string]time.Duration
-	ProviderHealth         map[string]core.ProviderHealth
-	ProviderHistory        map[string][]string
-	detailVisible          bool
-	alertLog               []string
-	visibleRuns            []core.Run
-	runTotals              map[string]int
-	logEntries             []logEntry
-	lastUpdate             time.Time
-	flashMessage           string
-	width                  int
-	height                 int
-	alertMessage           string
-	headerStyle            lipgloss.Style
-	footerStyle            lipgloss.Style
-	bodyBoxStyle           lipgloss.Style
-	panelStyle             lipgloss.Style
-	tagStyle               lipgloss.Style
-	tagWarningStyle        lipgloss.Style
-	tagErrorStyle          lipgloss.Style
-	errorStyle             lipgloss.Style
-	successStyle           lipgloss.Style
-	failStyle              lipgloss.Style
-	runningStyle           lipgloss.Style
-	providerStoreVisible   bool
-	providerStoreCursor    int
-	providerStoreEntries   []manager.ProviderRecord
-	providerStoreEditing   bool
-	providerStoreEditEntry manager.ProviderRecord
-	providerStoreTextInput textinput.Model
+	Store                     *core.Store
+	Table                     table.Model
+	ActiveProvider            string
+	Providers                 []string
+	visibleProviders          map[string]bool
+	statusFilters             []string
+	statusIndex               int
+	Refresh                   func()
+	openURL                   func(string)
+	copyText                  func(string)
+	providerStoreAction       func(manager.ProviderRecord, ProviderStoreActionType)
+	helpModel                 help.Model
+	keys                      keyMap
+	searchActive              bool
+	searchQuery               string
+	paletteVisible            bool
+	paletteCursor             int
+	helpVisible               bool
+	focusMode                 bool
+	sortModes                 []string
+	sortIndex                 int
+	darkBackground            bool
+	contrastMode              bool
+	Statuses                  map[string]string
+	ProviderTimes             map[string]time.Time
+	ProviderLag               map[string]time.Duration
+	ProviderHealth            map[string]core.ProviderHealth
+	ProviderHistory           map[string][]string
+	detailVisible             bool
+	alertLog                  []string
+	visibleRuns               []core.Run
+	runTotals                 map[string]int
+	logEntries                []logEntry
+	lastUpdate                time.Time
+	flashMessage              string
+	width                     int
+	height                    int
+	alertMessage              string
+	headerStyle               lipgloss.Style
+	footerStyle               lipgloss.Style
+	bodyBoxStyle              lipgloss.Style
+	panelStyle                lipgloss.Style
+	tagStyle                  lipgloss.Style
+	tagWarningStyle           lipgloss.Style
+	tagErrorStyle             lipgloss.Style
+	errorStyle                lipgloss.Style
+	successStyle              lipgloss.Style
+	failStyle                 lipgloss.Style
+	runningStyle              lipgloss.Style
+	providerStoreVisible      bool
+	providerStoreCursor       int
+	providerStoreEntries      []manager.ProviderRecord
+	providerStoreEditing      bool
+	providerStoreEditEntry    manager.ProviderRecord
+	providerStoreTextInput    textinput.Model
+	providerStoreEditField    string
+	providerStoreInstructions string
 }
 
 // NewModel constructs a UI model.
@@ -1209,11 +1212,49 @@ func (m *Model) handleProviderStoreInput(msg tea.KeyMsg) bool {
 func (m *Model) startProviderStoreEdit(entry manager.ProviderRecord) {
 	m.providerStoreEditing = true
 	m.providerStoreEditEntry = entry
-	name := entry.Config.DisplayName
-	if name == "" {
-		name = fmt.Sprintf("%s provider", entry.Config.Type)
+	value := ""
+	m.providerStoreInstructions = ""
+	switch entry.Config.Type {
+	case "github":
+		m.providerStoreEditField = "owner/repo"
+		m.providerStoreInstructions = "Enter owner/repo (e.g. octocat/hello-world)"
+		if len(entry.Config.Repos) > 0 {
+			value = fmt.Sprintf("%s/%s", entry.Config.Repos[0].Owner, entry.Config.Repos[0].Repo)
+		}
+	case "azure":
+		m.providerStoreEditField = "org/project[:pipelines]"
+		m.providerStoreInstructions = "Format org/project[:comma-separated pipelines]"
+		if entry.Config.Org != "" || entry.Config.Project != "" {
+			value = fmt.Sprintf("%s/%s", entry.Config.Org, entry.Config.Project)
+			if len(entry.Config.Pipelines) > 0 {
+				parts := make([]string, len(entry.Config.Pipelines))
+				for i, id := range entry.Config.Pipelines {
+					parts[i] = fmt.Sprintf("%d", id)
+				}
+				value = fmt.Sprintf("%s:%s", value, strings.Join(parts, ","))
+			}
+		}
+	case "gitlab":
+		m.providerStoreEditField = "gitlab_project"
+		m.providerStoreInstructions = "Enter the GitLab project path (e.g. org/repo)"
+		value = entry.Config.GitLabProject
+	default:
+		m.providerStoreEditField = "display name"
+		m.providerStoreInstructions = "Enter a friendly display name"
+		if entry.Config.DisplayName != "" {
+			value = entry.Config.DisplayName
+		} else {
+			value = entry.Config.Type + " provider"
+		}
 	}
-	m.providerStoreTextInput.SetValue(name)
+	m.providerStoreTextInput.Placeholder = m.providerStoreEditField
+	if value == "" {
+		m.providerStoreTextInput.SetValue("")
+		m.providerStoreTextInput.Blur()
+	} else {
+		m.providerStoreTextInput.SetValue(value)
+		m.providerStoreTextInput.CursorEnd()
+	}
 	m.providerStoreTextInput.Focus()
 }
 
@@ -1222,14 +1263,51 @@ func (m *Model) finishProviderStoreEdit() {
 		return
 	}
 	entry := m.providerStoreEditEntry
-	edited := strings.TrimSpace(m.providerStoreTextInput.Value())
-	if edited == "" {
-		m.flashMessage = "Display name cannot be empty"
+	value := strings.TrimSpace(m.providerStoreTextInput.Value())
+	if value == "" {
+		m.flashMessage = "Value cannot be empty"
 		return
 	}
-	entry.Config.DisplayName = edited
+	switch entry.Config.Type {
+	case "github":
+		parts := strings.Split(value, "/")
+		if len(parts) != 2 {
+			m.flashMessage = "GitHub value must be owner/repo"
+			return
+		}
+		entry.Config.Repos = []githubprovider.RepoConfig{{Owner: parts[0], Repo: parts[1]}}
+	case "azure":
+		parts := strings.SplitN(value, ":", 2)
+		project := strings.SplitN(parts[0], "/", 2)
+		if len(project) != 2 {
+			m.flashMessage = "Azure value must be org/project"
+			return
+		}
+		entry.Config.Org = project[0]
+		entry.Config.Project = project[1]
+		entry.Config.Pipelines = nil
+		if len(parts) == 2 && parts[1] != "" {
+			keys := strings.Split(parts[1], ",")
+			for _, key := range keys {
+				key = strings.TrimSpace(key)
+				if key == "" {
+					continue
+				}
+				var id int
+				fmt.Sscanf(key, "%d", &id)
+				if id > 0 {
+					entry.Config.Pipelines = append(entry.Config.Pipelines, id)
+				}
+			}
+		}
+	case "gitlab":
+		entry.Config.GitLabProject = value
+	default:
+		entry.Config.DisplayName = value
+	}
 	m.providerStoreEditing = false
 	m.providerStoreTextInput.Blur()
+	m.providerStoreInstructions = ""
 	if m.providerStoreAction != nil {
 		m.providerStoreAction(entry, ProviderStoreActionEdit)
 	}
@@ -1343,6 +1421,9 @@ func (m Model) renderProviderStore() string {
 	if m.providerStoreEditing {
 		header := fmt.Sprintf("Editing %s (enter to save, esc to cancel)", shortID(m.providerStoreEditEntry.ID))
 		lines = append(lines, bodyTextStyle.Render(header))
+		if m.providerStoreInstructions != "" {
+			lines = append(lines, bodyTextStyle.Render(m.providerStoreInstructions))
+		}
 		lines = append(lines, storeEntrySelected.Render(m.providerStoreTextInput.View()))
 		return storeBox.Render(lipgloss.JoinVertical(lipgloss.Left, lines...))
 	}
