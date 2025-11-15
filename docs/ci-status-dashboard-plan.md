@@ -176,7 +176,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Surface runtime provider store data in a Bubble Tea overlay (key `P`), listing each stored entry with ID, friendly name, and enabled state.
     - Keep the overlay entries synchronized with the manager via `RunUpdatedMsg` payloads and ensure it handles keyboard navigation/closing.
     - Add tests that verify the overlay toggle key and message handling so the UI stays in sync even as new entries appear.
-76. - [ ] **Step 76 – Store overlay actions** (`commit: pending`, `push: pending`)
+76. - [x] **Step 76 – Store overlay actions** (`commit: cd0ac1e`, `push: pending`)
     - Allow users to toggle a stored provider’s enabled state (`Space` in the overlay) without leaving the TUI.
     - Propagate manager-led changes back to the Bubble Tea model through `RunUpdatedMsg.Store` so the overlay stays current.
     - Expand tests and docs to describe the new keybinding and overlay behavior.
