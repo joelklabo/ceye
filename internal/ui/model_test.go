@@ -8,6 +8,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/joelklabo/ceye/internal/core"
+	"github.com/joelklabo/ceye/internal/providers"
+	"github.com/joelklabo/ceye/internal/providers/manager"
 )
 
 func TestModelRunUpdatedMsgRefreshesTable(t *testing.T) {
@@ -105,6 +107,43 @@ func TestModelProviderCycleOnTab(t *testing.T) {
 	actual = next.(Model)
 	if actual.ActiveProvider != "all" {
 		t.Fatalf("expected active provider to wrap to all, got %s", actual.ActiveProvider)
+	}
+}
+
+func TestModelProviderStoreToggle(t *testing.T) {
+	m := NewModel(core.NewStore(), nil, nil, nil, nil)
+	next, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'P'}})
+	actual := next.(Model)
+	if !actual.providerStoreVisible {
+		t.Fatalf("expected provider store overlay visible after 'P'")
+	}
+
+	next, _ = actual.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'P'}})
+	actual = next.(Model)
+	if actual.providerStoreVisible {
+		t.Fatalf("expected provider store overlay hidden after 'P' again")
+	}
+}
+
+func TestModelProviderStoreEntriesUpdate(t *testing.T) {
+	m := NewModel(core.NewStore(), nil, nil, nil, nil)
+	storeRecords := []manager.ProviderRecord{
+		{
+			ID:      "abc123",
+			Enabled: true,
+			Config: providers.ProviderConfig{
+				Type:        "demo",
+				DisplayName: "demo store entry",
+			},
+		},
+	}
+	next, _ := m.Update(RunUpdatedMsg{Timestamp: time.Now(), Store: storeRecords})
+	actual := next.(Model)
+	if len(actual.providerStoreEntries) != 1 {
+		t.Fatalf("expected provider store entries to update, got %d", len(actual.providerStoreEntries))
+	}
+	if actual.providerStoreEntries[0].Config.Type != "demo" {
+		t.Fatalf("expected demo provider saved, got %s", actual.providerStoreEntries[0].Config.Type)
 	}
 }
 

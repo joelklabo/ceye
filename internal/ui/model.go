@@ -14,6 +14,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 
 	"github.com/joelklabo/ceye/internal/core"
+	"github.com/joelklabo/ceye/internal/providers/manager"
 )
 
 const (
@@ -33,109 +34,116 @@ type RunUpdatedMsg struct {
 	Health    map[string]core.ProviderHealth
 	Lag       map[string]time.Duration
 	History   map[string][]string
+	Store     []manager.ProviderRecord
 }
 
 type flashExpiredMsg struct{}
 
 type keyMap struct {
-	Provider key.Binding
-	Status   key.Binding
-	Search   key.Binding
-	Palette  key.Binding
-	Refresh  key.Binding
-	Open     key.Binding
-	Focus    key.Binding
-	Sort     key.Binding
-	CopyURL  key.Binding
-	CopyInfo key.Binding
-	Contrast key.Binding
-	Detail   key.Binding
-	Help     key.Binding
-	Quit     key.Binding
+	Provider      key.Binding
+	Status        key.Binding
+	Search        key.Binding
+	Palette       key.Binding
+	ProviderStore key.Binding
+	Refresh       key.Binding
+	Open          key.Binding
+	Focus         key.Binding
+	Sort          key.Binding
+	CopyURL       key.Binding
+	CopyInfo      key.Binding
+	Contrast      key.Binding
+	Detail        key.Binding
+	Help          key.Binding
+	Quit          key.Binding
 }
 
 func newKeyMap() keyMap {
 	return keyMap{
-		Provider: key.NewBinding(key.WithKeys("tab"), key.WithHelp("tab", "cycle providers")),
-		Status:   key.NewBinding(key.WithKeys("f"), key.WithHelp("f", "cycle status")),
-		Search:   key.NewBinding(key.WithKeys("/"), key.WithHelp("/", "search")),
-		Palette:  key.NewBinding(key.WithKeys("p"), key.WithHelp("p", "provider palette")),
-		Refresh:  key.NewBinding(key.WithKeys("r"), key.WithHelp("r", "refresh")),
-		Open:     key.NewBinding(key.WithKeys("enter", "o"), key.WithHelp("enter/o", "open run")),
-		Focus:    key.NewBinding(key.WithKeys("v"), key.WithHelp("v", "toggle focus view")),
-		Sort:     key.NewBinding(key.WithKeys("t"), key.WithHelp("t", "cycle sort")),
-		CopyURL:  key.NewBinding(key.WithKeys("y"), key.WithHelp("y", "copy URL")),
-		CopyInfo: key.NewBinding(key.WithKeys("c"), key.WithHelp("c", "copy summary")),
-		Contrast: key.NewBinding(key.WithKeys("H"), key.WithHelp("H", "toggle high contrast")),
-		Detail:   key.NewBinding(key.WithKeys("D"), key.WithHelp("D", "toggle detail view")),
-		Help:     key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "toggle help")),
-		Quit:     key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "quit")),
+		Provider:      key.NewBinding(key.WithKeys("tab"), key.WithHelp("tab", "cycle providers")),
+		Status:        key.NewBinding(key.WithKeys("f"), key.WithHelp("f", "cycle status")),
+		Search:        key.NewBinding(key.WithKeys("/"), key.WithHelp("/", "search")),
+		Palette:       key.NewBinding(key.WithKeys("p"), key.WithHelp("p", "provider palette")),
+		ProviderStore: key.NewBinding(key.WithKeys("P"), key.WithHelp("P", "show provider store")),
+		Refresh:       key.NewBinding(key.WithKeys("r"), key.WithHelp("r", "refresh")),
+		Open:          key.NewBinding(key.WithKeys("enter", "o"), key.WithHelp("enter/o", "open run")),
+		Focus:         key.NewBinding(key.WithKeys("v"), key.WithHelp("v", "toggle focus view")),
+		Sort:          key.NewBinding(key.WithKeys("t"), key.WithHelp("t", "cycle sort")),
+		CopyURL:       key.NewBinding(key.WithKeys("y"), key.WithHelp("y", "copy URL")),
+		CopyInfo:      key.NewBinding(key.WithKeys("c"), key.WithHelp("c", "copy summary")),
+		Contrast:      key.NewBinding(key.WithKeys("H"), key.WithHelp("H", "toggle high contrast")),
+		Detail:        key.NewBinding(key.WithKeys("D"), key.WithHelp("D", "toggle detail view")),
+		Help:          key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "toggle help")),
+		Quit:          key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "quit")),
 	}
 }
 
 func (k keyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Provider, k.Status, k.Sort, k.CopyURL, k.CopyInfo, k.Focus, k.Contrast, k.Refresh, k.Help}
+	return []key.Binding{k.Provider, k.Status, k.Sort, k.CopyURL, k.CopyInfo, k.Focus, k.Contrast, k.Refresh, k.Help, k.ProviderStore}
 }
 
 func (k keyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.Provider, k.Status, k.Sort, k.Search},
-		{k.Palette, k.Focus, k.Refresh, k.Open},
-		{k.CopyURL, k.CopyInfo, k.Contrast, k.Help},
+		{k.Palette, k.ProviderStore, k.Focus, k.Refresh},
+		{k.Open, k.CopyURL, k.CopyInfo, k.Contrast},
+		{k.Help},
 		{k.Quit},
 	}
 }
 
 // Model represents the Bubble Tea UI state.
 type Model struct {
-	Store            *core.Store
-	Table            table.Model
-	ActiveProvider   string
-	Providers        []string
-	visibleProviders map[string]bool
-	statusFilters    []string
-	statusIndex      int
-	Refresh          func()
-	openURL          func(string)
-	copyText         func(string)
-	helpModel        help.Model
-	keys             keyMap
-	searchActive     bool
-	searchQuery      string
-	paletteVisible   bool
-	paletteCursor    int
-	helpVisible      bool
-	focusMode        bool
-	sortModes        []string
-	sortIndex        int
-	darkBackground   bool
-	contrastMode     bool
-	Statuses         map[string]string
-	ProviderTimes    map[string]time.Time
-	ProviderLag      map[string]time.Duration
-	ProviderHealth   map[string]core.ProviderHealth
-	ProviderHistory  map[string][]string
-	detailVisible    bool
-	alertLog         []string
-	visibleRuns      []core.Run
-	runTotals        map[string]int
-	logEntries       []logEntry
-	lastUpdate       time.Time
-	flashMessage     string
-	width            int
-	height           int
-	alertMessage     string
-	headerStyle      lipgloss.Style
-	footerStyle      lipgloss.Style
-	bodyBoxStyle     lipgloss.Style
-	panelStyle       lipgloss.Style
-	tagStyle         lipgloss.Style
-	tagWarningStyle  lipgloss.Style
-	tagErrorStyle    lipgloss.Style
-	errorStyle       lipgloss.Style
-	successStyle     lipgloss.Style
-	failStyle        lipgloss.Style
-	runningStyle     lipgloss.Style
+	Store                *core.Store
+	Table                table.Model
+	ActiveProvider       string
+	Providers            []string
+	visibleProviders     map[string]bool
+	statusFilters        []string
+	statusIndex          int
+	Refresh              func()
+	openURL              func(string)
+	copyText             func(string)
+	helpModel            help.Model
+	keys                 keyMap
+	searchActive         bool
+	searchQuery          string
+	paletteVisible       bool
+	paletteCursor        int
+	helpVisible          bool
+	focusMode            bool
+	sortModes            []string
+	sortIndex            int
+	darkBackground       bool
+	contrastMode         bool
+	Statuses             map[string]string
+	ProviderTimes        map[string]time.Time
+	ProviderLag          map[string]time.Duration
+	ProviderHealth       map[string]core.ProviderHealth
+	ProviderHistory      map[string][]string
+	detailVisible        bool
+	alertLog             []string
+	visibleRuns          []core.Run
+	runTotals            map[string]int
+	logEntries           []logEntry
+	lastUpdate           time.Time
+	flashMessage         string
+	width                int
+	height               int
+	alertMessage         string
+	headerStyle          lipgloss.Style
+	footerStyle          lipgloss.Style
+	bodyBoxStyle         lipgloss.Style
+	panelStyle           lipgloss.Style
+	tagStyle             lipgloss.Style
+	tagWarningStyle      lipgloss.Style
+	tagErrorStyle        lipgloss.Style
+	errorStyle           lipgloss.Style
+	successStyle         lipgloss.Style
+	failStyle            lipgloss.Style
+	runningStyle         lipgloss.Style
+	providerStoreVisible bool
+	providerStoreCursor  int
+	providerStoreEntries []manager.ProviderRecord
 }
 
 // NewModel constructs a UI model.
@@ -164,47 +172,50 @@ func NewModel(store *core.Store, providers []string, refresh func(), openURL fun
 	helpModel := help.New()
 	helpModel.ShowAll = false
 	m := Model{
-		Store:            store,
-		Table:            tbl,
-		ActiveProvider:   providerList[0],
-		Providers:        providerList,
-		visibleProviders: make(map[string]bool),
-		statusFilters:    []string{"all", "running", "queued", "failed", "success"},
-		statusIndex:      0,
-		sortModes:        []string{"status", "updated", "duration"},
-		sortIndex:        0,
-		darkBackground:   currentDark,
-		contrastMode:     currentHigh,
-		Refresh:          refresh,
-		openURL:          openURL,
-		copyText:         copyText,
-		helpModel:        helpModel,
-		keys:             keys,
-		searchActive:     false,
-		searchQuery:      "",
-		paletteVisible:   false,
-		paletteCursor:    0,
-		helpVisible:      false,
-		Statuses:         statusMap,
-		ProviderTimes:    make(map[string]time.Time),
-		ProviderLag:      make(map[string]time.Duration),
-		ProviderHealth:   make(map[string]core.ProviderHealth),
-		ProviderHistory:  make(map[string][]string),
-		runTotals:        make(map[string]int),
-		logEntries:       make([]logEntry, 0),
-		focusMode:        false,
-		headerStyle:      headerStyle,
-		footerStyle:      footerStyle,
-		bodyBoxStyle:     bodyBox,
-		panelStyle:       panel,
-		tagStyle:         tag,
-		tagWarningStyle:  tagWarn,
-		tagErrorStyle:    tagErr,
-		errorStyle:       lipgloss.NewStyle().Foreground(lipgloss.Color("196")),
-		successStyle:     lipgloss.NewStyle().Foreground(lipgloss.Color("46")).Bold(true),
-		failStyle:        lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Bold(true),
-		runningStyle:     lipgloss.NewStyle().Foreground(lipgloss.Color("226")),
-		detailVisible:    false,
+		Store:                store,
+		Table:                tbl,
+		ActiveProvider:       providerList[0],
+		Providers:            providerList,
+		visibleProviders:     make(map[string]bool),
+		statusFilters:        []string{"all", "running", "queued", "failed", "success"},
+		statusIndex:          0,
+		sortModes:            []string{"status", "updated", "duration"},
+		sortIndex:            0,
+		darkBackground:       currentDark,
+		contrastMode:         currentHigh,
+		Refresh:              refresh,
+		openURL:              openURL,
+		copyText:             copyText,
+		helpModel:            helpModel,
+		keys:                 keys,
+		searchActive:         false,
+		searchQuery:          "",
+		paletteVisible:       false,
+		paletteCursor:        0,
+		helpVisible:          false,
+		Statuses:             statusMap,
+		ProviderTimes:        make(map[string]time.Time),
+		ProviderLag:          make(map[string]time.Duration),
+		ProviderHealth:       make(map[string]core.ProviderHealth),
+		ProviderHistory:      make(map[string][]string),
+		runTotals:            make(map[string]int),
+		logEntries:           make([]logEntry, 0),
+		focusMode:            false,
+		providerStoreVisible: false,
+		providerStoreCursor:  0,
+		providerStoreEntries: make([]manager.ProviderRecord, 0),
+		headerStyle:          headerStyle,
+		footerStyle:          footerStyle,
+		bodyBoxStyle:         bodyBox,
+		panelStyle:           panel,
+		tagStyle:             tag,
+		tagWarningStyle:      tagWarn,
+		tagErrorStyle:        tagErr,
+		errorStyle:           lipgloss.NewStyle().Foreground(lipgloss.Color("196")),
+		successStyle:         lipgloss.NewStyle().Foreground(lipgloss.Color("46")).Bold(true),
+		failStyle:            lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Bold(true),
+		runningStyle:         lipgloss.NewStyle().Foreground(lipgloss.Color("226")),
+		detailVisible:        false,
 	}
 	m.refreshStyles()
 	m.SetProviderList(providers)
@@ -235,6 +246,13 @@ func (m Model) Init() tea.Cmd {
 
 // Update implements tea.Model.Update.
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if m.providerStoreVisible {
+		if keyMsg, ok := msg.(tea.KeyMsg); ok {
+			if m.handleProviderStoreInput(keyMsg) {
+				return m, nil
+			}
+		}
+	}
 	if m.paletteVisible {
 		if keyMsg, ok := msg.(tea.KeyMsg); ok {
 			if m.handlePaletteInput(keyMsg) {
@@ -271,6 +289,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.History != nil {
 			m.ProviderHistory = msg.History
 		}
+		if msg.Store != nil {
+			m.providerStoreEntries = msg.Store
+			if m.providerStoreCursor >= len(m.providerStoreEntries) {
+				m.providerStoreCursor = len(m.providerStoreEntries) - 1
+			}
+			if m.providerStoreCursor < 0 {
+				m.providerStoreCursor = 0
+			}
+		}
 		if msg.Message != "" {
 			entry := logEntry{text: msg.Message, timestamp: msg.Timestamp, level: msg.Level}
 			m.logEntries = append([]logEntry{entry}, m.logEntries...)
@@ -300,6 +327,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case msg.Type == tea.KeyRunes:
 			if len(msg.Runes) == 0 {
 				break
+			}
+			if string(msg.Runes) == "P" {
+				m.toggleProviderStore()
+				return m, nil
 			}
 			r := strings.ToLower(string(msg.Runes))
 			switch r {
@@ -390,6 +421,9 @@ func (m Model) View() string {
 	view := lipgloss.JoinVertical(lipgloss.Left, sections...)
 	if m.paletteVisible {
 		view = lipgloss.JoinHorizontal(lipgloss.Top, view, m.renderPalette())
+	}
+	if m.providerStoreVisible {
+		view = lipgloss.JoinHorizontal(lipgloss.Top, view, m.renderProviderStore())
 	}
 	if m.helpVisible {
 		view = lipgloss.JoinHorizontal(lipgloss.Top, view, m.renderHelpOverlay())
@@ -913,6 +947,13 @@ func shortSHA(sha string) string {
 	return sha
 }
 
+func shortID(id string) string {
+	if len(id) <= 8 {
+		return id
+	}
+	return id[:8]
+}
+
 func formatTimestamp(t time.Time) string {
 	if t.IsZero() {
 		return "n/a"
@@ -1060,6 +1101,23 @@ func (m *Model) handleHelpOverlayInput(msg tea.KeyMsg) bool {
 	return true
 }
 
+func (m *Model) handleProviderStoreInput(msg tea.KeyMsg) bool {
+	if !m.providerStoreVisible {
+		return false
+	}
+	switch msg.String() {
+	case "up", "k":
+		m.moveProviderStoreCursor(-1)
+	case "down", "j":
+		m.moveProviderStoreCursor(1)
+	case "P", "esc":
+		m.providerStoreVisible = false
+	default:
+		return false
+	}
+	return true
+}
+
 func (m *Model) movePaletteCursor(delta int) {
 	items := m.paletteItems()
 	if len(items) == 0 {
@@ -1071,6 +1129,20 @@ func (m *Model) movePaletteCursor(delta int) {
 	}
 	if m.paletteCursor >= len(items) {
 		m.paletteCursor = 0
+	}
+}
+
+func (m *Model) moveProviderStoreCursor(delta int) {
+	count := len(m.providerStoreEntries)
+	if count == 0 {
+		return
+	}
+	m.providerStoreCursor += delta
+	if m.providerStoreCursor < 0 {
+		m.providerStoreCursor = count - 1
+	}
+	if m.providerStoreCursor >= count {
+		m.providerStoreCursor = 0
 	}
 }
 
@@ -1110,6 +1182,13 @@ func (m *Model) togglePalette() {
 	}
 }
 
+func (m *Model) toggleProviderStore() {
+	m.providerStoreVisible = !m.providerStoreVisible
+	if m.providerStoreVisible {
+		m.providerStoreCursor = 0
+	}
+}
+
 func (m Model) paletteItems() []string {
 	items := make([]string, 0, len(m.visibleProviders))
 	for _, name := range m.Providers {
@@ -1142,6 +1221,34 @@ func (m Model) renderPalette() string {
 	return paletteBox.Render(strings.Join(lines, "\n"))
 }
 
+func (m Model) renderProviderStore() string {
+	lines := []string{sectionTitleStyle.Render("Provider store (press P to close)")}
+	if len(m.providerStoreEntries) == 0 {
+		lines = append(lines, bodyTextStyle.Render("No stored providers"))
+		return storeBox.Render(lipgloss.JoinVertical(lipgloss.Left, lines...))
+	}
+	for i, entry := range m.providerStoreEntries {
+		name := entry.Config.DisplayName
+		if name == "" {
+			name = fmt.Sprintf("%s provider", entry.Config.Type)
+		}
+		if name == "" {
+			name = entry.Config.Type
+		}
+		status := "disabled"
+		if entry.Enabled {
+			status = "enabled"
+		}
+		line := fmt.Sprintf("%s • %s • %s", shortID(entry.ID), name, status)
+		style := storeEntryStyle
+		if i == m.providerStoreCursor {
+			style = storeEntrySelected
+		}
+		lines = append(lines, style.Render(line))
+	}
+	return storeBox.Render(lipgloss.JoinVertical(lipgloss.Left, lines...))
+}
+
 func (m Model) renderHelpOverlay() string {
 	sections := []string{
 		sectionTitleStyle.Render("Help & Shortcuts (press ? or esc to close)"),
@@ -1155,6 +1262,7 @@ func (m Model) renderHelpOverlay() string {
 			{"t", "Cycle sort mode"},
 			{"/", "Start text search"},
 			{"p", "Toggle provider palette"},
+			{"P", "View stored providers"},
 		}),
 		renderHelpSection("Actions", [][2]string{
 			{"r", "Force refresh providers"},
@@ -1368,6 +1476,9 @@ var (
 	currentDark        bool
 	currentHigh        bool
 	alertStyle         lipgloss.Style
+	storeBox           lipgloss.Style
+	storeEntryStyle    lipgloss.Style
+	storeEntrySelected lipgloss.Style
 )
 
 type logEntry struct {
@@ -1446,6 +1557,9 @@ func applyTheme(dark, high bool) {
 	helpBox = lipgloss.NewStyle().BorderStyle(lipgloss.DoubleBorder()).BorderForeground(accentColor).Padding(1, 2).MarginLeft(2)
 	helpKeyStyle = lipgloss.NewStyle().Foreground(accentColor).Bold(true)
 	helpDescStyle = lipgloss.NewStyle().Foreground(baseTextColor)
+	storeBox = lipgloss.NewStyle().BorderStyle(lipgloss.NormalBorder()).BorderForeground(borderColor).Padding(1, 2).MarginLeft(2)
+	storeEntryStyle = lipgloss.NewStyle().Foreground(baseTextColor)
+	storeEntrySelected = storeEntryStyle.Copy().Background(accentDarkColor).Bold(true)
 	logInfoStyle = lipgloss.NewStyle().Foreground(baseTextColor)
 	logWarnStyle = lipgloss.NewStyle().Foreground(warningColor)
 	logErrorStyle = lipgloss.NewStyle().Foreground(errorColor).Bold(true)

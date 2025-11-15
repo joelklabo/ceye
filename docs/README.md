@@ -94,6 +94,8 @@ Dynamic providers added at runtime are kept in `~/.config/ceye/providers.json` b
 
 Stored providers are merged with your static `ceye.yaml` providers on startup, and their friendly names appear as provider tabs in the UI. Adjust `--provider-store` to point at another file when sharing dynamic lists across machines.
 
+- Press `P` while the dashboard is running to view a provider store overlay (showing each stored entry and its enabled/disabled state) without leaving the TUI.
+
 ### Demo/diagnostic flags
 - `--demo` / `--demo-runs`: start with synthetic runs only.
 - `--demo-duration=5s`: auto-exit after the duration (useful for automated screenshots/tests).

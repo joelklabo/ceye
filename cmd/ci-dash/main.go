@@ -268,6 +268,7 @@ func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, dem
 					Health:    copyHealth(providerHealth),
 					Lag:       copyLag(providerLag),
 					History:   copyHistory(providerHistory),
+					Store:     copyProviderRecords(providerStore.List()),
 				})
 			}
 		}
@@ -330,6 +331,15 @@ func copyHistory(in map[string][]string) map[string][]string {
 	for k, v := range in {
 		out[k] = append([]string(nil), v...)
 	}
+	return out
+}
+
+func copyProviderRecords(in []manager.ProviderRecord) []manager.ProviderRecord {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]manager.ProviderRecord, len(in))
+	copy(out, in)
 	return out
 }
 
