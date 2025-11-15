@@ -16,6 +16,7 @@ import (
 type RunUpdatedMsg struct {
 	Timestamp time.Time
 	Status    map[string]string
+	Times     map[string]time.Time
 }
 
 // Model represents the Bubble Tea UI state.
@@ -32,6 +33,7 @@ type Model struct {
 	searchActive   bool
 	searchQuery    string
 	Statuses       map[string]string
+	ProviderTimes  map[string]time.Time
 	visibleRuns    []core.Run
 	runTotals      map[string]int
 	lastUpdate     time.Time
@@ -74,6 +76,7 @@ func NewModel(store *core.Store, providers []string, refresh func(), openURL fun
 		searchActive:   false,
 		searchQuery:    "",
 		Statuses:       statusMap,
+		ProviderTimes:  make(map[string]time.Time),
 		runTotals:      make(map[string]int),
 		headerStyle:    lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("205")),
 		footerStyle:    lipgloss.NewStyle().Foreground(lipgloss.Color("241")),
@@ -97,6 +100,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.lastUpdate = msg.Timestamp
 		if msg.Status != nil {
 			m.Statuses = msg.Status
+		}
+		if msg.Times != nil {
+			m.ProviderTimes = msg.Times
 		}
 		m.refreshTable()
 		return m, nil
@@ -177,7 +183,11 @@ func (m Model) renderStatuses() string {
 		if msg, ok := m.Statuses[name]; ok && msg != "" {
 			status = m.errorStyle.Render(msg)
 		}
-		parts = append(parts, fmt.Sprintf("%s %s", label, status))
+		last := "never"
+		if ts, ok := m.ProviderTimes[name]; ok && !ts.IsZero() {
+			last = ts.Format("15:04:05")
+		}
+		parts = append(parts, fmt.Sprintf("%s %s (updated %s)", label, status, last))
 	}
 	if len(parts) == 0 {
 		return "Status: no providers configured"

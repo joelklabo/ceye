@@ -59,6 +59,7 @@ func run(ctx context.Context, cfgPath string) error {
 	var providerNames []string
 	var refreshers []func()
 	providerStatus := make(map[string]string)
+	providerTimes := make(map[string]time.Time)
 	for _, pCfg := range cfg.Providers {
 		provider, err := providers.CreateProvider(pCfg, deps)
 		if err != nil {
@@ -99,18 +100,19 @@ func run(ctx context.Context, cfgPath string) error {
 				return
 			case event := <-eventCh:
 				store.Merge(event)
+				ts := event.Timestamp
+				if ts.IsZero() {
+					ts = time.Now()
+				}
 				if event.Provider != "" {
 					if event.Err != nil {
 						providerStatus[event.Provider] = event.Err.Error()
 					} else {
 						providerStatus[event.Provider] = ""
 					}
+					providerTimes[event.Provider] = ts
 				}
-				ts := event.Timestamp
-				if ts.IsZero() {
-					ts = time.Now()
-				}
-				program.Send(ui.RunUpdatedMsg{Timestamp: ts, Status: copyStatus(providerStatus)})
+				program.Send(ui.RunUpdatedMsg{Timestamp: ts, Status: copyStatus(providerStatus), Times: copyTimes(providerTimes)})
 			}
 		}
 	}()
@@ -137,6 +139,14 @@ func azureToken() string {
 
 func copyStatus(in map[string]string) map[string]string {
 	out := make(map[string]string, len(in))
+	for k, v := range in {
+		out[k] = v
+	}
+	return out
+}
+
+func copyTimes(in map[string]time.Time) map[string]time.Time {
+	out := make(map[string]time.Time, len(in))
 	for k, v := range in {
 		out[k] = v
 	}
