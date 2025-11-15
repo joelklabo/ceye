@@ -59,7 +59,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Unit tests covering `RunUpdatedMsg` handling and provider filtering.
 19. - [x] **Step 19 – Key Handling Tests** (`commit: f74060d`, `push: yes`)
     - Test quitting, provider cycling, and table integration for navigation keys.
-20. - [ ] **Step 20 – TUI Finalization** (`commit: pending`, `push: pending`)
+20. - [x] **Step 20 – TUI Finalization** (`commit: 9568498`, `push: yes`)
     - Implement keybindings, Lip Gloss styling, refresh hooks, and ensure manual UX sanity.
 21. - [ ] **Step 21 – Makefile & Tooling** (`commit: pending`, `push: pending`)
     - Add Makefile targets (`build`, `run`, `test`, optional `fmt`/`lint`).
