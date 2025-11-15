@@ -161,6 +161,8 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Persist recent run summaries to disk so history survives restarts and can be used for diagnostics later.
 70. - [x] **Step 70 – Alerts channel** (`commit: 61c6e65`, `push: pending`)
     - Push provider failures to an external webhook (Slack/Teams/HTTP) so downstream systems can react automatically.
+71. - [x] **Step 71 – Run filtering & tabs** (`commit: fba3d51`, `push: pending`)
+    - Introduce per-provider tabs and status filters so users can focus on a single provider or status subset without scrolling.
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.
