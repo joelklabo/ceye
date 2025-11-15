@@ -77,7 +77,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Handle `r` keybinding to trigger immediate refresh: aggregator should notify providers via a channel or context poke.
 28. - [x] **Step 28 – GitHub HTTP client** (`commit: 5e0ff0a`, `push: yes`)
     - Implement real GitHub API client using `net/http`, injecting it into provider factory with auth token support (supports credentials from config/environment).
-29. - [ ] **Step 29 – Azure HTTP client** (`commit: pending`, `push: pending`)
+29. - [x] **Step 29 – Azure HTTP client** (`commit: 7196660`, `push: yes`)
     - Implement Azure DevOps REST client and wire PAT support via config/env.
 
 ## Tracking Updates
