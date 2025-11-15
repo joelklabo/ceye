@@ -55,7 +55,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Integrate config, provider factory, store, aggregator goroutine, and Bubble Tea bootstrap.
 17. - [x] **Step 17 – Initial TUI Model** (`commit: ba368cd`, `push: yes`)
     - Create Bubble Tea model with table, store hooks, header/footer view skeleton.
-18. - [ ] **Step 18 – TUI Update Tests** (`commit: pending`, `push: pending`)
+18. - [x] **Step 18 – TUI Update Tests** (`commit: 1d36e0f`, `push: yes`)
     - Unit tests covering `RunUpdatedMsg` handling and provider filtering.
 19. - [ ] **Step 19 – Key Handling Tests** (`commit: pending`, `push: pending`)
     - Test quitting, provider cycling, and table integration for navigation keys.
