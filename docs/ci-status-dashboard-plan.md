@@ -61,7 +61,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Test quitting, provider cycling, and table integration for navigation keys.
 20. - [x] **Step 20 – TUI Finalization** (`commit: 9568498`, `push: yes`)
     - Implement keybindings, Lip Gloss styling, refresh hooks, and ensure manual UX sanity.
-21. - [ ] **Step 21 – Makefile & Tooling** (`commit: pending`, `push: pending`)
+21. - [x] **Step 21 – Makefile & Tooling** (`commit: 0ba55fd`, `push: yes`)
     - Add Makefile targets (`build`, `run`, `test`, optional `fmt`/`lint`).
 22. - [ ] **Step 22 – Documentation** (`commit: pending`, `push: pending`)
     - Expand README with usage, config example, env vars, and architecture overview.
