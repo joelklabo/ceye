@@ -19,6 +19,7 @@ type RunUpdatedMsg struct {
 	Timestamp time.Time
 	Status    map[string]string
 	Times     map[string]time.Time
+	Message   string
 }
 
 type keyMap struct {
@@ -77,11 +78,15 @@ type Model struct {
 	ProviderTimes    map[string]time.Time
 	visibleRuns      []core.Run
 	runTotals        map[string]int
+	logEntries       []string
 	lastUpdate       time.Time
 	headerStyle      lipgloss.Style
 	footerStyle      lipgloss.Style
 	bodyBoxStyle     lipgloss.Style
 	panelStyle       lipgloss.Style
+	tagStyle         lipgloss.Style
+	tagWarningStyle  lipgloss.Style
+	tagErrorStyle    lipgloss.Style
 	errorStyle       lipgloss.Style
 	successStyle     lipgloss.Style
 	failStyle        lipgloss.Style
@@ -92,9 +97,12 @@ type Model struct {
 func NewModel(store *core.Store, providers []string, refresh func(), openURL func(string)) Model {
 	columns := []table.Column{
 		{Title: "Provider", Width: 10},
-		{Title: "Workflow", Width: 20},
+		{Title: "Repository", Width: 24},
+		{Title: "Workflow", Width: 24},
 		{Title: "Status", Width: 12},
-		{Title: "Branch", Width: 15},
+		{Title: "Branch", Width: 16},
+		{Title: "Updated", Width: 10},
+		{Title: "Duration", Width: 9},
 	}
 	tbl := table.New(table.WithColumns(columns), table.WithRows([]table.Row{}))
 	tbl.Focus()
@@ -130,10 +138,14 @@ func NewModel(store *core.Store, providers []string, refresh func(), openURL fun
 		Statuses:         statusMap,
 		ProviderTimes:    make(map[string]time.Time),
 		runTotals:        make(map[string]int),
-		headerStyle:      lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("213")),
-		footerStyle:      lipgloss.NewStyle().Foreground(lipgloss.Color("240")),
-		bodyBoxStyle:     lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("63")).Padding(0, 1),
-		panelStyle:       lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("23")).Padding(0, 1),
+		logEntries:       make([]string, 0),
+		headerStyle:      headerStyle,
+		footerStyle:      footerStyle,
+		bodyBoxStyle:     bodyBox,
+		panelStyle:       panel,
+		tagStyle:         tag,
+		tagWarningStyle:  tagWarn,
+		tagErrorStyle:    tagErr,
 		errorStyle:       lipgloss.NewStyle().Foreground(lipgloss.Color("196")),
 		successStyle:     lipgloss.NewStyle().Foreground(lipgloss.Color("46")).Bold(true),
 		failStyle:        lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Bold(true),
@@ -166,6 +178,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		if msg.Times != nil {
 			m.ProviderTimes = msg.Times
+		}
+		if msg.Message != "" {
+			m.logEntries = append([]string{fmt.Sprintf("%s — %s", msg.Timestamp.Format("15:04:05"), msg.Message)}, m.logEntries...)
+			if len(m.logEntries) > 8 {
+				m.logEntries = m.logEntries[:8]
+			}
 		}
 		m.refreshTable()
 		return m, nil
@@ -220,49 +238,119 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View renders the UI.
 func (m Model) View() string {
-	last := "never"
-	if !m.lastUpdate.IsZero() {
-		last = m.lastUpdate.Format("15:04:05")
+	header := m.renderHeader()
+	stats := m.renderStatsBar()
+	table := m.renderRunsTable()
+	sidebar := lipgloss.JoinVertical(lipgloss.Left, m.renderDetails(), m.renderLogs())
+	body := lipgloss.JoinHorizontal(lipgloss.Top, table, sidebar)
+	providers := m.renderStatuses()
+	sections := []string{header}
+	if stats != "" {
+		sections = append(sections, stats)
 	}
-	header := m.panelStyle.Render(m.headerStyle.Render(fmt.Sprintf("Viewing: %s | Last update: %s", titleCase(m.ActiveProvider), last)))
-	body := m.bodyBoxStyle.Render(m.Table.View())
-	detail := m.renderDetails()
-	statusLine := m.renderStatuses()
-	footer := lipgloss.JoinVertical(lipgloss.Left,
-		m.footerStyle.Render(detail),
-		m.footerStyle.Render(statusLine),
-		m.renderHelp(),
-	)
-	view := lipgloss.JoinVertical(lipgloss.Left, header, body, footer)
+	sections = append(sections, providers, body, m.renderHelp())
+	view := lipgloss.JoinVertical(lipgloss.Left, sections...)
 	if m.paletteVisible {
-		view = lipgloss.JoinVertical(lipgloss.Left, view, m.renderPalette())
+		view = lipgloss.JoinHorizontal(lipgloss.Top, view, m.renderPalette())
 	}
 	return view
 }
 
+func (m Model) renderHeader() string {
+	last := "never"
+	if !m.lastUpdate.IsZero() {
+		last = m.lastUpdate.Format("15:04:05")
+	}
+	totals := fmt.Sprintf("Runs: %d (running %d | queued %d | failed %d | success %d)",
+		len(m.visibleRuns),
+		m.runTotals["running"],
+		m.runTotals["queued"],
+		m.runTotals["failed"],
+		m.runTotals["success"],
+	)
+	filters := fmt.Sprintf("Provider: %s | Status: %s | Search: %s",
+		titleCase(m.ActiveProvider),
+		titleCase(m.statusFilters[m.statusIndex]),
+		func() string {
+			if m.searchQuery == "" {
+				return "none"
+			}
+			return m.searchQuery
+		}(),
+	)
+	content := lipgloss.JoinVertical(lipgloss.Left,
+		m.headerStyle.Render(fmt.Sprintf("CI Status Dashboard  •  Last update %s", last)),
+		m.footerStyle.Render(totals),
+		m.footerStyle.Render(filters),
+	)
+	return content
+}
+
+func (m Model) renderRunsTable() string {
+	title := sectionTitleStyle.Render(fmt.Sprintf("Runs (%d showing)", len(m.visibleRuns)))
+	return lipgloss.JoinVertical(lipgloss.Left, title, m.bodyBoxStyle.Render(m.Table.View()))
+}
+
+func (m Model) renderStatsBar() string {
+	if len(m.visibleRuns) == 0 && len(m.runTotals) == 0 {
+		return ""
+	}
+	boxes := []string{
+		statBoxStyle.Render(fmt.Sprintf("Total\n%d", len(m.visibleRuns))),
+		statRunningStyle.Render(fmt.Sprintf("Running\n%d", m.runTotals["running"])),
+		statQueuedStyle.Render(fmt.Sprintf("Queued\n%d", m.runTotals["queued"])),
+		statFailedStyle.Render(fmt.Sprintf("Failed\n%d", m.runTotals["failed"])),
+		statSuccessStyle.Render(fmt.Sprintf("Success\n%d", m.runTotals["success"])),
+	}
+	return lipgloss.JoinHorizontal(lipgloss.Top, boxes...)
+}
+
 func (m Model) renderStatuses() string {
-	parts := []string{fmt.Sprintf("Totals: running %d | queued %d | failed %d | success %d",
-		m.runTotals["running"], m.runTotals["queued"], m.runTotals["failed"], m.runTotals["success"],
-	)}
+	items := m.renderProviderBadges()
+	body := "Providers: none configured"
+	if len(items) > 0 {
+		body = lipgloss.JoinHorizontal(lipgloss.Top, items...)
+	}
+	content := lipgloss.JoinVertical(lipgloss.Left, sectionTitleStyle.Render("Providers"), bodyTextStyle.Render(body))
+	return m.panelStyle.Render(content)
+}
+
+func (m Model) renderProviderBadges() []string {
+	parts := make([]string, 0)
 	for _, name := range m.Providers {
 		if name == "all" {
 			continue
 		}
 		label := titleCase(name)
-		status := "OK"
+		style := m.tagStyle
 		if msg, ok := m.Statuses[name]; ok && msg != "" {
-			status = m.errorStyle.Render(msg)
+			label = fmt.Sprintf("%s ! %s", label, msg)
+			style = m.tagErrorStyle
+		} else if ts, ok := m.ProviderTimes[name]; ok && !ts.IsZero() {
+			label = fmt.Sprintf("%s %s", label, ts.Format("15:04:05"))
+		} else {
+			label = fmt.Sprintf("%s waiting", label)
+			style = m.tagWarningStyle
 		}
-		last := "never"
-		if ts, ok := m.ProviderTimes[name]; ok && !ts.IsZero() {
-			last = ts.Format("15:04:05")
-		}
-		parts = append(parts, fmt.Sprintf("%s %s (updated %s)", label, status, last))
+		parts = append(parts, style.Render(label))
 	}
-	if len(parts) == 0 {
-		return "Status: no providers configured"
+	return parts
+}
+
+func (m Model) renderLogs() string {
+	if len(m.logEntries) == 0 {
+		return m.panelStyle.Render(lipgloss.JoinVertical(
+			lipgloss.Left,
+			sectionTitleStyle.Render("Activity"),
+			bodyTextStyle.Render("none yet"),
+		))
 	}
-	return "Status: " + strings.Join(parts, "  |  ")
+	body := strings.Join(m.logEntries, "\n")
+	return m.panelStyle.Render(lipgloss.JoinVertical(
+		lipgloss.Left,
+		sectionTitleStyle.Render("Activity"),
+		bodyTextStyle.Render(body),
+	))
 }
 
 func (m *Model) refreshTable() {
@@ -296,7 +384,15 @@ func (m *Model) refreshTable() {
 		if !matchesSearch(run, m.searchQuery) {
 			continue
 		}
-		rows = append(rows, table.Row{run.Provider, run.WorkflowName, m.formatStatus(run), run.Branch})
+		rows = append(rows, table.Row{
+			strings.ToLower(run.Provider),
+			run.Repo,
+			run.WorkflowName,
+			m.formatStatus(run),
+			run.Branch,
+			formatRelativeTime(run.UpdatedAt),
+			formatDuration(run.Duration, run.StartedAt, run.UpdatedAt),
+		})
 		filtered = append(filtered, run)
 	}
 	m.visibleRuns = filtered
@@ -327,6 +423,22 @@ func (m *Model) formatStatus(run core.Run) string {
 	}
 }
 
+func formatStatusText(run core.Run) string {
+	switch run.Status {
+	case core.RunStatusCompleted:
+		if run.Conclusion == "" {
+			return "completed"
+		}
+		return strings.ToLower(run.Conclusion)
+	case core.RunStatusInProgress:
+		return "running"
+	case core.RunStatusQueued:
+		return "queued"
+	default:
+		return strings.ToLower(string(run.Status))
+	}
+}
+
 func (m *Model) cycleProvider() {
 	if len(m.Providers) == 0 {
 		return
@@ -349,28 +461,36 @@ func (m *Model) startSearch() {
 }
 
 func (m Model) renderDetails() string {
-	filterLabel := fmt.Sprintf("Status filter: %s", titleCase(m.statusFilters[m.statusIndex]))
-	searchLabel := ""
+	lines := []string{
+		sectionTitleStyle.Render("Selection"),
+		bodyTextStyle.Render(fmt.Sprintf("Provider filter: %s", titleCase(m.ActiveProvider))),
+		bodyTextStyle.Render(fmt.Sprintf("Status filter: %s", titleCase(m.statusFilters[m.statusIndex]))),
+	}
 	if m.searchQuery != "" {
-		searchLabel = fmt.Sprintf(" | Search: %s", m.searchQuery)
+		lines = append(lines, bodyTextStyle.Render(fmt.Sprintf("Search: %s", m.searchQuery)))
 	}
 	if len(m.visibleRuns) == 0 {
-		return filterLabel + searchLabel + " | Details: no runs"
+		lines = append(lines, bodyTextStyle.Render("No runs to display"))
+		return m.panelStyle.Render(lipgloss.JoinVertical(lipgloss.Left, lines...))
 	}
 	idx := m.Table.Cursor()
 	if idx < 0 || idx >= len(m.visibleRuns) {
-		return filterLabel + searchLabel + " | Details: select a run"
+		lines = append(lines, bodyTextStyle.Render("Select a run to see details"))
+		return m.panelStyle.Render(lipgloss.JoinVertical(lipgloss.Left, lines...))
 	}
 	run := m.visibleRuns[idx]
-	return fmt.Sprintf(
-		"%s%s | Details: %s | %s | SHA %s | %s",
-		filterLabel,
-		searchLabel,
-		run.Repo,
-		run.Branch,
-		shortSHA(run.CommitSHA),
-		run.URL,
+	lines = append(lines,
+		bodyTextStyle.Render(fmt.Sprintf("Repo: %s", run.Repo)),
+		bodyTextStyle.Render(fmt.Sprintf("Workflow: %s", run.WorkflowName)),
+		bodyTextStyle.Render(fmt.Sprintf("Branch: %s", run.Branch)),
+		bodyTextStyle.Render(fmt.Sprintf("Commit: %s", shortSHA(run.CommitSHA))),
+		bodyTextStyle.Render(fmt.Sprintf("Status: %s", formatStatusText(run))),
+		bodyTextStyle.Render(fmt.Sprintf("Updated: %s", formatTimestamp(run.UpdatedAt))),
 	)
+	if run.URL != "" {
+		lines = append(lines, bodyTextStyle.Render(fmt.Sprintf("URL: %s", run.URL)))
+	}
+	return m.panelStyle.Render(lipgloss.JoinVertical(lipgloss.Left, lines...))
 }
 
 func shortSHA(sha string) string {
@@ -378,6 +498,62 @@ func shortSHA(sha string) string {
 		return sha[:7]
 	}
 	return sha
+}
+
+func formatTimestamp(t time.Time) string {
+	if t.IsZero() {
+		return "n/a"
+	}
+	return t.Format("2006-01-02 15:04:05")
+}
+
+func formatRelativeTime(t time.Time) string {
+	if t.IsZero() {
+		return "-"
+	}
+	diff := time.Since(t)
+	if diff < time.Minute {
+		secs := int(diff.Seconds())
+		if secs <= 0 {
+			return "now"
+		}
+		return fmt.Sprintf("%ds", secs)
+	}
+	if diff < time.Hour {
+		return fmt.Sprintf("%dm", int(diff.Minutes()))
+	}
+	if diff < 24*time.Hour {
+		return fmt.Sprintf("%dh", int(diff.Hours()))
+	}
+	return fmt.Sprintf("%dd", int(diff.Hours()/24))
+}
+
+func formatDuration(duration time.Duration, start, updated time.Time) string {
+	if duration <= 0 {
+		if !start.IsZero() && !updated.IsZero() {
+			duration = updated.Sub(start)
+		} else if !start.IsZero() {
+			duration = time.Since(start)
+		}
+	}
+	if duration <= 0 {
+		return "-"
+	}
+	return humanDuration(duration)
+}
+
+func humanDuration(d time.Duration) string {
+	if d >= time.Hour {
+		h := int(d.Hours())
+		m := int(d.Minutes()) % 60
+		return fmt.Sprintf("%dh%02dm", h, m)
+	}
+	if d >= time.Minute {
+		m := int(d.Minutes())
+		s := int(d.Seconds()) % 60
+		return fmt.Sprintf("%dm%02ds", m, s)
+	}
+	return fmt.Sprintf("%ds", int(d.Seconds()))
 }
 
 func (m Model) openSelectedURL() {
@@ -470,18 +646,22 @@ func (m Model) paletteItems() []string {
 func (m Model) renderPalette() string {
 	items := m.paletteItems()
 	if len(items) == 0 {
-		return ""
+		return paletteBox.Render(lipgloss.JoinVertical(
+			lipgloss.Left,
+			sectionTitleStyle.Render("Provider palette"),
+			bodyTextStyle.Render("(no providers)"),
+		))
 	}
-	lines := []string{m.panelStyle.Render("Providers: space toggles, enter closes, esc cancels")}
+	lines := []string{sectionTitleStyle.Render("Provider palette (space toggles, enter closes, esc cancels)")}
 	for i, name := range items {
 		line := fmt.Sprintf("[%s] %s", checkbox(m.visibleProviders[name]), titleCase(name))
 		style := m.footerStyle
 		if i == m.paletteCursor {
-			style = m.headerStyle
+			style = m.headerStyle.Copy().Background(accentDarkColor).Foreground(baseTextColor)
 		}
 		lines = append(lines, style.Render(line))
 	}
-	return strings.Join(lines, "\n")
+	return paletteBox.Render(strings.Join(lines, "\n"))
 }
 
 func checkbox(on bool) string {
@@ -622,3 +802,29 @@ func titleCase(s string) string {
 	}
 	return strings.ToUpper(s[:1]) + s[1:]
 }
+
+var (
+	accentColor       = lipgloss.Color("#b392f0")
+	accentDarkColor   = lipgloss.Color("#342e5c")
+	subtleColor       = lipgloss.Color("#8b8fb8")
+	borderColor       = lipgloss.Color("#3f3c69")
+	successColor      = lipgloss.Color("#43bf6d")
+	warningColor      = lipgloss.Color("#f4c069")
+	errorColor        = lipgloss.Color("#ff6b81")
+	baseTextColor     = lipgloss.Color("#e4e5f1")
+	headerStyle       = lipgloss.NewStyle().Background(accentColor).Foreground(lipgloss.Color("#0e0d19")).Bold(true).Padding(0, 2)
+	footerStyle       = lipgloss.NewStyle().Foreground(subtleColor).Padding(0, 2)
+	bodyBox           = lipgloss.NewStyle().Padding(0, 1).BorderStyle(lipgloss.NormalBorder()).BorderForeground(borderColor)
+	panel             = lipgloss.NewStyle().Padding(0, 1).BorderStyle(lipgloss.NormalBorder()).BorderForeground(borderColor)
+	tag               = lipgloss.NewStyle().Padding(0, 1).MarginRight(1).Background(accentDarkColor).Foreground(baseTextColor).Bold(true)
+	tagWarn           = tag.Copy().Background(lipgloss.Color("#4f3a10"))
+	tagErr            = tag.Copy().Background(lipgloss.Color("#4f1424"))
+	sectionTitleStyle = lipgloss.NewStyle().Foreground(accentColor).Bold(true)
+	bodyTextStyle     = lipgloss.NewStyle().Foreground(baseTextColor)
+	statBoxStyle      = lipgloss.NewStyle().Padding(0, 1).BorderStyle(lipgloss.NormalBorder()).BorderForeground(borderColor).MarginRight(1)
+	statRunningStyle  = statBoxStyle.Copy().Foreground(warningColor)
+	statQueuedStyle   = statBoxStyle.Copy().Foreground(subtleColor)
+	statFailedStyle   = statBoxStyle.Copy().Foreground(errorColor)
+	statSuccessStyle  = statBoxStyle.Copy().Foreground(successColor)
+	paletteBox        = lipgloss.NewStyle().BorderStyle(lipgloss.NormalBorder()).BorderForeground(borderColor).Padding(0, 1).MarginLeft(2)
+)

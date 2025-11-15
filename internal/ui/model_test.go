@@ -31,7 +31,7 @@ func TestModelRunUpdatedMsgRefreshesTable(t *testing.T) {
 	if len(rows) != 1 {
 		t.Fatalf("expected 1 row, got %d", len(rows))
 	}
-	if rows[0][0] != "github" || rows[0][1] != "Build" {
+	if rows[0][0] != "github" || rows[0][2] != "Build" {
 		t.Fatalf("unexpected row values: %v", rows[0])
 	}
 }
