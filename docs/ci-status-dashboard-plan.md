@@ -141,7 +141,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Add `make demo` to run the CLI in demo mode (with docs) so validating the UI is one command.
 60. - [x] **Step 60 – Demo diagnostics loop** (`commit: 6dcbc0d`, `push: yes`)
     - Provide `--demo-duration` / `--log-events` flags plus a `make snapshot` target that captures the TUI output for screenshots/logging.
-61. - [x] **Step 61 – Provider health tracking** (`commit: ????`, `push: pending`)
+61. - [x] **Step 61 – Provider health tracking** (`commit: 9cc5ca0`, `push: yes`)
     - Track last success/error + error counts per provider and display them in the status badges to make real providers easier to diagnose.
 62. - [ ] **Step 62 – Provider metrics/alerts** (`commit: pending`, `push: pending`)
     - Surface provider lag/failures in the UI (badges, notifications, or logs) and record metrics for slow polls.
