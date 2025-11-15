@@ -204,14 +204,10 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Add `ci-dash provider export --file` to dump the store to JSON so the configuration can be shared.
     - Add `ci-dash provider import` with optional `--replace` so backed-up entries can be reapplied.
     - Document the commands and write tests (unit or integration) that verify JSON import/export behavior.
-81. - [ ] **Step 81 – Store overlay config editing** (`commit: pending`, `push: pending`)
-    - Extend the overlay so `E` opens a simple editor that can modify the stored provider’s core fields (repo owner, project, pipelines) instead of just the display name.
-    - Validate updates via the provider factory and persist them through the manager, then refresh the overlay with the updated entry.
-    - Add tests that mock the edit flow, ensure invalid edits are rejected, and confirm the overlay receives fresh data via `RunUpdatedMsg`.
-79. - [x] **Step 79 – Store overlay editing workflow** (`commit: adfe6e6`, `push: yes`)
-    - Allow the overlay to edit a stored provider’s fields inline (e.g., show the YAML snippet beside the list or open a modal that lets you update owner/repo/pipeline IDs).
-    - Validate edits (type-specific required fields) using the same factory logic to prevent invalid configs, and reload the dashboard state once the change commits.
-    - Add tests that simulate invoking the edit UI, feeding updates to the store via RunUpdatedMsg, and ensuring the overlay refreshes with the new values.
+83. - [ ] **Step 83 – Store change auditing** (`commit: pending`, `push: pending`)
+    - Track a history of provider store mutations (add/enable/disable/remove/edit) with timestamps and user actions.
+    - Display the audit trail in the UI (maybe within the overlay or a dedicated pane) and optionally persist it to disk for diagnostics.
+    - Add tests that assert the audit log records the correct events when store commands or overlay actions run.
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.
