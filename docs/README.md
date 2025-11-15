@@ -29,6 +29,9 @@ $ make build
 
 # Run directly
 $ make run -- --config path/to/ceye.yaml
+
+# Demo mode (no config/credentials required)
+$ go run ./cmd/ci-dash --demo --demo-runs 4
 ```
 
 Alternatively, you can run `go run ./cmd/ci-dash --config path/to/config.yaml` once CLI flags are wired.

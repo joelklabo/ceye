@@ -27,28 +27,43 @@ func main() {
 	defer cancel()
 
 	var cfgPath string
+	var demo bool
+	var demoRuns int
 	rootCmd := &cobra.Command{
 		Use:   "ci-dash",
 		Short: "CI Status Dashboard TUI",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return run(ctx, cfgPath)
+			return run(ctx, cfgPath, demo, demoRuns)
 		},
 	}
 	rootCmd.PersistentFlags().StringVar(&cfgPath, "config", "", "Path to config file (defaults to ceye.yaml search paths)")
+	rootCmd.PersistentFlags().BoolVar(&demo, "demo", false, "Run with the built-in demo provider (ignores config)")
+	rootCmd.PersistentFlags().IntVar(&demoRuns, "demo-runs", 4, "Number of demo runs when --demo is set")
 
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
 		os.Exit(1)
 	}
 }
 
-func run(ctx context.Context, cfgPath string) error {
-	if cfgPath == "" {
-		cfgPath = os.Getenv("CEYE_CONFIG")
-	}
+func run(ctx context.Context, cfgPath string, demo bool, demoRuns int) error {
+	var cfg *config.Config
+	var err error
+	if demo {
+		if demoRuns <= 0 {
+			demoRuns = 4
+		}
+		cfg = &config.Config{
+			Providers: []providers.ProviderConfig{{Type: "demo", Runs: demoRuns}},
+		}
+	} else {
+		if cfgPath == "" {
+			cfgPath = os.Getenv("CEYE_CONFIG")
+		}
 
-	cfg, err := config.Load(cfgPath)
-	if err != nil {
-		return fmt.Errorf("load config: %w", err)
+		cfg, err = config.Load(cfgPath)
+		if err != nil {
+			return fmt.Errorf("load config: %w", err)
+		}
 	}
 
 	deps := providers.Dependencies{

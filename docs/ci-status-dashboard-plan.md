@@ -135,6 +135,8 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Incorporate iconified statuses, colored branch badges, and table highlight styles inspired by Glow/LazyGit.
 57. - [x] **Step 57 – Demo-only default config** (`commit: 45abce4`, `push: yes`)
     - Ship a demo-only `config.example.yaml` so the out-of-box experience shows data without credential errors.
+58. - [x] **Step 58 – Demo CLI flag** (`commit: pending`, `push: pending`)
+    - Add `--demo` / `--demo-runs` flags so anyone can start the dashboard with synthetic runs without editing config.
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.
