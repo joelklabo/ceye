@@ -133,6 +133,8 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Add a built-in demo provider so we can verify the UI without real credentials.
 56. - [x] **Step 56 – UI polish (status icons & branch colors)** (`commit: 68d7d4f`, `push: yes`)
     - Incorporate iconified statuses, colored branch badges, and table highlight styles inspired by Glow/LazyGit.
+57. - [ ] **Step 57 – Demo-only default config** (`commit: pending`, `push: pending`)
+    - Ship a demo-only `config.example.yaml` so the out-of-box experience shows data without credential errors.
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.
