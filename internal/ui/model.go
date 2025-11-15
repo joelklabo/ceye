@@ -120,8 +120,8 @@ func NewModel(store *core.Store, providers []string, refresh func(), openURL fun
 		{Title: "Provider", Width: 10},
 		{Title: "Repository", Width: 24},
 		{Title: "Workflow", Width: 24},
-		{Title: "Status", Width: 12},
-		{Title: "Branch", Width: 16},
+		{Title: "Status", Width: 20},
+		{Title: "Branch", Width: 18},
 		{Title: "Updated", Width: 10},
 		{Title: "Duration", Width: 9},
 	}
