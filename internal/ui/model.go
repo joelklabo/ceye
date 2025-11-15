@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -30,6 +31,7 @@ type keyMap struct {
 	Refresh  key.Binding
 	Open     key.Binding
 	Focus    key.Binding
+	Sort     key.Binding
 	Help     key.Binding
 	Quit     key.Binding
 }
@@ -43,19 +45,20 @@ func newKeyMap() keyMap {
 		Refresh:  key.NewBinding(key.WithKeys("r"), key.WithHelp("r", "refresh")),
 		Open:     key.NewBinding(key.WithKeys("o"), key.WithHelp("o", "open run")),
 		Focus:    key.NewBinding(key.WithKeys("v"), key.WithHelp("v", "toggle focus view")),
+		Sort:     key.NewBinding(key.WithKeys("t"), key.WithHelp("t", "cycle sort")),
 		Help:     key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "toggle help")),
 		Quit:     key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "quit")),
 	}
 }
 
 func (k keyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Provider, k.Status, k.Focus, k.Refresh, k.Help}
+	return []key.Binding{k.Provider, k.Status, k.Sort, k.Focus, k.Refresh, k.Help}
 }
 
 func (k keyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.Provider, k.Status, k.Search, k.Palette},
-		{k.Focus, k.Refresh, k.Open, k.Help},
+		{k.Provider, k.Status, k.Sort, k.Search},
+		{k.Palette, k.Focus, k.Refresh, k.Open},
 		{k.Quit},
 	}
 }
@@ -79,6 +82,8 @@ type Model struct {
 	paletteCursor    int
 	helpVisible      bool
 	focusMode        bool
+	sortModes        []string
+	sortIndex        int
 	Statuses         map[string]string
 	ProviderTimes    map[string]time.Time
 	visibleRuns      []core.Run
@@ -132,6 +137,8 @@ func NewModel(store *core.Store, providers []string, refresh func(), openURL fun
 		visibleProviders: visibleProviders,
 		statusFilters:    []string{"all", "running", "queued", "failed", "success"},
 		statusIndex:      0,
+		sortModes:        []string{"status", "updated", "duration"},
+		sortIndex:        0,
 		Refresh:          refresh,
 		openURL:          openURL,
 		helpModel:        helpModel,
@@ -239,6 +246,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "o":
 				m.openSelectedURL()
 				return m, nil
+			case "t":
+				m.cycleSort()
+				m.refreshTable()
+				return m, nil
 			case "v":
 				m.toggleFocusMode()
 				return m, nil
@@ -290,9 +301,11 @@ func (m Model) renderHeader() string {
 		m.runTotals["failed"],
 		m.runTotals["success"],
 	)
-	filters := fmt.Sprintf("Provider: %s | Status: %s | Search: %s",
+	sortLabel := titleCase(m.sortModes[m.sortIndex])
+	filters := fmt.Sprintf("Provider: %s | Status: %s | Sort: %s | Search: %s",
 		titleCase(m.ActiveProvider),
 		titleCase(m.statusFilters[m.statusIndex]),
+		sortLabel,
 		func() string {
 			if m.searchQuery == "" {
 				return "none"
@@ -394,7 +407,6 @@ func (m *Model) refreshTable() {
 	}
 	runs := m.Store.ListRuns(providerFilter)
 	filtered := make([]core.Run, 0, len(runs))
-	rows := make([]table.Row, 0, len(runs))
 	statusFilter := m.statusFilters[m.statusIndex]
 	m.runTotals = countStatuses(runs)
 	for _, run := range runs {
@@ -418,6 +430,11 @@ func (m *Model) refreshTable() {
 		if !matchesSearch(run, m.searchQuery) {
 			continue
 		}
+		filtered = append(filtered, run)
+	}
+	sorted := m.sortRuns(filtered)
+	rows := make([]table.Row, 0, len(sorted))
+	for _, run := range sorted {
 		rows = append(rows, table.Row{
 			strings.ToLower(run.Provider),
 			run.Repo,
@@ -427,9 +444,8 @@ func (m *Model) refreshTable() {
 			formatRelativeTime(run.UpdatedAt),
 			formatDuration(run.Duration, run.StartedAt, run.UpdatedAt),
 		})
-		filtered = append(filtered, run)
 	}
-	m.visibleRuns = filtered
+	m.visibleRuns = sorted
 	m.Table.SetRows(rows)
 }
 
@@ -455,6 +471,63 @@ func (m *Model) formatStatus(run core.Run) string {
 	default:
 		return statusText
 	}
+}
+
+func (m *Model) sortRuns(runs []core.Run) []core.Run {
+	if len(runs) <= 1 {
+		return runs
+	}
+	sorted := make([]core.Run, len(runs))
+	copy(sorted, runs)
+	mode := "status"
+	if len(m.sortModes) > 0 {
+		mode = m.sortModes[m.sortIndex%len(m.sortModes)]
+	}
+	sort.SliceStable(sorted, func(i, j int) bool {
+		switch mode {
+		case "updated":
+			return sorted[i].UpdatedAt.After(sorted[j].UpdatedAt)
+		case "duration":
+			return durationValue(sorted[i]).Nanoseconds() > durationValue(sorted[j]).Nanoseconds()
+		default:
+			wi := statusWeight(sorted[i])
+			wj := statusWeight(sorted[j])
+			if wi == wj {
+				return sorted[i].UpdatedAt.After(sorted[j].UpdatedAt)
+			}
+			return wi < wj
+		}
+	})
+	return sorted
+}
+
+func statusWeight(run core.Run) int {
+	switch run.Status {
+	case core.RunStatusInProgress:
+		return 0
+	case core.RunStatusQueued:
+		return 1
+	case core.RunStatusFailed, core.RunStatusCancelled:
+		return 2
+	case core.RunStatusCompleted:
+		if strings.EqualFold(run.Conclusion, "success") || strings.EqualFold(run.Conclusion, "succeeded") || run.Conclusion == "" {
+			return 3
+		}
+		return 2
+	default:
+		return 4
+	}
+}
+
+func durationValue(run core.Run) time.Duration {
+	d := run.Duration
+	if d <= 0 && !run.StartedAt.IsZero() {
+		d = time.Since(run.StartedAt)
+		if !run.UpdatedAt.IsZero() {
+			d = run.UpdatedAt.Sub(run.StartedAt)
+		}
+	}
+	return d
 }
 
 func formatStatusText(run core.Run) string {
@@ -487,6 +560,13 @@ func (m *Model) cycleStatus() {
 		return
 	}
 	m.statusIndex = (m.statusIndex + 1) % len(m.statusFilters)
+}
+
+func (m *Model) cycleSort() {
+	if len(m.sortModes) == 0 {
+		return
+	}
+	m.sortIndex = (m.sortIndex + 1) % len(m.sortModes)
 }
 
 func (m *Model) startSearch() {
@@ -731,6 +811,7 @@ func (m Model) renderHelpOverlay() string {
 		}),
 		renderHelpSection("Filtering", [][2]string{
 			{"f", "Cycle status filter"},
+			{"t", "Cycle sort mode"},
 			{"/", "Start text search"},
 			{"p", "Toggle provider palette"},
 		}),

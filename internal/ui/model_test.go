@@ -150,3 +150,30 @@ func TestModelFocusModeToggle(t *testing.T) {
 		t.Fatalf("expected focus mode disabled after second 'v'")
 	}
 }
+
+func TestModelCycleSort(t *testing.T) {
+	m := NewModel(core.NewStore(), nil, nil, nil)
+	initial := m.sortIndex
+	m.cycleSort()
+	if m.sortIndex == initial {
+		t.Fatalf("expected sort index to advance")
+	}
+}
+
+func TestModelSortByUpdated(t *testing.T) {
+	store := core.NewStore()
+	old := time.Now().Add(-1 * time.Hour)
+	newer := time.Now()
+	store.Merge(core.RunEvent{Provider: "github", Runs: []core.Run{{ID: "1", Provider: "github", WorkflowName: "Build", Branch: "main", Status: core.RunStatusInProgress, UpdatedAt: old}}})
+	store.Merge(core.RunEvent{Provider: "github", Runs: []core.Run{{ID: "2", Provider: "github", WorkflowName: "Test", Branch: "dev", Status: core.RunStatusCompleted, Conclusion: "success", UpdatedAt: newer}}})
+	m := NewModel(store, []string{"github"}, nil, nil)
+	m.sortIndex = 1 // updated
+	m.refreshTable()
+	rows := m.Table.Rows()
+	if len(rows) != 2 {
+		t.Fatalf("expected 2 rows, got %d", len(rows))
+	}
+	if rows[0][2] != "Test" {
+		t.Fatalf("expected newest run first, got %v", rows[0])
+	}
+}
