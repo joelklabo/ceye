@@ -80,6 +80,7 @@ A flash message appears beneath the header after copy operations or other action
 - `--notify`: emit a desktop notification whenever a provider reports an error (macOS/Linux only).
 - `--history-path=<path>`: write the recent run history for each provider to a JSON file (default `~/.config/ceye/run-history.json`).
 - `--webhook-url=<url>`: POST provider errors to this webhook endpoint (e.g., Slack/Teams) so you can hook alerts into other systems.
+- `D`: toggle the detail pane that shows durations/log summaries for the selected run.
 - `run history`: the right sidebar shows each provider’s last few run summaries for quick inspection.
 - `make demo`: convenience wrapper for `go run ./cmd/ci-dash --demo --demo-runs 4`.
 - `make snapshot`: launches demo mode in tmux, waits a few seconds, and writes the current TUI into `docs/ui-demo.txt`.

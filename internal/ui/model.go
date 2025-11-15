@@ -49,6 +49,7 @@ type keyMap struct {
 	CopyURL  key.Binding
 	CopyInfo key.Binding
 	Contrast key.Binding
+	Detail   key.Binding
 	Help     key.Binding
 	Quit     key.Binding
 }
@@ -66,6 +67,7 @@ func newKeyMap() keyMap {
 		CopyURL:  key.NewBinding(key.WithKeys("y"), key.WithHelp("y", "copy URL")),
 		CopyInfo: key.NewBinding(key.WithKeys("c"), key.WithHelp("c", "copy summary")),
 		Contrast: key.NewBinding(key.WithKeys("H"), key.WithHelp("H", "toggle high contrast")),
+		Detail:   key.NewBinding(key.WithKeys("D"), key.WithHelp("D", "toggle detail view")),
 		Help:     key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "toggle help")),
 		Quit:     key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "quit")),
 	}
@@ -113,6 +115,7 @@ type Model struct {
 	ProviderLag      map[string]time.Duration
 	ProviderHealth   map[string]core.ProviderHealth
 	ProviderHistory  map[string][]string
+	detailVisible    bool
 	visibleRuns      []core.Run
 	runTotals        map[string]int
 	logEntries       []logEntry
@@ -202,6 +205,7 @@ func NewModel(store *core.Store, providers []string, refresh func(), openURL fun
 		successStyle:     lipgloss.NewStyle().Foreground(lipgloss.Color("46")).Bold(true),
 		failStyle:        lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Bold(true),
 		runningStyle:     lipgloss.NewStyle().Foreground(lipgloss.Color("226")),
+		detailVisible:    false,
 	}
 	m.refreshStyles()
 	return m
@@ -310,6 +314,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, cmd
 			case "H":
 				m.toggleContrast()
+				return m, nil
+			case "D":
+				m.detailVisible = !m.detailVisible
 				return m, nil
 			case "1", "2", "3", "4", "5", "6", "7", "8", "9":
 				if idx, err := strconv.Atoi(r); err == nil && idx < len(m.Providers) {
@@ -420,13 +427,13 @@ func (m Model) renderRunsTable() string {
 
 func (m Model) renderDashboardBody() string {
 	table := m.renderRunsTable()
-	sidebar := lipgloss.JoinVertical(lipgloss.Left, m.renderDetails(), m.renderLogs(), m.renderHistoryPanel())
+	sidebar := lipgloss.JoinVertical(lipgloss.Left, m.renderDetails(), m.renderDetailView(), m.renderLogs(), m.renderHistoryPanel())
 	return lipgloss.JoinHorizontal(lipgloss.Top, table, sidebar)
 }
 
 func (m Model) renderCompactBody() string {
 	history := m.renderHistoryPanel()
-	sidebar := []string{m.renderDetails(), m.renderLogs()}
+	sidebar := []string{m.renderDetails(), m.renderDetailView(), m.renderLogs()}
 	if history != "" {
 		sidebar = append(sidebar, history)
 	}
@@ -841,6 +848,28 @@ func (m Model) renderDetails() string {
 	)
 	if run.URL != "" {
 		lines = append(lines, bodyTextStyle.Render(fmt.Sprintf("URL: %s", run.URL)))
+	}
+	return m.panelStyle.Render(lipgloss.JoinVertical(lipgloss.Left, lines...))
+}
+
+func (m Model) renderDetailView() string {
+	if !m.detailVisible {
+		return ""
+	}
+	idx := m.Table.Cursor()
+	if idx < 0 || idx >= len(m.visibleRuns) {
+		return m.panelStyle.Render(bodyTextStyle.Render("Select a run to see details"))
+	}
+	run := m.visibleRuns[idx]
+	lines := []string{
+		sectionTitleStyle.Render("Detail View"),
+		bodyTextStyle.Render(fmt.Sprintf("Status: %s", formatStatusText(run))),
+		bodyTextStyle.Render(fmt.Sprintf("Duration: %s", formatDuration(run.Duration, run.StartedAt, run.UpdatedAt))),
+		bodyTextStyle.Render(fmt.Sprintf("Updated: %s", formatTimestamp(run.UpdatedAt))),
+		bodyTextStyle.Render(fmt.Sprintf("Workflow: %s", run.WorkflowName)),
+		bodyTextStyle.Render(fmt.Sprintf("Branch: %s", run.Branch)),
+		bodyTextStyle.Render(fmt.Sprintf("Commit: %s", shortSHA(run.CommitSHA))),
+		bodyTextStyle.Render(fmt.Sprintf("URL: %s", run.URL)),
 	}
 	return m.panelStyle.Render(lipgloss.JoinVertical(lipgloss.Left, lines...))
 }
