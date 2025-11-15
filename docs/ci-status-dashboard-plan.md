@@ -29,7 +29,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
    - Write failing tests covering merge (new + updated runs) and `ListRuns` sorting/filtering.
 4. - [x] **Step 4 – Store Implementation** (`commit: 9a01be6`, `push: yes`)
    - Implement thread-safe store with merge + list logic to satisfy Step 3 tests.
-5. - [ ] **Step 5 – GitHub Parser Tests** (`commit: pending`, `push: pending`)
+5. - [x] **Step 5 – GitHub Parser Tests** (`commit: 0ec64cd`, `push: yes`)
    - Add failing tests for parsing GitHub workflow run JSON into normalized `Run`s.
 6. - [ ] **Step 6 – GitHub Parser Implementation** (`commit: pending`, `push: pending`)
    - Implement `ParseGitHubRuns` to satisfy Step 5 tests.
