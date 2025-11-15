@@ -123,6 +123,8 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Provide a keybinding to copy the selected run's URL to the clipboard (in addition to opening it) for workflows that prefer sharing links.
 51. - [x] **Step 51 – Enter key opens run** (`commit: 8a8b48e`, `push: yes`)
     - Make the Enter key open the selected run URL (alongside `o`) so the UX matches expectations from other TUIs.
+52. - [x] **Step 52 – Copy run summary** (`commit: 8cd0eb4`, `push: yes`)
+    - Add a keybinding to copy a formatted summary of the selected run (provider, repo, branch, status, URL) for sharing in chat or tickets.
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.
