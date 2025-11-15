@@ -165,9 +165,13 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Introduce per-provider tabs and status filters so users can focus on a single provider or status subset without scrolling.
 72. - [x] **Step 72 – Provider detail view** (`commit: 629c4ff`, `push: pending`)
     - Allow expanding a provider or run row to reveal detailed information (timings, logs, quick actions) without leaving the UI.
-73. - [ ] **Step 73 – Alert log** (`commit: pending`, `push: pending`)
-    - Record each provider alert/webhook event in an “Alert log” panel so historical notifications are easy to review.Errors
+73. - [x] **Step 73 – Alert log** (`commit: 21691fa`, `push: yes`)
+    - Record each provider alert/webhook event in an “Alert log” panel so historical notifications are easy to review.
     - Introduce per-provider tabs and status filters so users can focus on a single provider or status subset without scrolling.
+74. - [ ] **Step 74 – Runtime provider management** (`commit: pending`, `push: pending`)
+    - Add UI controls or CLI helpers so operators can add, update, or disable providers without editing the primary config file.
+    - Persist provider metadata (credentials, filters, notification hooks) to disk so the dashboard can reload the dynamic list across restarts.
+    - Write tests for the manager that ensure the in-memory provider registry reflects added/removed entries and the UI updates when the list changes.
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.
