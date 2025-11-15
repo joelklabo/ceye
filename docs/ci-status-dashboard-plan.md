@@ -153,6 +153,8 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Add a high-contrast toggle, brighter colors, and new keyboard help so the UI stays readable on any background.
 66. - [x] **Step 66 – Provider notifications** (`commit: d272644`, `push: pending`)
     - Show a transient alert when a provider errors so regressions are obvious without scanning logs.
+67. - [x] **Step 67 – Desktop alerts** (`commit: a0e2a71`, `push: pending`)
+    - Emit a desktop notification (via `osascript`/`notify-send`) whenever a provider reports an error so failures surface even if a terminal isn’t visible.
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.
