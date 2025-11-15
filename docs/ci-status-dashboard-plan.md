@@ -137,6 +137,8 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Ship a demo-only `config.example.yaml` so the out-of-box experience shows data without credential errors.
 58. - [x] **Step 58 – Demo CLI flag** (`commit: a3d1c4c`, `push: yes`)
     - Add `--demo` / `--demo-runs` flags so anyone can start the dashboard with synthetic runs without editing config.
+59. - [x] **Step 59 – Demo make target** (`commit: ???????`, `push: yes`)
+    - Add `make demo` to run the CLI in demo mode (with docs) so validating the UI is one command.
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.

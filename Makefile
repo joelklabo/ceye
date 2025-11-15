@@ -1,7 +1,7 @@
 GO ?= go
 BINARY ?= bin/ci-dash
 
-.PHONY: build run test fmt clean
+.PHONY: build run test fmt clean demo
 
 build:
 	@mkdir -p $$(dirname $(BINARY))
@@ -9,6 +9,9 @@ build:
 
 run: build
 	$(BINARY)
+
+demo:
+	$(GO) run ./cmd/ci-dash --demo --demo-runs 4
 
 test:
 	$(GO) test ./...
