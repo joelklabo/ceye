@@ -60,6 +60,8 @@ Once running, the dashboard will start polling providers and updating the table 
 - Highlight a run with the arrow keys (or `j`/`k`) to see its repo/branch/URL details in the pane beneath the table
 - `f`: Cycle status filter (All → Running → Queued → Failed → Success)
 - `o`: Open the selected run in your default browser
+- `/`: Start a search filter; type to filter runs, Enter/Esc to finish
+- `p`: Open the provider palette to toggle visible providers (space toggles, Enter/Esc closes)
 - Arrow keys / `j`, `k`: Navigate table rows (handled by Bubbles table component)
 
 ## Architecture Overview
