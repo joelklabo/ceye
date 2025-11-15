@@ -151,7 +151,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Add support (config, factory, docs, tests) for a new provider such as GitLab so the dashboard can expand beyond GitHub/Azure.
 65. - [x] **Step 65 – Accessibility/high-contrast theme** (`commit: 0b05288`, `push: yes`)
     - Add a high-contrast toggle, brighter colors, and new keyboard help so the UI stays readable on any background.
-66. - [ ] **Step 66 – Provider notifications** (`commit: pending`, `push: pending`)
+66. - [x] **Step 66 – Provider notifications** (`commit: d272644`, `push: pending`)
     - Show a transient alert when a provider errors so regressions are obvious without scanning logs.
 
 ## Tracking Updates
