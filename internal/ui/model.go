@@ -116,6 +116,7 @@ type Model struct {
 	ProviderHealth   map[string]core.ProviderHealth
 	ProviderHistory  map[string][]string
 	detailVisible    bool
+	alertLog         []string
 	visibleRuns      []core.Run
 	runTotals        map[string]int
 	logEntries       []logEntry
@@ -427,15 +428,19 @@ func (m Model) renderRunsTable() string {
 
 func (m Model) renderDashboardBody() string {
 	table := m.renderRunsTable()
-	sidebar := lipgloss.JoinVertical(lipgloss.Left, m.renderDetails(), m.renderDetailView(), m.renderLogs(), m.renderHistoryPanel())
+	sidebar := lipgloss.JoinVertical(lipgloss.Left, m.renderDetails(), m.renderDetailView(), m.renderLogs(), m.renderHistoryPanel(), m.renderAlertLog())
 	return lipgloss.JoinHorizontal(lipgloss.Top, table, sidebar)
 }
 
 func (m Model) renderCompactBody() string {
 	history := m.renderHistoryPanel()
+	alertLog := m.renderAlertLog()
 	sidebar := []string{m.renderDetails(), m.renderDetailView(), m.renderLogs()}
 	if history != "" {
 		sidebar = append(sidebar, history)
+	}
+	if alertLog != "" {
+		sidebar = append(sidebar, alertLog)
 	}
 	return lipgloss.JoinVertical(lipgloss.Left,
 		m.renderStatuses(),
@@ -567,6 +572,17 @@ func (m Model) renderLogs() string {
 	for _, entry := range m.logEntries {
 		line := fmt.Sprintf("%s — %s", entry.timestamp.Format("15:04:05"), entry.text)
 		lines = append(lines, renderLogLine(entry.level, line))
+	}
+	return m.panelStyle.Render(lipgloss.JoinVertical(lipgloss.Left, lines...))
+}
+
+func (m Model) renderAlertLog() string {
+	if len(m.alertLog) == 0 {
+		return ""
+	}
+	lines := []string{sectionTitleStyle.Render("Alert log")}
+	for _, entry := range m.alertLog {
+		lines = append(lines, logErrorStyle.Render(entry))
 	}
 	return m.panelStyle.Render(lipgloss.JoinVertical(lipgloss.Left, lines...))
 }
