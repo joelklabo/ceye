@@ -53,16 +53,22 @@ Set provider credentials via environment variables (`GITHUB_TOKEN`, `AZURE_DEVOP
 The GitHub provider automatically reads `CEYE_GITHUB_TOKEN` (preferred) or `GITHUB_TOKEN` for authentication.
 
 ## Usage
-Once running, the dashboard will start polling providers and updating the table automatically. Key bindings:
+Once running, the dashboard polls providers and refreshes the table automatically. Key bindings:
 - `Tab`: Cycle provider filter (All → GitHub → Azure → ...)
-- `r`: Force an immediate refresh of all providers
-- `q` or `Ctrl+C`: Quit
-- Highlight a run with the arrow keys (or `j`/`k`) to see its repo/branch/URL details in the pane beneath the table
 - `f`: Cycle status filter (All → Running → Queued → Failed → Success)
-- `o`: Open the selected run in your default browser
-- `/`: Start a search filter; type to filter runs, Enter/Esc to finish
-- `p`: Open the provider palette to toggle visible providers (space toggles, Enter/Esc closes)
-- Arrow keys / `j`, `k`: Navigate table rows (handled by Bubbles table component)
+- `t`: Cycle sort mode (status, updated time, duration)
+- `p`: Toggle provider palette (space toggles visibility, Enter/Esc closes)
+- `/`: Start a substring filter; type to filter, Enter/Esc to exit
+- Arrow keys / `j`, `k`: Navigate rows; PageUp/PageDown handled by the table component
+- `Enter` or `o`: Open the selected run in your default browser
+- `y`: Copy the run URL to the clipboard
+- `c`: Copy a summary (provider • repo • branch • workflow/status • URL)
+- `v`: Toggle focus mode (full-width table vs. paneled view)
+- `r`: Force immediate provider refresh
+- `?`: Toggle the help overlay
+- `q` or `Ctrl+C`: Quit
+
+A flash message appears beneath the header after copy operations or other actions so you know the key press succeeded.
 
 ## Architecture Overview
 - `cmd/ci-dash`: Entrypoint wiring config, providers, store, and the Bubble Tea program.

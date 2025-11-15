@@ -127,6 +127,8 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Add a keybinding to copy a formatted summary of the selected run (provider, repo, branch, status, URL) for sharing in chat or tickets.
 53. - [x] **Step 53 – Action confirmations** (`commit: 0d5dca3`, `push: yes`)
     - Show brief confirmation toasts (e.g., “Copied run URL”) so feedback is visible after key actions.
+54. - [ ] **Step 54 – Keyboard shortcut docs** (`commit: pending`, `push: pending`)
+    - Sync README/docs with the latest keybindings (focus mode, sorting, copy actions, etc.).
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.
