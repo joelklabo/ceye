@@ -139,6 +139,8 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Add `--demo` / `--demo-runs` flags so anyone can start the dashboard with synthetic runs without editing config.
 59. - [x] **Step 59 – Demo make target** (`commit: 6c3594e`, `push: yes`)
     - Add `make demo` to run the CLI in demo mode (with docs) so validating the UI is one command.
+60. - [ ] **Step 60 – Demo diagnostics loop** (`commit: pending`, `push: pending`)
+    - Provide `--demo-duration` / `--log-events` flags plus a `make snapshot` target that captures the TUI output for screenshots/logging.
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.

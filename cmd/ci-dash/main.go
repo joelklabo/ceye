@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -29,23 +31,42 @@ func main() {
 	var cfgPath string
 	var demo bool
 	var demoRuns int
+	var demoDuration time.Duration
+	var eventLogPath string
 	rootCmd := &cobra.Command{
 		Use:   "ci-dash",
 		Short: "CI Status Dashboard TUI",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return run(ctx, cfgPath, demo, demoRuns)
+			return run(ctx, cfgPath, demo, demoRuns, demoDuration, eventLogPath)
 		},
 	}
 	rootCmd.PersistentFlags().StringVar(&cfgPath, "config", "", "Path to config file (defaults to ceye.yaml search paths)")
 	rootCmd.PersistentFlags().BoolVar(&demo, "demo", false, "Run with the built-in demo provider (ignores config)")
 	rootCmd.PersistentFlags().IntVar(&demoRuns, "demo-runs", 4, "Number of demo runs when --demo is set")
+	rootCmd.PersistentFlags().DurationVar(&demoDuration, "demo-duration", 0, "Automatically exit demo mode after this duration (e.g. 5s)")
+	rootCmd.PersistentFlags().StringVar(&eventLogPath, "log-events", "", "Write RunEvent JSON lines to the given file")
 
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
 		os.Exit(1)
 	}
 }
 
-func run(ctx context.Context, cfgPath string, demo bool, demoRuns int) error {
+func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, demoDuration time.Duration, eventLogPath string) error {
+	ctx, cancel := context.WithCancel(parentCtx)
+	defer cancel()
+
+	if demoDuration > 0 && demo {
+		timer := time.NewTimer(demoDuration)
+		defer timer.Stop()
+		go func() {
+			select {
+			case <-timer.C:
+				cancel()
+			case <-ctx.Done():
+			}
+		}()
+	}
+
 	var cfg *config.Config
 	var err error
 	if demo {
@@ -64,6 +85,16 @@ func run(ctx context.Context, cfgPath string, demo bool, demoRuns int) error {
 		if err != nil {
 			return fmt.Errorf("load config: %w", err)
 		}
+	}
+
+	var eventLog io.WriteCloser
+	if eventLogPath != "" {
+		f, err := os.Create(eventLogPath)
+		if err != nil {
+			return fmt.Errorf("open event log: %w", err)
+		}
+		eventLog = f
+		defer eventLog.Close()
 	}
 
 	deps := providers.Dependencies{
@@ -114,8 +145,13 @@ func run(ctx context.Context, cfgPath string, demo bool, demoRuns int) error {
 			select {
 			case <-ctx.Done():
 				return
-			case event := <-eventCh:
-				store.Merge(event)
+		case event := <-eventCh:
+			if eventLog != nil {
+				if err := writeEventLog(eventLog, event); err != nil {
+					fmt.Fprintf(os.Stderr, "log event: %v\n", err)
+				}
+			}
+			store.Merge(event)
 				message := ""
 				level := ""
 				ts := event.Timestamp
@@ -217,4 +253,30 @@ func copyToClipboard(text string) {
 	if err := clipboard.WriteAll(text); err != nil {
 		fmt.Fprintf(os.Stderr, "copy to clipboard: %v\n", err)
 	}
+}
+
+func writeEventLog(w io.Writer, event core.RunEvent) error {
+	entry := struct {
+		Timestamp time.Time    `json:"timestamp"`
+		Provider  string       `json:"provider"`
+		Runs      int          `json:"runs"`
+		Error     string       `json:"error,omitempty"`
+		Message   string       `json:"message,omitempty"`
+	}{
+		Timestamp: event.Timestamp,
+		Provider:  event.Provider,
+		Runs:      len(event.Runs),
+		Message:   event.Message,
+	}
+	if event.Err != nil {
+		entry.Error = event.Err.Error()
+	}
+	data, err := json.Marshal(entry)
+	if err != nil {
+		return err
+	}
+	if _, err := w.Write(append(data, '\n')); err != nil {
+		return err
+	}
+	return nil
 }

@@ -1,7 +1,7 @@
 GO ?= go
 BINARY ?= bin/ci-dash
 
-.PHONY: build run test fmt clean demo
+.PHONY: build run test fmt clean demo snapshot
 
 build:
 	@mkdir -p $$(dirname $(BINARY))
@@ -12,6 +12,13 @@ run: build
 
 demo:
 	$(GO) run ./cmd/ci-dash --demo --demo-runs 4
+
+SNAPSHOT_SECONDS ?= 5
+snapshot:
+	tmux new-session -d -s ceye-snapshot "cd $(PWD) && $(GO) run ./cmd/ci-dash --demo --demo-runs 4 --demo-duration $(SNAPSHOT_SECONDS)s"; \
+	sleep $(SNAPSHOT_SECONDS); \
+	tmux capture-pane -t ceye-snapshot -p > docs/ui-demo.txt; \
+	tmux kill-session -t ceye-snapshot
 
 test:
 	$(GO) test ./...

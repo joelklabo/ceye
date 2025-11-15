@@ -80,6 +80,13 @@ Once running, the dashboard polls providers and refreshes the table automaticall
 
 A flash message appears beneath the header after copy operations or other actions so you know the key press succeeded.
 
+### Demo/diagnostic flags
+- `--demo` / `--demo-runs`: start with synthetic runs only.
+- `--demo-duration=5s`: auto-exit after the duration (useful for automated screenshots/tests).
+- `--log-events=out.jsonl`: write provider events to a JSON-lines file for debugging.
+- `make demo`: convenience wrapper for `go run ./cmd/ci-dash --demo --demo-runs 4`.
+- `make snapshot`: launches demo mode in tmux, waits a few seconds, and writes the current TUI into `docs/ui-demo.txt`.
+
 ## Architecture Overview
 - `cmd/ci-dash`: Entrypoint wiring config, providers, store, and the Bubble Tea program.
 - `internal/core`: Core types (`Run`, `RunEvent`, `RunStatus`), provider interface, and thread-safe store.
