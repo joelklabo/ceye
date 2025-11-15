@@ -118,3 +118,19 @@ func TestModelRefreshKeyInvokesCallback(t *testing.T) {
 		t.Fatalf("expected refresh callback once, got %d", called)
 	}
 }
+
+func TestModelHelpOverlayToggle(t *testing.T) {
+	m := NewModel(core.NewStore(), nil, nil, nil)
+
+	next, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'?'}})
+	actual := next.(Model)
+	if !actual.helpVisible {
+		t.Fatalf("expected help overlay visible after '?'")
+	}
+
+	next, _ = actual.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'?'}})
+	actual = next.(Model)
+	if actual.helpVisible {
+		t.Fatalf("expected help overlay hidden after '?' again")
+	}
+}

@@ -74,6 +74,7 @@ type Model struct {
 	searchQuery      string
 	paletteVisible   bool
 	paletteCursor    int
+	helpVisible      bool
 	Statuses         map[string]string
 	ProviderTimes    map[string]time.Time
 	visibleRuns      []core.Run
@@ -135,6 +136,7 @@ func NewModel(store *core.Store, providers []string, refresh func(), openURL fun
 		searchQuery:      "",
 		paletteVisible:   false,
 		paletteCursor:    0,
+		helpVisible:      false,
 		Statuses:         statusMap,
 		ProviderTimes:    make(map[string]time.Time),
 		runTotals:        make(map[string]int),
@@ -164,6 +166,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if m.paletteVisible {
 		if keyMsg, ok := msg.(tea.KeyMsg); ok {
 			if m.handlePaletteInput(keyMsg) {
+				return m, nil
+			}
+			return m, nil
+		}
+	}
+	if m.helpVisible {
+		if keyMsg, ok := msg.(tea.KeyMsg); ok {
+			if m.handleHelpOverlayInput(keyMsg) {
 				return m, nil
 			}
 			return m, nil
@@ -225,7 +235,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.openSelectedURL()
 				return m, nil
 			case "?":
-				m.helpModel.ShowAll = !m.helpModel.ShowAll
+				m.toggleHelpOverlay()
 				return m, nil
 			}
 		}
@@ -252,6 +262,9 @@ func (m Model) View() string {
 	view := lipgloss.JoinVertical(lipgloss.Left, sections...)
 	if m.paletteVisible {
 		view = lipgloss.JoinHorizontal(lipgloss.Top, view, m.renderPalette())
+	}
+	if m.helpVisible {
+		view = lipgloss.JoinHorizontal(lipgloss.Top, view, m.renderHelpOverlay())
 	}
 	return view
 }
@@ -460,6 +473,11 @@ func (m *Model) startSearch() {
 	m.searchQuery = ""
 }
 
+func (m *Model) toggleHelpOverlay() {
+	m.helpVisible = !m.helpVisible
+	m.helpModel.ShowAll = m.helpVisible
+}
+
 func (m Model) renderDetails() string {
 	lines := []string{
 		sectionTitleStyle.Render("Selection"),
@@ -597,6 +615,20 @@ func (m *Model) handlePaletteInput(msg tea.KeyMsg) bool {
 	return true
 }
 
+func (m *Model) handleHelpOverlayInput(msg tea.KeyMsg) bool {
+	if !m.helpVisible {
+		return false
+	}
+	switch msg.String() {
+	case "?", "esc":
+		m.helpVisible = false
+		m.helpModel.ShowAll = false
+	default:
+		// swallow other keys while overlay is visible
+	}
+	return true
+}
+
 func (m *Model) movePaletteCursor(delta int) {
 	items := m.paletteItems()
 	if len(items) == 0 {
@@ -662,6 +694,44 @@ func (m Model) renderPalette() string {
 		lines = append(lines, style.Render(line))
 	}
 	return paletteBox.Render(strings.Join(lines, "\n"))
+}
+
+func (m Model) renderHelpOverlay() string {
+	sections := []string{
+		sectionTitleStyle.Render("Help & Shortcuts (press ? or esc to close)"),
+		renderHelpSection("Navigation", [][2]string{
+			{"↑/↓ / j/k", "Move selection"},
+			{"Tab", "Cycle providers"},
+			{"Enter / o", "Open selected run URL"},
+		}),
+		renderHelpSection("Filtering", [][2]string{
+			{"f", "Cycle status filter"},
+			{"/", "Start text search"},
+			{"p", "Toggle provider palette"},
+		}),
+		renderHelpSection("Actions", [][2]string{
+			{"r", "Force refresh providers"},
+			{"?", "Toggle help overlay"},
+			{"q / ctrl+c", "Quit"},
+		}),
+	}
+	return helpBox.Render(lipgloss.JoinVertical(lipgloss.Left, sections...))
+}
+
+func renderHelpSection(title string, entries [][2]string) string {
+	lines := []string{sectionTitleStyle.Render(title)}
+	for _, entry := range entries {
+		lines = append(lines, formatHelpEntry(entry[0], entry[1]))
+	}
+	return lipgloss.JoinVertical(lipgloss.Left, lines...)
+}
+
+func formatHelpEntry(key, desc string) string {
+	return lipgloss.JoinHorizontal(
+		lipgloss.Top,
+		helpKeyStyle.Render(fmt.Sprintf("%-12s", key)),
+		helpDescStyle.Render(desc),
+	)
 }
 
 func checkbox(on bool) string {
@@ -827,4 +897,7 @@ var (
 	statFailedStyle   = statBoxStyle.Copy().Foreground(errorColor)
 	statSuccessStyle  = statBoxStyle.Copy().Foreground(successColor)
 	paletteBox        = lipgloss.NewStyle().BorderStyle(lipgloss.NormalBorder()).BorderForeground(borderColor).Padding(0, 1).MarginLeft(2)
+	helpBox           = lipgloss.NewStyle().BorderStyle(lipgloss.DoubleBorder()).BorderForeground(accentColor).Padding(1, 2).MarginLeft(2)
+	helpKeyStyle      = lipgloss.NewStyle().Foreground(accentColor).Bold(true)
+	helpDescStyle     = lipgloss.NewStyle().Foreground(baseTextColor)
 )
