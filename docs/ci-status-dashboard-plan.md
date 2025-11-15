@@ -23,7 +23,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
 1. - [x] **Step 1 – Project Initialization** (`commit: bb90f85`, `push: yes`)
    - Go module setup (`ci-dash`), git init, baseline directories (`cmd/ci-dash`, `internal/...`).
    - Add module deps (Bubble Tea, Lip Gloss, Bubbles, Cobra, Viper) and a trivial sanity test to prove the test harness.
-2. - [ ] **Step 2 – Core Data Types** (`commit: pending`, `push: pending`)
+2. - [x] **Step 2 – Core Data Types** (`commit: 3be7e8f`, `push: yes`)
    - Define `RunStatus` enum, `Run`, `RunEvent`, and `Provider` interface under `internal/core`.
 3. - [ ] **Step 3 – Store Tests** (`commit: pending`, `push: pending`)
    - Write failing tests covering merge (new + updated runs) and `ListRuns` sorting/filtering.
