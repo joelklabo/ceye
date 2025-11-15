@@ -93,6 +93,8 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Allow filtering runs by status (e.g., failures only) via a keybinding.
 36. - [x] **Step 36 – URL opening** (`commit: 119ec6c`, `push: yes`)
     - Add keybinding (e.g., `o` or Enter) to open the selected run's URL in the default browser.
+37. - [ ] **Step 37 – Keyboard help** (`commit: pending`, `push: pending`)
+    - Provide an on-screen summary of keybindings or toggleable help dialog.
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.

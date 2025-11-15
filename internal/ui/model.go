@@ -28,6 +28,7 @@ type Model struct {
 	statusIndex    int
 	Refresh        func()
 	openURL        func(string)
+	helpVisible    bool
 	Statuses       map[string]string
 	visibleRuns    []core.Run
 	lastUpdate     time.Time
@@ -66,6 +67,7 @@ func NewModel(store *core.Store, providers []string, refresh func(), openURL fun
 		statusIndex:    0,
 		Refresh:        refresh,
 		openURL:        openURL,
+		helpVisible:    false,
 		Statuses:       statusMap,
 		headerStyle:    lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("205")),
 		footerStyle:    lipgloss.NewStyle().Foreground(lipgloss.Color("241")),
@@ -117,6 +119,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.cycleStatus()
 				m.refreshTable()
 				return m, nil
+			case "?":
+				m.helpVisible = !m.helpVisible
+				return m, nil
 			case "o":
 				m.openSelectedURL()
 				return m, nil
@@ -140,10 +145,9 @@ func (m Model) View() string {
 	detail := m.renderDetails()
 	statusLine := m.renderStatuses()
 	footer := lipgloss.JoinVertical(lipgloss.Left,
-		m.footerStyle.Render("Tab: filters  |  r: refresh  |  q: quit"),
-		m.footerStyle.Render("Use ↑/↓ or j/k to move, pgup/pgdn to page"),
 		m.footerStyle.Render(detail),
 		m.footerStyle.Render(statusLine),
+		m.renderHelp(),
 	)
 	return lipgloss.JoinVertical(lipgloss.Left, header, body, footer)
 }
@@ -267,6 +271,16 @@ func (m Model) openSelectedURL() {
 		return
 	}
 	m.openURL(run.URL)
+}
+
+func (m Model) renderHelp() string {
+	if m.helpVisible {
+		return lipgloss.JoinVertical(lipgloss.Left,
+			m.footerStyle.Render("Help: Tab provider, f filter, r refresh, o open URL, q quit"),
+			m.footerStyle.Render("Use ↑/↓ or j/k to move, pgup/pgdn to page, ? hide help"),
+		)
+	}
+	return m.footerStyle.Render("Press ? for help | Tab: provider, f: status, r: refresh, o: open")
 }
 
 func matchesStatusFilter(run core.Run, filter string) bool {
