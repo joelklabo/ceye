@@ -69,7 +69,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - `go test ./...`, manual CI provider smoke test, fmt/vet, and final cleanup.
 24. - [x] **Step 24 – CLI Flags** (`commit: da28875`, `push: yes`)
     - Add Cobra-based CLI entrypoint with `--config` flag and route execution through root command.
-25. - [ ] **Step 25 – Example Config** (`commit: pending`, `push: pending`)
+25. - [x] **Step 25 – Example Config** (`commit: 9e89cfd`, `push: yes`)
     - Add `config.example.yaml` plus README note so users can copy/edit quickly.
 
 ## Tracking Updates
