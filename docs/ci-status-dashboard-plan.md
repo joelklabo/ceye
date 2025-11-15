@@ -119,6 +119,8 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Track log severity (info/warn/error) so the Activity pane highlights provider errors distinctly.
 49. - [x] **Step 49 – Responsive layout** (`commit: 269abe3`, `push: yes`)
     - Capture terminal size and switch to a stacked mobile-style layout when the window is narrow so the dashboard stays legible.
+50. - [x] **Step 50 – Copy run URL key** (`commit: 0fae62b`, `push: yes`)
+    - Provide a keybinding to copy the selected run's URL to the clipboard (in addition to opening it) for workflows that prefer sharing links.
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.
