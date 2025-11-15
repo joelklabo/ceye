@@ -205,6 +205,30 @@ func TestModelProviderStoreRemoveKey(t *testing.T) {
 	}
 }
 
+func TestModelProviderStoreDuplicateKey(t *testing.T) {
+	m := NewModel(core.NewStore(), nil, nil, nil, nil)
+	m.providerStoreVisible = true
+	m.providerStoreEntries = []manager.ProviderRecord{
+		{ID: "abc", Enabled: true, Config: providers.ProviderConfig{Type: "demo"}},
+	}
+	called := false
+	m.SetProviderStoreAction(func(entry manager.ProviderRecord, action ProviderStoreActionType) {
+		called = true
+		if action != ProviderStoreActionDuplicate {
+			t.Fatalf("expected duplicate action, got %v", action)
+		}
+		if entry.ID != "abc" {
+			t.Fatalf("expected entry abc, got %s", entry.ID)
+		}
+	})
+
+	m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'e'}})
+
+	if !called {
+		t.Fatalf("expected duplicate action called")
+	}
+}
+
 func TestModelSetProviderListUpdatesVisibility(t *testing.T) {
 	m := NewModel(core.NewStore(), []string{"github"}, nil, nil, nil)
 	m.SetProviderList([]string{"github", "azure"})

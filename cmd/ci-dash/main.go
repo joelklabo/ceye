@@ -214,6 +214,28 @@ func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, dem
 						Store:     copyProviderRecords(providerStore.List()),
 					})
 				}
+			case ui.ProviderStoreActionDuplicate:
+				record, err := providerStore.Add(entry.Config)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "provider store duplicate: %v\n", err)
+					if program != nil {
+						program.Send(ui.RunUpdatedMsg{
+							Timestamp: time.Now(),
+							Message:   fmt.Sprintf("store duplication failed: %v", err),
+							Level:     "error",
+							Store:     copyProviderRecords(providerStore.List()),
+						})
+					}
+					return
+				}
+				if program != nil {
+					program.Send(ui.RunUpdatedMsg{
+						Timestamp: time.Now(),
+						Message:   fmt.Sprintf("%s duplicated (%s)", providers.DisplayName(entry.Config), shortID(record.ID)),
+						Level:     "info",
+						Store:     copyProviderRecords(providerStore.List()),
+					})
+				}
 			}
 		}()
 	})
@@ -391,6 +413,13 @@ func copyProviderRecords(in []manager.ProviderRecord) []manager.ProviderRecord {
 	out := make([]manager.ProviderRecord, len(in))
 	copy(out, in)
 	return out
+}
+
+func shortID(id string) string {
+	if len(id) <= 8 {
+		return id
+	}
+	return id[:8]
 }
 
 func appendHistory(history map[string][]string, provider string, runs []core.Run, ts time.Time) {

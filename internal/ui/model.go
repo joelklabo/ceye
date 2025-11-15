@@ -45,6 +45,7 @@ type ProviderStoreActionType int
 const (
 	ProviderStoreActionToggle ProviderStoreActionType = iota
 	ProviderStoreActionRemove
+	ProviderStoreActionDuplicate
 )
 
 type keyMap struct {
@@ -1137,6 +1138,16 @@ func (m *Model) handleProviderStoreInput(msg tea.KeyMsg) bool {
 		m.providerStoreEntries[index].Enabled = target
 		entry.Enabled = target
 		m.providerStoreAction(entry, ProviderStoreActionToggle)
+	case "e":
+		if len(m.providerStoreEntries) == 0 || m.providerStoreAction == nil {
+			return true
+		}
+		index := m.providerStoreCursor
+		if index < 0 || index >= len(m.providerStoreEntries) {
+			return true
+		}
+		entry := m.providerStoreEntries[index]
+		m.providerStoreAction(entry, ProviderStoreActionDuplicate)
 	case "d":
 		if len(m.providerStoreEntries) == 0 || m.providerStoreAction == nil {
 			return true
