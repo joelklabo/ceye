@@ -93,7 +93,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Allow filtering runs by status (e.g., failures only) via a keybinding.
 36. - [x] **Step 36 – URL opening** (`commit: 119ec6c`, `push: yes`)
     - Add keybinding (e.g., `o` or Enter) to open the selected run's URL in the default browser.
-37. - [ ] **Step 37 – Keyboard help** (`commit: pending`, `push: pending`)
+37. - [x] **Step 37 – Keyboard help** (`commit: 8fddbd9`, `push: yes`)
     - Provide an on-screen summary of keybindings or toggleable help dialog.
 
 ## Tracking Updates
