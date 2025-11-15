@@ -103,7 +103,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Track per-provider last update/error timestamps and show them alongside counts.
 41. - [x] **Step 41 – Provider-level filtering** (`commit: d0dda0a`, `push: yes`)
     - Support toggling individual providers on/off or selecting them from a list beyond Tab cycling (e.g., `p` to open provider palette).
-42. - [ ] **Step 42 – Provider palette UI** (`commit: pending`, `push: pending`)
+42. - [x] **Step 42 – Provider palette UI** (`commit: b5932b9`, `push: yes`)
     - Implement an overlay list to toggle providers (e.g., press `p` to show checkboxes and Enter to apply).
 42. - [ ] **Step 42 – Provider palette UI** (`commit: pending`, `push: pending`)
     - Implement an overlay list to toggle providers (e.g., press `p` to show checkboxes and Enter to apply).
