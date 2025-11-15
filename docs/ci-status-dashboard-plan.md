@@ -101,7 +101,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Display counts of running/failed/successful runs in header or summary line.
 40. - [x] **Step 40 – Provider metrics** (`commit: ad31c36`, `push: yes`)
     - Track per-provider last update/error timestamps and show them alongside counts.
-41. - [ ] **Step 41 – Provider-level filtering** (`commit: pending`, `push: pending`)
+41. - [x] **Step 41 – Provider-level filtering** (`commit: d0dda0a`, `push: yes`)
     - Support toggling individual providers on/off or selecting them from a list beyond Tab cycling (e.g., `p` to open provider palette).
 39. - [ ] **Step 39 – Aggregated stats** (`commit: pending`, `push: pending`)
     - Display counts of running/failed/successful runs in header or summary line.
