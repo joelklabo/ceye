@@ -109,6 +109,8 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Rework header/table/footer layout using Lip Gloss/Bubbles patterns (help model, badges, bordered sections) for a polished look.
 44. - [x] **Step 44 – Inspiration-driven layout refresh** (`commit: 540102c`, `push: yes`)
     - Borrowed pane layout patterns from Glow/LazyGit, introduced a stats strip, provider panel, refreshed selection/log panes, and improved time/duration formatting.
+45. - [x] **Step 45 – Dedicated help overlay** (`commit: 5fd9324`, `push: yes`)
+    - Replace the inline help toggle with a modal overlay mirroring Glow/LazyGit reference patterns so shortcuts are easier to discover; ensure tests keep covering this interaction.
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.
