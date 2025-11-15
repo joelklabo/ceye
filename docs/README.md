@@ -44,16 +44,9 @@ Create `ceye.yaml` (or point `CEYE_CONFIG` to a custom file). Example (`config.e
 providers:
   - type: demo
     runs: 4
-  # Enable the providers below once tokens/PATs are configured:
-  # - type: github
-  #   repos:
-  #     - owner: octocat
-  #       repo: Hello-World
-  #       workflows: ["CI", "Deploy"]
-  # - type: azure
-  #   org: myorg
-  #   project: MyProject
-  #   pipelines: [42, 43]
+  # Optional GitLab config (no auth required for this demo implementation)
+  # - type: gitlab
+  #   gitlab_project: example-org/project
 ```
 
 Set provider credentials via environment variables (`GITHUB_TOKEN`, `AZURE_DEVOPS_PAT`, etc.). The config loader searches `./ceye.yaml` then `~/.config/ceye/ceye.yaml` by default, and respects `CEYE_*` env overrides.

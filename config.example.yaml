@@ -1,6 +1,8 @@
 providers:
   - type: demo
     runs: 4
+  # - type: gitlab
+  #   gitlab_project: example-org/project
   # Uncomment and configure the sections below when you have real provider credentials.
   # - type: github
   #   repos:

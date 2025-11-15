@@ -449,18 +449,18 @@ func (m Model) renderProviderBadges() []string {
 			label = fmt.Sprintf("%s waiting", label)
 			style = m.tagWarningStyle
 		}
-		if health, ok := m.ProviderHealth[name]; ok && health.ErrorCount > 0 {
-			label = fmt.Sprintf("%s (%d errs)", label, health.ErrorCount)
-			style = m.tagErrorStyle
-		} else if health.LastSuccess.After(time.Time{}) {
-			label = fmt.Sprintf("%s [%s]", label, health.LastSuccess.Format("15:04:05"))
-		}
-		if lag, ok := m.ProviderLag[name]; ok && lag > 0 {
-			label = fmt.Sprintf("%s • lag %s", label, formatLag(lag))
-			if lag > 20*time.Second {
-				style = m.tagWarnStyle
+			if health, ok := m.ProviderHealth[name]; ok && health.ErrorCount > 0 {
+				label = fmt.Sprintf("%s (%d errs)", label, health.ErrorCount)
+				style = m.tagErrorStyle
+			} else if health.LastSuccess.After(time.Time{}) {
+				label = fmt.Sprintf("%s [%s]", label, health.LastSuccess.Format("15:04:05"))
 			}
-		}
+			if lag, ok := m.ProviderLag[name]; ok && lag > 0 {
+				label = fmt.Sprintf("%s • lag %s", label, formatLag(lag))
+				if lag > 20*time.Second {
+					style = m.tagWarningStyle
+				}
+			}
 		parts = append(parts, style.Render(label))
 	}
 	return parts

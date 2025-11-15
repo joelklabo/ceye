@@ -8,6 +8,7 @@ import (
 	azureprovider "github.com/joelklabo/ceye/internal/providers/azure"
 	demoprovider "github.com/joelklabo/ceye/internal/providers/demo"
 	githubprovider "github.com/joelklabo/ceye/internal/providers/github"
+	gitlabprovider "github.com/joelklabo/ceye/internal/providers/gitlab"
 )
 
 // ProviderConfig is a generic configuration for any provider entry.
@@ -24,6 +25,9 @@ type ProviderConfig struct {
 
 	// Demo-specific fields
 	Runs int `mapstructure:"runs"`
+
+	// GitLab-specific fields
+	GitLabProject string `mapstructure:"gitlab_project"`
 }
 
 // Dependencies supplies shared resources (API clients, tokens, etc.) needed
@@ -56,6 +60,11 @@ func CreateProvider(cfg ProviderConfig, deps Dependencies) (core.Provider, error
 	case "demo":
 		count := cfg.Runs
 		return demoprovider.New(count, 5*time.Second), nil
+	case "gitlab":
+		if cfg.GitLabProject == "" {
+			return nil, fmt.Errorf("gitlab provider requires project")
+		}
+		return gitlabprovider.NewProvider(gitlabprovider.Config{Project: cfg.GitLabProject}), nil
 	default:
 		return nil, fmt.Errorf("unknown provider type: %s", cfg.Type)
 	}
