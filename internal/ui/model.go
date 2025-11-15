@@ -33,6 +33,7 @@ type Model struct {
 	searchQuery    string
 	Statuses       map[string]string
 	visibleRuns    []core.Run
+	runTotals      map[string]int
 	lastUpdate     time.Time
 	headerStyle    lipgloss.Style
 	footerStyle    lipgloss.Style
@@ -73,6 +74,7 @@ func NewModel(store *core.Store, providers []string, refresh func(), openURL fun
 		searchActive:   false,
 		searchQuery:    "",
 		Statuses:       statusMap,
+		runTotals:      make(map[string]int),
 		headerStyle:    lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("205")),
 		footerStyle:    lipgloss.NewStyle().Foreground(lipgloss.Color("241")),
 		errorStyle:     lipgloss.NewStyle().Foreground(lipgloss.Color("196")),
@@ -163,7 +165,9 @@ func (m Model) View() string {
 }
 
 func (m Model) renderStatuses() string {
-	parts := make([]string, 0, len(m.Statuses))
+	parts := []string{fmt.Sprintf("Totals: running %d | queued %d | failed %d | success %d",
+		m.runTotals["running"], m.runTotals["queued"], m.runTotals["failed"], m.runTotals["success"],
+	)}
 	for _, name := range m.Providers {
 		if name == "all" {
 			continue
@@ -190,6 +194,7 @@ func (m *Model) refreshTable() {
 	filtered := make([]core.Run, 0, len(runs))
 	rows := make([]table.Row, 0, len(runs))
 	statusFilter := m.statusFilters[m.statusIndex]
+	m.runTotals = countStatuses(runs)
 	for _, run := range runs {
 		if !matchesStatusFilter(run, statusFilter) {
 			continue
@@ -353,6 +358,32 @@ func matchesSearch(run core.Run, query string) bool {
 		}
 	}
 	return false
+}
+
+func countStatuses(runs []core.Run) map[string]int {
+	counts := map[string]int{
+		"running": 0,
+		"queued":  0,
+		"failed":  0,
+		"success": 0,
+	}
+	for _, run := range runs {
+		switch run.Status {
+		case core.RunStatusInProgress:
+			counts["running"]++
+		case core.RunStatusQueued:
+			counts["queued"]++
+		case core.RunStatusFailed, core.RunStatusCancelled:
+			counts["failed"]++
+		case core.RunStatusCompleted:
+			if strings.EqualFold(run.Conclusion, "success") || strings.EqualFold(run.Conclusion, "succeeded") || run.Conclusion == "" {
+				counts["success"]++
+			} else {
+				counts["failed"]++
+			}
+		}
+	}
+	return counts
 }
 
 func matchesStatusFilter(run core.Run, filter string) bool {
