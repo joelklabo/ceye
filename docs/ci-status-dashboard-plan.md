@@ -149,8 +149,10 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Run `make snapshot` as part of CI so every push captures the latest demo screen + event log for regression evidence.
 64. - [x] **Step 64 – Additional providers** (`commit: 3dd1b97`, `push: pending`)
     - Add support (config, factory, docs, tests) for a new provider such as GitLab so the dashboard can expand beyond GitHub/Azure.
-65. - [x] **Step 65 – Accessibility/high-contrast theme** (`commit: 0b05288`, `push: pending`)
+65. - [x] **Step 65 – Accessibility/high-contrast theme** (`commit: 0b05288`, `push: yes`)
     - Add a high-contrast toggle, brighter colors, and new keyboard help so the UI stays readable on any background.
+66. - [ ] **Step 66 – Provider notifications** (`commit: pending`, `push: pending`)
+    - Show a transient alert when a provider errors so regressions are obvious without scanning logs.
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.

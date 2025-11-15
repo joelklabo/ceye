@@ -117,6 +117,7 @@ type Model struct {
 	flashMessage     string
 	width            int
 	height           int
+	alertMessage     string
 	headerStyle      lipgloss.Style
 	footerStyle      lipgloss.Style
 	bodyBoxStyle     lipgloss.Style
@@ -228,6 +229,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case RunUpdatedMsg:
+		cmd := tea.Cmd(nil)
 		m.lastUpdate = msg.Timestamp
 		if msg.Status != nil {
 			m.Statuses = msg.Status
@@ -248,8 +250,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.logEntries = m.logEntries[:8]
 			}
 		}
+		if msg.Level == "error" && msg.Message != "" {
+			cmd = m.setAlert(msg.Message)
+		}
 		m.refreshTable()
-		return m, nil
+		return m, cmd
 	case tea.KeyMsg:
 		if m.handleSearchInput(msg) {
 			return m, nil
@@ -315,6 +320,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 		m.updateTableSize()
+		return m, nil
+	case alertExpiredMsg:
+		m.alertMessage = ""
 		return m, nil
 	case flashExpiredMsg:
 		m.flashMessage = ""
@@ -383,6 +391,9 @@ func (m Model) renderHeader() string {
 	}
 	if m.flashMessage != "" {
 		lines = append(lines, m.footerStyle.Render(m.flashMessage))
+	}
+	if m.alertMessage != "" {
+		lines = append(lines, alertStyle.Render(m.alertMessage))
 	}
 	return lipgloss.JoinVertical(lipgloss.Left, lines...)
 }
@@ -716,6 +727,13 @@ func (m *Model) setFlash(message string) tea.Cmd {
 	m.flashMessage = message
 	return tea.Tick(2*time.Second, func(time.Time) tea.Msg {
 		return flashExpiredMsg{}
+	})
+}
+
+func (m *Model) setAlert(message string) tea.Cmd {
+	m.alertMessage = message
+	return tea.Tick(3*time.Second, func(time.Time) tea.Msg {
+		return alertExpiredMsg{}
 	})
 }
 
@@ -1213,6 +1231,7 @@ var (
 	appStyle           lipgloss.Style
 	currentDark        bool
 	currentHigh        bool
+	alertStyle         lipgloss.Style
 )
 
 type logEntry struct {
@@ -1220,6 +1239,8 @@ type logEntry struct {
 	timestamp time.Time
 	level     string
 }
+
+type alertExpiredMsg struct{}
 
 func init() {
 	setTheme(lipgloss.HasDarkBackground(), false)
