@@ -192,7 +192,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Allow the overlay to edit a stored provider’s metadata (display name, etc.) inline and persist the change via the manager.
     - Validate edits and rerender the overlay with the new data so the UI and persisted store stay in sync.
     - Add tests that cover the edit UI and confirm `RunUpdatedMsg` updates refresh the overlay.
-80. - [x] **Step 80 – Store overlay details** (`commit: 258a017`, `push: pending`)
+80. - [x] **Step 80 – Store overlay details** (`commit: 258a017`, `push: yes`)
     - Render provider-specific details (owner/repo, org/project, pipelines) beneath each entry in the overlay so operators can recall configuration at a glance.
     - Share helpers that build those detail strings so the overlay, logs, or future UI components can reuse the same summary logic.
     - Write tests for the helper to ensure detail strings include the expected data for each provider type.
