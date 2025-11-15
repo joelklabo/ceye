@@ -39,6 +39,14 @@ type RunUpdatedMsg struct {
 
 type flashExpiredMsg struct{}
 
+// ProviderStoreActionType describes the type of action requested in the store overlay.
+type ProviderStoreActionType int
+
+const (
+	ProviderStoreActionToggle ProviderStoreActionType = iota
+	ProviderStoreActionRemove
+)
+
 type keyMap struct {
 	Provider      key.Binding
 	Status        key.Binding
@@ -103,7 +111,7 @@ type Model struct {
 	Refresh              func()
 	openURL              func(string)
 	copyText             func(string)
-	providerStoreAction  func(manager.ProviderRecord, bool)
+	providerStoreAction  func(manager.ProviderRecord, ProviderStoreActionType)
 	helpModel            help.Model
 	keys                 keyMap
 	searchActive         bool
@@ -240,8 +248,8 @@ func (m *Model) SetProviderList(names []string) {
 	m.refreshTable()
 }
 
-// SetProviderStoreAction wires the action invoked when the overlay toggles entries.
-func (m *Model) SetProviderStoreAction(action func(manager.ProviderRecord, bool)) {
+// SetProviderStoreAction wires the action invoked when the overlay manipulates entries.
+func (m *Model) SetProviderStoreAction(action func(manager.ProviderRecord, ProviderStoreActionType)) {
 	m.providerStoreAction = action
 }
 
@@ -1127,7 +1135,18 @@ func (m *Model) handleProviderStoreInput(msg tea.KeyMsg) bool {
 		entry := m.providerStoreEntries[index]
 		target := !entry.Enabled
 		m.providerStoreEntries[index].Enabled = target
-		m.providerStoreAction(entry, target)
+		entry.Enabled = target
+		m.providerStoreAction(entry, ProviderStoreActionToggle)
+	case "d":
+		if len(m.providerStoreEntries) == 0 || m.providerStoreAction == nil {
+			return true
+		}
+		index := m.providerStoreCursor
+		if index < 0 || index >= len(m.providerStoreEntries) {
+			return true
+		}
+		entry := m.providerStoreEntries[index]
+		m.providerStoreAction(entry, ProviderStoreActionRemove)
 	case "P", "esc":
 		m.providerStoreVisible = false
 	default:

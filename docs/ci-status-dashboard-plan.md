@@ -180,6 +180,10 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Allow users to toggle a stored provider’s enabled state (`Space` in the overlay) without leaving the TUI.
     - Propagate manager-led changes back to the Bubble Tea model through `RunUpdatedMsg.Store` so the overlay stays current.
     - Expand tests and docs to describe the new keybinding and overlay behavior.
+77. - [ ] **Step 77 – Store overlay removals** (`commit: pending`, `push: pending`)
+    - Enable deleting stored providers directly from the overlay with a dedicated key (`d`), and refresh the overlay when removal completes.
+    - Surface removal success/errors in the UI header/footer so operators know the store state changed.
+    - Add tests covering the new keybinding and confirm the overlay rerenders after removal via `RunUpdatedMsg`.
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.

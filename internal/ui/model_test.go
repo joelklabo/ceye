@@ -156,10 +156,13 @@ func TestModelProviderStoreActionSpace(t *testing.T) {
 	called := false
 	var last manager.ProviderRecord
 	var enabled bool
-	m.SetProviderStoreAction(func(entry manager.ProviderRecord, target bool) {
+	m.SetProviderStoreAction(func(entry manager.ProviderRecord, action ProviderStoreActionType) {
 		called = true
 		last = entry
-		enabled = target
+		if action != ProviderStoreActionToggle {
+			t.Fatalf("expected toggle action, got %v", action)
+		}
+		enabled = entry.Enabled
 	})
 
 	m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{' '}})
@@ -175,6 +178,30 @@ func TestModelProviderStoreActionSpace(t *testing.T) {
 	}
 	if m.providerStoreEntries[0].Enabled {
 		t.Fatalf("expected local entry updated to disabled")
+	}
+}
+
+func TestModelProviderStoreRemoveKey(t *testing.T) {
+	m := NewModel(core.NewStore(), nil, nil, nil, nil)
+	m.providerStoreVisible = true
+	m.providerStoreEntries = []manager.ProviderRecord{
+		{ID: "abc", Enabled: true, Config: providers.ProviderConfig{Type: "demo"}},
+	}
+	called := false
+	m.SetProviderStoreAction(func(entry manager.ProviderRecord, action ProviderStoreActionType) {
+		called = true
+		if action != ProviderStoreActionRemove {
+			t.Fatalf("expected remove action, got %v", action)
+		}
+		if entry.ID != "abc" {
+			t.Fatalf("expected entry abc, got %s", entry.ID)
+		}
+	})
+
+	m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'d'}})
+
+	if !called {
+		t.Fatalf("expected remove action called")
 	}
 }
 

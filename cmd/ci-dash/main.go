@@ -168,28 +168,52 @@ func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, dem
 
 	model := ui.NewModel(store, providerNames, refresh, openURL, copyToClipboard)
 	var program *tea.Program
-	model.SetProviderStoreAction(func(entry manager.ProviderRecord, enable bool) {
+	model.SetProviderStoreAction(func(entry manager.ProviderRecord, action ui.ProviderStoreActionType) {
 		go func() {
-			if err := providerStore.SetEnabled(entry.ID, enable); err != nil {
-				fmt.Fprintf(os.Stderr, "provider store: %v\n", err)
+			switch action {
+			case ui.ProviderStoreActionToggle:
+				if err := providerStore.SetEnabled(entry.ID, entry.Enabled); err != nil {
+					fmt.Fprintf(os.Stderr, "provider store: %v\n", err)
+					if program != nil {
+						program.Send(ui.RunUpdatedMsg{
+							Timestamp: time.Now(),
+							Message:   fmt.Sprintf("store update failed: %v", err),
+							Level:     "error",
+							Store:     copyProviderRecords(providerStore.List()),
+						})
+					}
+					return
+				}
+				msg := fmt.Sprintf("%s %s", providers.DisplayName(entry.Config), map[bool]string{true: "enabled", false: "disabled"}[entry.Enabled])
 				if program != nil {
 					program.Send(ui.RunUpdatedMsg{
 						Timestamp: time.Now(),
-						Message:   fmt.Sprintf("store update failed: %v", err),
-						Level:     "error",
+						Message:   msg,
+						Level:     "info",
 						Store:     copyProviderRecords(providerStore.List()),
 					})
 				}
-				return
-			}
-			msg := fmt.Sprintf("%s %s", providers.DisplayName(entry.Config), map[bool]string{true: "enabled", false: "disabled"}[enable])
-			if program != nil {
-				program.Send(ui.RunUpdatedMsg{
-					Timestamp: time.Now(),
-					Message:   msg,
-					Level:     "info",
-					Store:     copyProviderRecords(providerStore.List()),
-				})
+			case ui.ProviderStoreActionRemove:
+				if err := providerStore.Remove(entry.ID); err != nil {
+					fmt.Fprintf(os.Stderr, "provider store: %v\n", err)
+					if program != nil {
+						program.Send(ui.RunUpdatedMsg{
+							Timestamp: time.Now(),
+							Message:   fmt.Sprintf("store removal failed: %v", err),
+							Level:     "error",
+							Store:     copyProviderRecords(providerStore.List()),
+						})
+					}
+					return
+				}
+				if program != nil {
+					program.Send(ui.RunUpdatedMsg{
+						Timestamp: time.Now(),
+						Message:   fmt.Sprintf("%s removed", providers.DisplayName(entry.Config)),
+						Level:     "info",
+						Store:     copyProviderRecords(providerStore.List()),
+					})
+				}
 			}
 		}()
 	})
