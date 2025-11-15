@@ -53,7 +53,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Implement `LoadConfig` to satisfy Step 14 test.
 16. - [x] **Step 16 – Main Wiring** (`commit: 72e7a4a`, `push: yes`)
     - Integrate config, provider factory, store, aggregator goroutine, and Bubble Tea bootstrap.
-17. - [ ] **Step 17 – Initial TUI Model** (`commit: pending`, `push: pending`)
+17. - [x] **Step 17 – Initial TUI Model** (`commit: ba368cd`, `push: yes`)
     - Create Bubble Tea model with table, store hooks, header/footer view skeleton.
 18. - [ ] **Step 18 – TUI Update Tests** (`commit: pending`, `push: pending`)
     - Unit tests covering `RunUpdatedMsg` handling and provider filtering.
