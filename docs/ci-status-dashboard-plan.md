@@ -65,7 +65,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Add Makefile targets (`build`, `run`, `test`, optional `fmt`/`lint`).
 22. - [x] **Step 22 – Documentation** (`commit: 53de48d`, `push: yes`)
     - Expand README with usage, config example, env vars, and architecture overview.
-23. - [ ] **Step 23 – Final QA** (`commit: pending`, `push: pending`)
+23. - [x] **Step 23 – Final QA** (`commit: pending`, `push: pending`)
     - `go test ./...`, manual CI provider smoke test, fmt/vet, and final cleanup.
 
 ## Tracking Updates
