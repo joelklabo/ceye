@@ -159,7 +159,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Track each provider’s last few run summaries and expose them in a dedicated sidebar panel for quick inspection.
 69. - [x] **Step 69 – Persistent run history** (`commit: c9cdeac`, `push: pending`)
     - Persist recent run summaries to disk so history survives restarts and can be used for diagnostics later.
-70. - [ ] **Step 70 – Alerts channel** (`commit: pending`, `push: pending`)
+70. - [x] **Step 70 – Alerts channel** (`commit: 61c6e65`, `push: pending`)
     - Push provider failures to an external webhook (Slack/Teams/HTTP) so downstream systems can react automatically.
 
 ## Tracking Updates
