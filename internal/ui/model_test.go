@@ -192,3 +192,18 @@ func TestModelCopyURLKey(t *testing.T) {
 		t.Fatalf("expected URL copied, got %q", copied)
 	}
 }
+
+func TestModelEnterOpensURL(t *testing.T) {
+	store := core.NewStore()
+	url := "https://example.com/run/enter"
+	store.Merge(core.RunEvent{Provider: "github", Runs: []core.Run{{ID: "1", Provider: "github", WorkflowName: "Deploy", Branch: "main", Status: core.RunStatusCompleted, Conclusion: "success", UpdatedAt: time.Now(), URL: url}}})
+	opened := ""
+	openFn := func(text string) { opened = text }
+	m := NewModel(store, []string{"github"}, nil, openFn, nil)
+	next, _ := m.Update(RunUpdatedMsg{Timestamp: time.Now()})
+	m = next.(Model)
+	m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	if opened != url {
+		t.Fatalf("expected enter to open URL, got %q", opened)
+	}
+}

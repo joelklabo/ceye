@@ -45,7 +45,7 @@ func newKeyMap() keyMap {
 		Search:   key.NewBinding(key.WithKeys("/"), key.WithHelp("/", "search")),
 		Palette:  key.NewBinding(key.WithKeys("p"), key.WithHelp("p", "provider palette")),
 		Refresh:  key.NewBinding(key.WithKeys("r"), key.WithHelp("r", "refresh")),
-		Open:     key.NewBinding(key.WithKeys("o"), key.WithHelp("o", "open run")),
+		Open:     key.NewBinding(key.WithKeys("enter", "o"), key.WithHelp("enter/o", "open run")),
 		Focus:    key.NewBinding(key.WithKeys("v"), key.WithHelp("v", "toggle focus view")),
 		Sort:     key.NewBinding(key.WithKeys("t"), key.WithHelp("t", "cycle sort")),
 		Copy:     key.NewBinding(key.WithKeys("y"), key.WithHelp("y", "copy URL")),
@@ -227,6 +227,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case msg.Type == tea.KeyTab:
 			m.cycleProvider()
 			m.refreshTable()
+			return m, nil
+		case msg.Type == tea.KeyEnter:
+			m.openSelectedURL()
 			return m, nil
 		case msg.Type == tea.KeyRunes:
 			if len(msg.Runes) == 0 {
