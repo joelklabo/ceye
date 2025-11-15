@@ -35,7 +35,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
    - Implement `ParseGitHubRuns` to satisfy Step 5 tests.
 7. - [x] **Step 7 – Azure Parser Tests** (`commit: c38012e`, `push: yes`)
    - Add failing tests for Azure DevOps builds API -> `Run`s transformation.
-8. - [ ] **Step 8 – Azure Parser Implementation** (`commit: pending`, `push: pending`)
+8. - [x] **Step 8 – Azure Parser Implementation** (`commit: 0c8dcf8`, `push: yes`)
    - Implement `ParseAzureRuns` to satisfy Step 7 tests.
 9. - [ ] **Step 9 – GitHub Provider Start Test** (`commit: pending`, `push: pending`)
    - Test provider polling loop with stub client + context cancellation.
