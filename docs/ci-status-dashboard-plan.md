@@ -47,7 +47,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Implement Azure polling with adaptive intervals and context handling.
 13. - [x] **Step 13 – Provider Factory** (`commit: fadb214`, `push: yes`)
     - Introduce registry/factory to instantiate providers from config + unit tests.
-14. - [ ] **Step 14 – Config Parsing Test** (`commit: pending`, `push: pending`)
+14. - [x] **Step 14 – Config Parsing Test** (`commit: 467678f`, `push: yes`)
     - Write failing test loading sample YAML via Viper into config structs.
 15. - [ ] **Step 15 – Config Parsing Implementation** (`commit: pending`, `push: pending`)
     - Implement `LoadConfig` to satisfy Step 14 test.
