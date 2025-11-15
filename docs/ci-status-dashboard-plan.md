@@ -196,6 +196,10 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Render provider-specific details (owner/repo, org/project, pipelines) beneath each entry in the overlay so operators can recall configuration at a glance.
     - Share helpers that build those detail strings so the overlay, logs, or future UI components can reuse the same summary logic.
     - Write tests for the helper to ensure detail strings include the expected data for each provider type.
+81. - [ ] **Step 81 – Store overlay config editing** (`commit: pending`, `push: pending`)
+    - Extend the overlay so `E` opens a simple editor that can modify the stored provider’s core fields (repo owner, project, pipelines) instead of just the display name.
+    - Validate updates via the provider factory and persist them through the manager, then refresh the overlay with the updated entry.
+    - Add tests that mock the edit flow, ensure invalid edits are rejected, and confirm the overlay receives fresh data via `RunUpdatedMsg`.
 79. - [x] **Step 79 – Store overlay editing workflow** (`commit: adfe6e6`, `push: yes`)
     - Allow the overlay to edit a stored provider’s fields inline (e.g., show the YAML snippet beside the list or open a modal that lets you update owner/repo/pipeline IDs).
     - Validate edits (type-specific required fields) using the same factory logic to prevent invalid configs, and reload the dashboard state once the change commits.
