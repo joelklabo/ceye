@@ -189,6 +189,14 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Ensure edits respect validation (provider type + required fields) and reuse the existing provider factory/state so changes immediately refresh the list.
     - Write tests that simulate the edit action and confirm the overlay/list updates after `RunUpdatedMsg` events reflecting the edited entry.
 79. - [x] **Step 79 – Store overlay editing workflow** (`commit: adfe6e6`, `push: yes`)
+    - Allow the overlay to edit a stored provider’s metadata (display name, etc.) inline and persist the change via the manager.
+    - Validate edits and rerender the overlay with the new data so the UI and persisted store stay in sync.
+    - Add tests that cover the edit UI and confirm `RunUpdatedMsg` updates refresh the overlay.
+80. - [ ] **Step 80 – Store overlay details** (`commit: pending`, `push: pending`)
+    - Render provider-specific details (owner/repo, org/project, pipelines) beneath each entry in the overlay so operators can recall configuration at a glance.
+    - Share helpers that build those detail strings so the overlay, logs, or future UI components can reuse the same summary logic.
+    - Write tests for the helper to ensure detail strings include the expected data for each provider type.
+79. - [x] **Step 79 – Store overlay editing workflow** (`commit: adfe6e6`, `push: yes`)
     - Allow the overlay to edit a stored provider’s fields inline (e.g., show the YAML snippet beside the list or open a modal that lets you update owner/repo/pipeline IDs).
     - Validate edits (type-specific required fields) using the same factory logic to prevent invalid configs, and reload the dashboard state once the change commits.
     - Add tests that simulate invoking the edit UI, feeding updates to the store via RunUpdatedMsg, and ensuring the overlay refreshes with the new values.

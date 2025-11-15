@@ -15,6 +15,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 
 	"github.com/joelklabo/ceye/internal/core"
+	"github.com/joelklabo/ceye/internal/providers"
 	"github.com/joelklabo/ceye/internal/providers/manager"
 )
 
@@ -1367,6 +1368,9 @@ func (m Model) renderProviderStore() string {
 			style = storeEntrySelected
 		}
 		lines = append(lines, style.Render(line))
+		if detail := providers.StoreDetail(entry.Config); detail != "" {
+			lines = append(lines, bodyTextStyle.Foreground(subtleColor).Render(detail))
+		}
 	}
 	return storeBox.Render(lipgloss.JoinVertical(lipgloss.Left, lines...))
 }
