@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -310,6 +311,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "H":
 				m.toggleContrast()
 				return m, nil
+			case "1", "2", "3", "4", "5", "6", "7", "8", "9":
+				if idx, err := strconv.Atoi(r); err == nil && idx < len(m.Providers) {
+					m.ActiveProvider = m.Providers[idx]
+					m.refreshTable()
+				}
+				return m, nil
 			case "t":
 				m.cycleSort()
 				m.refreshTable()
@@ -394,6 +401,8 @@ func (m Model) renderHeader() string {
 		m.headerStyle.Render(fmt.Sprintf("CI Status Dashboard  •  Last update %s", last)),
 		m.footerStyle.Render(totals),
 		m.footerStyle.Render(filters),
+		m.renderProviderTabs(),
+		m.renderStatusTabs(),
 	}
 	if m.flashMessage != "" {
 		lines = append(lines, m.footerStyle.Render(m.flashMessage))
@@ -496,6 +505,39 @@ func (m Model) renderProviderBadges() []string {
 		parts = append(parts, style.Render(label))
 	}
 	return parts
+}
+
+func (m Model) renderProviderTabs() string {
+	tabs := make([]string, 0, len(m.Providers))
+	for i, name := range m.Providers {
+		if name == "all" {
+			continue
+		}
+		style := m.tagStyle
+		if name == m.ActiveProvider {
+			style = m.headerStyle.Copy().Foreground(baseTextColor)
+			tabs = append(tabs, style.Render(fmt.Sprintf("[%d] %s", i, titleCase(name))))
+		} else {
+			tabs = append(tabs, style.Render(fmt.Sprintf("[%d] %s", i, titleCase(name))))
+		}
+	}
+	if len(tabs) == 0 {
+		return ""
+	}
+	return lipgloss.JoinHorizontal(lipgloss.Left, tabs...)
+}
+
+func (m Model) renderStatusTabs() string {
+	tabs := make([]string, 0, len(m.statusFilters))
+	for i, status := range m.statusFilters {
+		label := titleCase(status)
+		style := m.tagStyle
+		if i == m.statusIndex {
+			style = m.tagErrorStyle
+		}
+		tabs = append(tabs, style.Render(label))
+	}
+	return lipgloss.JoinHorizontal(lipgloss.Left, tabs...)
 }
 
 func formatLag(d time.Duration) string {
