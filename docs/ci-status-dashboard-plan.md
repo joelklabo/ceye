@@ -73,7 +73,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Add `config.example.yaml` plus README note so users can copy/edit quickly.
 26. - [x] **Step 26 – UI Header & Styling** (`commit: ca0469d`, `push: yes`)
     - Introduce Lip Gloss-styled header/footer with last update timestamp and key hints.
-27. - [ ] **Step 27 – Refresh Key** (`commit: pending`, `push: pending`)
+27. - [x] **Step 27 – Refresh Key** (`commit: f76f887`, `push: yes`)
     - Handle `r` keybinding to trigger immediate refresh: aggregator should notify providers via a channel or context poke.
 
 ## Tracking Updates
