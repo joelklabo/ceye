@@ -167,7 +167,33 @@ func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, dem
 	}
 
 	model := ui.NewModel(store, providerNames, refresh, openURL, copyToClipboard)
-	program := tea.NewProgram(model)
+	var program *tea.Program
+	model.SetProviderStoreAction(func(entry manager.ProviderRecord, enable bool) {
+		go func() {
+			if err := providerStore.SetEnabled(entry.ID, enable); err != nil {
+				fmt.Fprintf(os.Stderr, "provider store: %v\n", err)
+				if program != nil {
+					program.Send(ui.RunUpdatedMsg{
+						Timestamp: time.Now(),
+						Message:   fmt.Sprintf("store update failed: %v", err),
+						Level:     "error",
+						Store:     copyProviderRecords(providerStore.List()),
+					})
+				}
+				return
+			}
+			msg := fmt.Sprintf("%s %s", providers.DisplayName(entry.Config), map[bool]string{true: "enabled", false: "disabled"}[enable])
+			if program != nil {
+				program.Send(ui.RunUpdatedMsg{
+					Timestamp: time.Now(),
+					Message:   msg,
+					Level:     "info",
+					Store:     copyProviderRecords(providerStore.List()),
+				})
+			}
+		}()
+	})
+	program = tea.NewProgram(model)
 
 	go func() {
 		for {

@@ -103,6 +103,7 @@ type Model struct {
 	Refresh              func()
 	openURL              func(string)
 	copyText             func(string)
+	providerStoreAction  func(manager.ProviderRecord, bool)
 	helpModel            help.Model
 	keys                 keyMap
 	searchActive         bool
@@ -237,6 +238,11 @@ func (m *Model) SetProviderList(names []string) {
 		m.ActiveProvider = providerList[0]
 	}
 	m.refreshTable()
+}
+
+// SetProviderStoreAction wires the action invoked when the overlay toggles entries.
+func (m *Model) SetProviderStoreAction(action func(manager.ProviderRecord, bool)) {
+	m.providerStoreAction = action
 }
 
 // Init implements tea.Model.Init.
@@ -1110,6 +1116,18 @@ func (m *Model) handleProviderStoreInput(msg tea.KeyMsg) bool {
 		m.moveProviderStoreCursor(-1)
 	case "down", "j":
 		m.moveProviderStoreCursor(1)
+	case " ", "enter":
+		if len(m.providerStoreEntries) == 0 || m.providerStoreAction == nil {
+			return true
+		}
+		index := m.providerStoreCursor
+		if index < 0 || index >= len(m.providerStoreEntries) {
+			return true
+		}
+		entry := m.providerStoreEntries[index]
+		target := !entry.Enabled
+		m.providerStoreEntries[index].Enabled = target
+		m.providerStoreAction(entry, target)
 	case "P", "esc":
 		m.providerStoreVisible = false
 	default:

@@ -147,6 +147,37 @@ func TestModelProviderStoreEntriesUpdate(t *testing.T) {
 	}
 }
 
+func TestModelProviderStoreActionSpace(t *testing.T) {
+	m := NewModel(core.NewStore(), nil, nil, nil, nil)
+	m.providerStoreVisible = true
+	m.providerStoreEntries = []manager.ProviderRecord{
+		{ID: "abc", Enabled: true, Config: providers.ProviderConfig{Type: "demo"}},
+	}
+	called := false
+	var last manager.ProviderRecord
+	var enabled bool
+	m.SetProviderStoreAction(func(entry manager.ProviderRecord, target bool) {
+		called = true
+		last = entry
+		enabled = target
+	})
+
+	m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{' '}})
+
+	if !called {
+		t.Fatalf("expected action called")
+	}
+	if last.ID != "abc" {
+		t.Fatalf("expected entry abc, got %s", last.ID)
+	}
+	if enabled {
+		t.Fatalf("expected disable toggle, got enabled=%t", enabled)
+	}
+	if m.providerStoreEntries[0].Enabled {
+		t.Fatalf("expected local entry updated to disabled")
+	}
+}
+
 func TestModelSetProviderListUpdatesVisibility(t *testing.T) {
 	m := NewModel(core.NewStore(), []string{"github"}, nil, nil, nil)
 	m.SetProviderList([]string{"github", "azure"})

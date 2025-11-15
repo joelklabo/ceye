@@ -41,11 +41,7 @@ func providerListCmd() *cobra.Command {
 			}
 			fmt.Printf("%-36s  %-8s  %-12s  %s\n", "ID", "Enabled", "Type", "Name")
 			for _, e := range entries {
-				name := e.Config.DisplayName
-				if name == "" {
-					name = fmt.Sprintf("%s provider", e.Config.Type)
-				}
-				fmt.Printf("%-36s  %-8t  %-12s  %s\n", e.ID, e.Enabled, e.Config.Type, name)
+				fmt.Printf("%-36s  %-8t  %-12s  %s\n", e.ID, e.Enabled, e.Config.Type, providers.DisplayName(e.Config))
 			}
 			return nil
 		},
@@ -71,7 +67,7 @@ func providerAddCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			fmt.Printf("added provider %s (%s)\n", record.ID, displayName(record.Config))
+			fmt.Printf("added provider %s (%s)\n", record.ID, providers.DisplayName(record.Config))
 			return nil
 		},
 	}
@@ -103,7 +99,7 @@ func providerUpdateCmd() *cobra.Command {
 			if err := store.Update(id, cfg); err != nil {
 				return err
 			}
-			fmt.Printf("updated provider %s (%s)\n", id, displayName(cfg))
+			fmt.Printf("updated provider %s (%s)\n", id, providers.DisplayName(cfg))
 			return nil
 		},
 	}
@@ -192,11 +188,4 @@ func readProviderConfig(path, inline string) (providers.ProviderConfig, error) {
 		return cfg, fmt.Errorf("provider type is required")
 	}
 	return cfg, nil
-}
-
-func displayName(cfg providers.ProviderConfig) string {
-	if cfg.DisplayName != "" {
-		return cfg.DisplayName
-	}
-	return fmt.Sprintf("%s provider", cfg.Type)
 }
