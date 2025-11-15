@@ -15,6 +15,13 @@ import (
 	"github.com/joelklabo/ceye/internal/core"
 )
 
+const (
+	statusIconSuccess = "✓"
+	statusIconFailed  = "✗"
+	statusIconRunning = "▸"
+	statusIconQueued  = "…"
+)
+
 // RunUpdatedMsg is emitted when the store receives new data.
 type RunUpdatedMsg struct {
 	Timestamp time.Time
@@ -127,6 +134,7 @@ func NewModel(store *core.Store, providers []string, refresh func(), openURL fun
 	}
 	tbl := table.New(table.WithColumns(columns), table.WithRows([]table.Row{}))
 	tbl.Focus()
+	tbl.SetStyles(tableStyles())
 	providerList := buildProviderList(providers)
 	statusMap := make(map[string]string)
 	visibleProviders := make(map[string]bool)
@@ -502,7 +510,7 @@ func (m *Model) refreshTable() {
 			run.Repo,
 			run.WorkflowName,
 			m.formatStatus(run),
-			run.Branch,
+			formatBranchName(run.Branch),
 			formatRelativeTime(run.UpdatedAt),
 			formatDuration(run.Duration, run.StartedAt, run.UpdatedAt),
 		})
@@ -512,26 +520,25 @@ func (m *Model) refreshTable() {
 }
 
 func (m *Model) formatStatus(run core.Run) string {
-	statusText := strings.ToLower(string(run.Status))
 	switch run.Status {
 	case core.RunStatusCompleted:
 		conclusion := strings.ToLower(run.Conclusion)
 		switch conclusion {
-		case "success", "succeeded":
-			return m.successStyle.Render("success")
-		case "failure", "failed", "cancelled", "canceled":
-			return m.failStyle.Render(conclusion)
-		case "":
-			return m.successStyle.Render("done")
+		case "", "success", "succeeded":
+			return m.successStyle.Render(fmt.Sprintf("%s success", statusIconSuccess))
+		case "cancelled", "canceled":
+			return m.failStyle.Render(fmt.Sprintf("%s canceled", statusIconFailed))
 		default:
-			return m.runningStyle.Render(conclusion)
+			return m.failStyle.Render(fmt.Sprintf("%s %s", statusIconFailed, conclusion))
 		}
 	case core.RunStatusInProgress:
-		return m.runningStyle.Render("running")
+		return m.runningStyle.Render(fmt.Sprintf("%s running", statusIconRunning))
 	case core.RunStatusQueued:
-		return m.runningStyle.Render("queued")
+		return m.runningStyle.Render(fmt.Sprintf("%s queued", statusIconQueued))
+	case core.RunStatusFailed, core.RunStatusCancelled:
+		return m.failStyle.Render(fmt.Sprintf("%s failed", statusIconFailed))
 	default:
-		return statusText
+		return bodyTextStyle.Render(fmt.Sprintf("%s %s", statusIconRunning, strings.ToLower(string(run.Status))))
 	}
 }
 
@@ -605,6 +612,23 @@ func formatStatusText(run core.Run) string {
 		return "queued"
 	default:
 		return strings.ToLower(string(run.Status))
+	}
+}
+
+func formatBranchName(branch string) string {
+	if branch == "" {
+		return branch
+	}
+	blower := strings.ToLower(branch)
+	switch {
+	case blower == "main" || blower == "master":
+		return branchMainStyle.Render(branch)
+	case blower == "develop" || blower == "dev":
+		return branchDevStyle.Render(branch)
+	case strings.HasPrefix(blower, "release"):
+		return branchReleaseStyle.Render(branch)
+	default:
+		return branchDefaultStyle.Render(branch)
 	}
 }
 
@@ -1108,39 +1132,60 @@ func titleCase(s string) string {
 }
 
 var (
-	accentColor       = lipgloss.Color("#b392f0")
-	accentDarkColor   = lipgloss.Color("#342e5c")
-	subtleColor       = lipgloss.Color("#8b8fb8")
-	borderColor       = lipgloss.Color("#3f3c69")
-	successColor      = lipgloss.Color("#43bf6d")
-	warningColor      = lipgloss.Color("#f4c069")
-	errorColor        = lipgloss.Color("#ff6b81")
-	baseTextColor     = lipgloss.Color("#e4e5f1")
-	headerStyle       = lipgloss.NewStyle().Background(accentColor).Foreground(lipgloss.Color("#0e0d19")).Bold(true).Padding(0, 2)
-	footerStyle       = lipgloss.NewStyle().Foreground(subtleColor).Padding(0, 2)
-	bodyBox           = lipgloss.NewStyle().Padding(0, 1).BorderStyle(lipgloss.NormalBorder()).BorderForeground(borderColor)
-	panel             = lipgloss.NewStyle().Padding(0, 1).BorderStyle(lipgloss.NormalBorder()).BorderForeground(borderColor)
-	tag               = lipgloss.NewStyle().Padding(0, 1).MarginRight(1).Background(accentDarkColor).Foreground(baseTextColor).Bold(true)
-	tagWarn           = tag.Copy().Background(lipgloss.Color("#4f3a10"))
-	tagErr            = tag.Copy().Background(lipgloss.Color("#4f1424"))
-	sectionTitleStyle = lipgloss.NewStyle().Foreground(accentColor).Bold(true)
-	bodyTextStyle     = lipgloss.NewStyle().Foreground(baseTextColor)
-	statBoxStyle      = lipgloss.NewStyle().Padding(0, 1).BorderStyle(lipgloss.NormalBorder()).BorderForeground(borderColor).MarginRight(1)
-	statRunningStyle  = statBoxStyle.Copy().Foreground(warningColor)
-	statQueuedStyle   = statBoxStyle.Copy().Foreground(subtleColor)
-	statFailedStyle   = statBoxStyle.Copy().Foreground(errorColor)
-	statSuccessStyle  = statBoxStyle.Copy().Foreground(successColor)
-	paletteBox        = lipgloss.NewStyle().BorderStyle(lipgloss.NormalBorder()).BorderForeground(borderColor).Padding(0, 1).MarginLeft(2)
-	helpBox           = lipgloss.NewStyle().BorderStyle(lipgloss.DoubleBorder()).BorderForeground(accentColor).Padding(1, 2).MarginLeft(2)
-	helpKeyStyle      = lipgloss.NewStyle().Foreground(accentColor).Bold(true)
-	helpDescStyle     = lipgloss.NewStyle().Foreground(baseTextColor)
-	logInfoStyle      = lipgloss.NewStyle().Foreground(baseTextColor)
-	logWarnStyle      = lipgloss.NewStyle().Foreground(warningColor)
-	logErrorStyle     = lipgloss.NewStyle().Foreground(errorColor).Bold(true)
+	accentColor        = lipgloss.Color("#b392f0")
+	accentDarkColor    = lipgloss.Color("#342e5c")
+	subtleColor        = lipgloss.Color("#8b8fb8")
+	borderColor        = lipgloss.Color("#3f3c69")
+	successColor       = lipgloss.Color("#43bf6d")
+	warningColor       = lipgloss.Color("#f4c069")
+	errorColor         = lipgloss.Color("#ff6b81")
+	baseTextColor      = lipgloss.Color("#e4e5f1")
+	headerStyle        = lipgloss.NewStyle().Background(accentColor).Foreground(lipgloss.Color("#0e0d19")).Bold(true).Padding(0, 2)
+	footerStyle        = lipgloss.NewStyle().Foreground(subtleColor).Padding(0, 2)
+	bodyBox            = lipgloss.NewStyle().Padding(0, 1).BorderStyle(lipgloss.NormalBorder()).BorderForeground(borderColor)
+	panel              = lipgloss.NewStyle().Padding(0, 1).BorderStyle(lipgloss.NormalBorder()).BorderForeground(borderColor)
+	tag                = lipgloss.NewStyle().Padding(0, 1).MarginRight(1).Background(accentDarkColor).Foreground(baseTextColor).Bold(true)
+	tagWarn            = tag.Copy().Background(lipgloss.Color("#4f3a10"))
+	tagErr             = tag.Copy().Background(lipgloss.Color("#4f1424"))
+	sectionTitleStyle  = lipgloss.NewStyle().Foreground(accentColor).Bold(true)
+	bodyTextStyle      = lipgloss.NewStyle().Foreground(baseTextColor)
+	statBoxStyle       = lipgloss.NewStyle().Padding(0, 1).BorderStyle(lipgloss.NormalBorder()).BorderForeground(borderColor).MarginRight(1)
+	statRunningStyle   = statBoxStyle.Copy().Foreground(warningColor)
+	statQueuedStyle    = statBoxStyle.Copy().Foreground(subtleColor)
+	statFailedStyle    = statBoxStyle.Copy().Foreground(errorColor)
+	statSuccessStyle   = statBoxStyle.Copy().Foreground(successColor)
+	paletteBox         = lipgloss.NewStyle().BorderStyle(lipgloss.NormalBorder()).BorderForeground(borderColor).Padding(0, 1).MarginLeft(2)
+	helpBox            = lipgloss.NewStyle().BorderStyle(lipgloss.DoubleBorder()).BorderForeground(accentColor).Padding(1, 2).MarginLeft(2)
+	helpKeyStyle       = lipgloss.NewStyle().Foreground(accentColor).Bold(true)
+	helpDescStyle      = lipgloss.NewStyle().Foreground(baseTextColor)
+	logInfoStyle       = lipgloss.NewStyle().Foreground(baseTextColor)
+	logWarnStyle       = lipgloss.NewStyle().Foreground(warningColor)
+	logErrorStyle      = lipgloss.NewStyle().Foreground(errorColor).Bold(true)
+	branchMainStyle    = lipgloss.NewStyle().Foreground(successColor).Bold(true)
+	branchDevStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("#f6e58d")).Bold(true)
+	branchReleaseStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#ffb3d1")).Bold(true)
+	branchDefaultStyle = lipgloss.NewStyle().Foreground(baseTextColor)
+	rowHighlightBg     = lipgloss.Color("#373257")
 )
 
 type logEntry struct {
 	text      string
 	timestamp time.Time
 	level     string
+}
+
+func tableStyles() table.Styles {
+	styles := table.DefaultStyles()
+	styles.Header = styles.Header.
+		BorderStyle(lipgloss.NormalBorder()).
+		BorderBottom(true).
+		BorderForeground(borderColor).
+		Padding(0, 1).
+		Bold(true)
+	styles.Cell = styles.Cell.PaddingLeft(1).PaddingRight(1)
+	styles.Selected = styles.Selected.
+		Foreground(baseTextColor).
+		Background(rowHighlightBg).
+		Bold(true)
+	return styles
 }
