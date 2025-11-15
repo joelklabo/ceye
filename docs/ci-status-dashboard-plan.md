@@ -184,6 +184,10 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Enable deleting stored providers directly from the overlay with a dedicated key (`d`), and refresh the overlay when removal completes.
     - Surface removal success/errors in the UI header/footer so operators know the store state changed.
     - Add tests covering the new keybinding and confirm the overlay rerenders after removal via `RunUpdatedMsg`.
+78. - [ ] **Step 78 – Store overlay edits** (`commit: pending`, `push: pending`)
+    - Add an inline “edit” or “duplicate” shortcut in the overlay (e.g., press `e` on a stored entry) to spawn a temporary YAML snippet for editing, or trigger `ci-dash provider update` with the current config.
+    - Ensure edits respect validation (provider type + required fields) and reuse the existing provider factory/state so changes immediately refresh the list.
+    - Write tests that simulate the edit action and confirm the overlay/list updates after `RunUpdatedMsg` events reflecting the edited entry.
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.
