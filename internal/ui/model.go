@@ -30,6 +30,9 @@ type Model struct {
 	headerStyle    lipgloss.Style
 	footerStyle    lipgloss.Style
 	errorStyle     lipgloss.Style
+	successStyle   lipgloss.Style
+	failStyle      lipgloss.Style
+	runningStyle   lipgloss.Style
 }
 
 // NewModel constructs a UI model.
@@ -59,6 +62,9 @@ func NewModel(store *core.Store, providers []string, refresh func()) Model {
 		headerStyle:    lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("205")),
 		footerStyle:    lipgloss.NewStyle().Foreground(lipgloss.Color("241")),
 		errorStyle:     lipgloss.NewStyle().Foreground(lipgloss.Color("196")),
+		successStyle:   lipgloss.NewStyle().Foreground(lipgloss.Color("46")).Bold(true),
+		failStyle:      lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Bold(true),
+		runningStyle:   lipgloss.NewStyle().Foreground(lipgloss.Color("226")),
 	}
 	return m
 }
@@ -151,9 +157,33 @@ func (m *Model) refreshTable() {
 	runs := m.Store.ListRuns(filter)
 	rows := make([]table.Row, 0, len(runs))
 	for _, run := range runs {
-		rows = append(rows, table.Row{run.Provider, run.WorkflowName, string(run.Status), run.Branch})
+		rows = append(rows, table.Row{run.Provider, run.WorkflowName, m.formatStatus(run), run.Branch})
 	}
 	m.Table.SetRows(rows)
+}
+
+func (m *Model) formatStatus(run core.Run) string {
+	statusText := strings.ToLower(string(run.Status))
+	switch run.Status {
+	case core.RunStatusCompleted:
+		conclusion := strings.ToLower(run.Conclusion)
+		switch conclusion {
+		case "success", "succeeded":
+			return m.successStyle.Render("success")
+		case "failure", "failed", "cancelled", "canceled":
+			return m.failStyle.Render(conclusion)
+		case "":
+			return m.successStyle.Render("done")
+		default:
+			return m.runningStyle.Render(conclusion)
+		}
+	case core.RunStatusInProgress:
+		return m.runningStyle.Render("running")
+	case core.RunStatusQueued:
+		return m.runningStyle.Render("queued")
+	default:
+		return statusText
+	}
 }
 
 func (m *Model) cycleProvider() {
