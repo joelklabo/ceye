@@ -24,6 +24,8 @@ type RunUpdatedMsg struct {
 	Level     string
 }
 
+type flashExpiredMsg struct{}
+
 type keyMap struct {
 	Provider key.Binding
 	Status   key.Binding
@@ -96,6 +98,7 @@ type Model struct {
 	runTotals        map[string]int
 	logEntries       []logEntry
 	lastUpdate       time.Time
+	flashMessage     string
 	width            int
 	height           int
 	headerStyle      lipgloss.Style
@@ -260,11 +263,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.openSelectedURL()
 				return m, nil
 			case "y":
-				m.copySelectedURL()
-				return m, nil
+				cmd := m.copySelectedURL()
+				return m, cmd
 			case "c":
-				m.copyRunSummary()
-				return m, nil
+				cmd := m.copyRunSummary()
+				return m, cmd
 			case "t":
 				m.cycleSort()
 				m.refreshTable()
@@ -281,6 +284,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 		m.updateTableSize()
+		return m, nil
+	case flashExpiredMsg:
+		m.flashMessage = ""
 		return m, nil
 	}
 
@@ -339,12 +345,15 @@ func (m Model) renderHeader() string {
 			return m.searchQuery
 		}(),
 	)
-	content := lipgloss.JoinVertical(lipgloss.Left,
+	lines := []string{
 		m.headerStyle.Render(fmt.Sprintf("CI Status Dashboard  •  Last update %s", last)),
 		m.footerStyle.Render(totals),
 		m.footerStyle.Render(filters),
-	)
-	return content
+	}
+	if m.flashMessage != "" {
+		lines = append(lines, m.footerStyle.Render(m.flashMessage))
+	}
+	return lipgloss.JoinVertical(lipgloss.Left, lines...)
 }
 
 func (m Model) renderRunsTable() string {
@@ -637,6 +646,13 @@ func (m *Model) toggleFocusMode() {
 	m.updateTableSize()
 }
 
+func (m *Model) setFlash(message string) tea.Cmd {
+	m.flashMessage = message
+	return tea.Tick(2*time.Second, func(time.Time) tea.Msg {
+		return flashExpiredMsg{}
+	})
+}
+
 func (m Model) renderDetails() string {
 	lines := []string{
 		sectionTitleStyle.Render("Selection"),
@@ -748,28 +764,29 @@ func (m Model) openSelectedURL() {
 	m.openURL(run.URL)
 }
 
-func (m Model) copySelectedURL() {
+func (m *Model) copySelectedURL() tea.Cmd {
 	if m.copyText == nil || len(m.visibleRuns) == 0 {
-		return
+		return nil
 	}
 	idx := m.Table.Cursor()
 	if idx < 0 || idx >= len(m.visibleRuns) {
-		return
+		return nil
 	}
 	run := m.visibleRuns[idx]
 	if run.URL == "" {
-		return
+		return nil
 	}
 	m.copyText(run.URL)
+	return m.setFlash("Copied run URL")
 }
 
-func (m Model) copyRunSummary() {
+func (m *Model) copyRunSummary() tea.Cmd {
 	if m.copyText == nil || len(m.visibleRuns) == 0 {
-		return
+		return nil
 	}
 	idx := m.Table.Cursor()
 	if idx < 0 || idx >= len(m.visibleRuns) {
-		return
+		return nil
 	}
 	run := m.visibleRuns[idx]
 	summary := fmt.Sprintf("%s • %s • %s • %s • %s",
@@ -780,6 +797,7 @@ func (m Model) copyRunSummary() {
 		run.URL,
 	)
 	m.copyText(summary)
+	return m.setFlash("Copied run summary")
 }
 
 func (m Model) renderHelp() string {
