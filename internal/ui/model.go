@@ -1132,46 +1132,111 @@ func titleCase(s string) string {
 }
 
 var (
-	accentColor        = lipgloss.Color("#b392f0")
-	accentDarkColor    = lipgloss.Color("#342e5c")
-	subtleColor        = lipgloss.Color("#8b8fb8")
-	borderColor        = lipgloss.Color("#3f3c69")
-	successColor       = lipgloss.Color("#43bf6d")
-	warningColor       = lipgloss.Color("#f4c069")
-	errorColor         = lipgloss.Color("#ff6b81")
-	baseTextColor      = lipgloss.Color("#e4e5f1")
-	headerStyle        = lipgloss.NewStyle().Background(accentColor).Foreground(lipgloss.Color("#0e0d19")).Bold(true).Padding(0, 2)
-	footerStyle        = lipgloss.NewStyle().Foreground(subtleColor).Padding(0, 2)
-	bodyBox            = lipgloss.NewStyle().Padding(0, 1).BorderStyle(lipgloss.NormalBorder()).BorderForeground(borderColor)
-	panel              = lipgloss.NewStyle().Padding(0, 1).BorderStyle(lipgloss.NormalBorder()).BorderForeground(borderColor)
-	tag                = lipgloss.NewStyle().Padding(0, 1).MarginRight(1).Background(accentDarkColor).Foreground(baseTextColor).Bold(true)
-	tagWarn            = tag.Copy().Background(lipgloss.Color("#4f3a10"))
-	tagErr             = tag.Copy().Background(lipgloss.Color("#4f1424"))
-	sectionTitleStyle  = lipgloss.NewStyle().Foreground(accentColor).Bold(true)
-	bodyTextStyle      = lipgloss.NewStyle().Foreground(baseTextColor)
-	statBoxStyle       = lipgloss.NewStyle().Padding(0, 1).BorderStyle(lipgloss.NormalBorder()).BorderForeground(borderColor).MarginRight(1)
-	statRunningStyle   = statBoxStyle.Copy().Foreground(warningColor)
-	statQueuedStyle    = statBoxStyle.Copy().Foreground(subtleColor)
-	statFailedStyle    = statBoxStyle.Copy().Foreground(errorColor)
-	statSuccessStyle   = statBoxStyle.Copy().Foreground(successColor)
-	paletteBox         = lipgloss.NewStyle().BorderStyle(lipgloss.NormalBorder()).BorderForeground(borderColor).Padding(0, 1).MarginLeft(2)
-	helpBox            = lipgloss.NewStyle().BorderStyle(lipgloss.DoubleBorder()).BorderForeground(accentColor).Padding(1, 2).MarginLeft(2)
-	helpKeyStyle       = lipgloss.NewStyle().Foreground(accentColor).Bold(true)
-	helpDescStyle      = lipgloss.NewStyle().Foreground(baseTextColor)
-	logInfoStyle       = lipgloss.NewStyle().Foreground(baseTextColor)
-	logWarnStyle       = lipgloss.NewStyle().Foreground(warningColor)
-	logErrorStyle      = lipgloss.NewStyle().Foreground(errorColor).Bold(true)
-	branchMainStyle    = lipgloss.NewStyle().Foreground(successColor).Bold(true)
-	branchDevStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("#f6e58d")).Bold(true)
-	branchReleaseStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#ffb3d1")).Bold(true)
-	branchDefaultStyle = lipgloss.NewStyle().Foreground(baseTextColor)
-	rowHighlightBg     = lipgloss.Color("#373257")
+	accentColor        lipgloss.Color
+	accentDarkColor    lipgloss.Color
+	subtleColor        lipgloss.Color
+	borderColor        lipgloss.Color
+	successColor       lipgloss.Color
+	warningColor       lipgloss.Color
+	errorColor         lipgloss.Color
+	baseTextColor      lipgloss.Color
+	headerStyle        lipgloss.Style
+	footerStyle        lipgloss.Style
+	bodyBox            lipgloss.Style
+	panel              lipgloss.Style
+	tag                lipgloss.Style
+	tagWarn            lipgloss.Style
+	tagErr             lipgloss.Style
+	sectionTitleStyle  lipgloss.Style
+	bodyTextStyle      lipgloss.Style
+	statBoxStyle       lipgloss.Style
+	statRunningStyle   lipgloss.Style
+	statQueuedStyle    lipgloss.Style
+	statFailedStyle    lipgloss.Style
+	statSuccessStyle   lipgloss.Style
+	paletteBox         lipgloss.Style
+	helpBox            lipgloss.Style
+	helpKeyStyle       lipgloss.Style
+	helpDescStyle      lipgloss.Style
+	logInfoStyle       lipgloss.Style
+	logWarnStyle       lipgloss.Style
+	logErrorStyle      lipgloss.Style
+	branchMainStyle    lipgloss.Style
+	branchDevStyle     lipgloss.Style
+	branchReleaseStyle lipgloss.Style
+	branchDefaultStyle lipgloss.Style
+	rowHighlightBg     lipgloss.Color
 )
 
 type logEntry struct {
 	text      string
 	timestamp time.Time
 	level     string
+}
+
+func init() {
+	applyTheme(lipgloss.HasDarkBackground())
+}
+
+func applyTheme(dark bool) {
+	if dark {
+		accentColor = lipgloss.Color("#b392f0")
+		accentDarkColor = lipgloss.Color("#342e5c")
+		subtleColor = lipgloss.Color("#8b8fb8")
+		borderColor = lipgloss.Color("#3f3c69")
+		successColor = lipgloss.Color("#43bf6d")
+		warningColor = lipgloss.Color("#f4c069")
+		errorColor = lipgloss.Color("#ff6b81")
+		baseTextColor = lipgloss.Color("#e4e5f1")
+		rowHighlightBg = lipgloss.Color("#373257")
+	} else {
+		accentColor = lipgloss.Color("#5e2ca5")
+		accentDarkColor = lipgloss.Color("#dcd2f8")
+		subtleColor = lipgloss.Color("#605483")
+		borderColor = lipgloss.Color("#c3b7e5")
+		successColor = lipgloss.Color("#0f5f2a")
+		warningColor = lipgloss.Color("#a96500")
+		errorColor = lipgloss.Color("#b00020")
+		baseTextColor = lipgloss.Color("#1a1832")
+		rowHighlightBg = lipgloss.Color("#f0e9ff")
+	}
+
+	headerStyle = lipgloss.NewStyle().Background(accentColor).Foreground(lipgloss.Color("#0e0d19")).Bold(true).Padding(0, 2)
+	if !dark {
+		headerStyle = lipgloss.NewStyle().Background(accentColor).Foreground(lipgloss.Color("#ffffff")).Bold(true).Padding(0, 2)
+	}
+	footerStyle = lipgloss.NewStyle().Foreground(subtleColor).Padding(0, 2)
+	bodyBox = lipgloss.NewStyle().Padding(0, 1).BorderStyle(lipgloss.NormalBorder()).BorderForeground(borderColor)
+	panel = lipgloss.NewStyle().Padding(0, 1).BorderStyle(lipgloss.NormalBorder()).BorderForeground(borderColor)
+	tag = lipgloss.NewStyle().Padding(0, 1).MarginRight(1).Background(accentDarkColor).Foreground(baseTextColor).Bold(true)
+	tagWarn = tag.Copy().Background(lipgloss.Color("#4f3a10"))
+	tagErr = tag.Copy().Background(lipgloss.Color("#4f1424"))
+	if !dark {
+		tagWarn = tag.Copy().Background(lipgloss.Color("#f4c069")).Foreground(lipgloss.Color("#3f2b00"))
+		tagErr = tag.Copy().Background(lipgloss.Color("#fbb6ce")).Foreground(lipgloss.Color("#5a0012"))
+	}
+	sectionTitleStyle = lipgloss.NewStyle().Foreground(accentColor).Bold(true)
+	bodyTextStyle = lipgloss.NewStyle().Foreground(baseTextColor)
+	statBoxStyle = lipgloss.NewStyle().Padding(0, 1).BorderStyle(lipgloss.NormalBorder()).BorderForeground(borderColor).MarginRight(1)
+	statRunningStyle = statBoxStyle.Copy().Foreground(warningColor)
+	statQueuedStyle = statBoxStyle.Copy().Foreground(subtleColor)
+	statFailedStyle = statBoxStyle.Copy().Foreground(errorColor)
+	statSuccessStyle = statBoxStyle.Copy().Foreground(successColor)
+	paletteBox = lipgloss.NewStyle().BorderStyle(lipgloss.NormalBorder()).BorderForeground(borderColor).Padding(0, 1).MarginLeft(2)
+	helpBox = lipgloss.NewStyle().BorderStyle(lipgloss.DoubleBorder()).BorderForeground(accentColor).Padding(1, 2).MarginLeft(2)
+	helpKeyStyle = lipgloss.NewStyle().Foreground(accentColor).Bold(true)
+	helpDescStyle = lipgloss.NewStyle().Foreground(baseTextColor)
+	logInfoStyle = lipgloss.NewStyle().Foreground(baseTextColor)
+	logWarnStyle = lipgloss.NewStyle().Foreground(warningColor)
+	logErrorStyle = lipgloss.NewStyle().Foreground(errorColor).Bold(true)
+	branchMainStyle = lipgloss.NewStyle().Foreground(successColor).Bold(true)
+	branchDevStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#f6e58d")).Bold(true)
+	branchReleaseStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#ffb3d1")).Bold(true)
+	if !dark {
+		branchDevStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#c28c0e")).Bold(true)
+		branchReleaseStyle = lipgloss.NewStyle().Foreground(errorColor).Bold(true)
+	}
+	branchDefaultStyle = lipgloss.NewStyle().Foreground(baseTextColor)
 }
 
 func tableStyles() table.Styles {
