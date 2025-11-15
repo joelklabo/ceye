@@ -77,6 +77,7 @@ A flash message appears beneath the header after copy operations or other action
 - `--demo` / `--demo-runs`: start with synthetic runs only.
 - `--demo-duration=5s`: auto-exit after the duration (useful for automated screenshots/tests).
 - `--log-events=out.jsonl`: write provider events to a JSON-lines file for debugging.
+- `--notify`: emit a desktop notification whenever a provider reports an error (macOS/Linux only).
 - `make demo`: convenience wrapper for `go run ./cmd/ci-dash --demo --demo-runs 4`.
 - `make snapshot`: launches demo mode in tmux, waits a few seconds, and writes the current TUI into `docs/ui-demo.txt`.
 

@@ -33,11 +33,12 @@ func main() {
 	var demoRuns int
 	var demoDuration time.Duration
 	var eventLogPath string
+	var notify bool
 	rootCmd := &cobra.Command{
 		Use:   "ci-dash",
 		Short: "CI Status Dashboard TUI",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return run(ctx, cfgPath, demo, demoRuns, demoDuration, eventLogPath)
+			return run(ctx, cfgPath, demo, demoRuns, demoDuration, eventLogPath, notify)
 		},
 	}
 	rootCmd.PersistentFlags().StringVar(&cfgPath, "config", "", "Path to config file (defaults to ceye.yaml search paths)")
@@ -45,13 +46,14 @@ func main() {
 	rootCmd.PersistentFlags().IntVar(&demoRuns, "demo-runs", 4, "Number of demo runs when --demo is set")
 	rootCmd.PersistentFlags().DurationVar(&demoDuration, "demo-duration", 0, "Automatically exit demo mode after this duration (e.g. 5s)")
 	rootCmd.PersistentFlags().StringVar(&eventLogPath, "log-events", "", "Write RunEvent JSON lines to the given file")
+	rootCmd.PersistentFlags().BoolVar(&notify, "notify", false, "Emit desktop notifications when providers error")
 
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
 		os.Exit(1)
 	}
 }
 
-func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, demoDuration time.Duration, eventLogPath string) error {
+func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, demoDuration time.Duration, eventLogPath string, notify bool) error {
 	ctx, cancel := context.WithCancel(parentCtx)
 	defer cancel()
 
@@ -203,6 +205,11 @@ func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, dem
 						level = "info"
 					}
 				}
+				if notify && event.Err != nil {
+					if err := sendNotification(event.Provider, event.Err.Error()); err != nil {
+						fmt.Fprintf(os.Stderr, "notify: %v\n", err)
+					}
+				}
 				program.Send(ui.RunUpdatedMsg{
 					Timestamp: ts,
 					Status:    copyStatus(providerStatus),
@@ -266,6 +273,20 @@ func copyLag(in map[string]time.Duration) map[string]time.Duration {
 		out[k] = v
 	}
 	return out
+}
+
+func sendNotification(title, message string) error {
+	switch runtime.GOOS {
+	case "darwin":
+		cmd := exec.Command("osascript", "-e", fmt.Sprintf(`display notification %q with title %q`, message, title))
+		return cmd.Start()
+	case "linux":
+		cmd := exec.Command("notify-send", title, message)
+		return cmd.Start()
+	default:
+		// no-op on unsupported platforms
+		return nil
+	}
 }
 
 func openURL(link string) {
