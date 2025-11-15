@@ -107,10 +107,8 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Implement an overlay list to toggle providers (e.g., press `p` to show checkboxes and Enter to apply).
 43. - [x] **Step 43 – Layout & styling overhaul** (`commit: b5932b9`, `push: yes`)
     - Rework header/table/footer layout using Lip Gloss/Bubbles patterns (help model, badges, bordered sections) for a polished look.
-42. - [ ] **Step 42 – Provider palette UI** (`commit: pending`, `push: pending`)
-    - Implement an overlay list to toggle providers (e.g., press `p` to show checkboxes and Enter to apply).
-39. - [ ] **Step 39 – Aggregated stats** (`commit: pending`, `push: pending`)
-    - Display counts of running/failed/successful runs in header or summary line.
+44. - [x] **Step 44 – Inspiration-driven layout refresh** (`commit: 540102c`, `push: yes`)
+    - Borrowed pane layout patterns from Glow/LazyGit, introduced a stats strip, provider panel, refreshed selection/log panes, and improved time/duration formatting.
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.
