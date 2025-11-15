@@ -81,7 +81,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Implement Azure DevOps REST client and wire PAT support via config/env.
 30. - [x] **Step 30 – Provider errors & status** (`commit: 12951be`, `push: yes`)
     - Surface provider errors in UI header/footer and log warnings when polls fail.
-31. - [ ] **Step 31 – Table status coloring** (`commit: pending`, `push: pending`)
+31. - [x] **Step 31 – Table status coloring** (`commit: 362f36c`, `push: yes`)
     - Apply Lip Gloss styles to the status column (Success/Failed/Running colors) for better visibility.
 
 ## Tracking Updates
