@@ -105,6 +105,8 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Support toggling individual providers on/off or selecting them from a list beyond Tab cycling (e.g., `p` to open provider palette).
 42. - [x] **Step 42 – Provider palette UI** (`commit: b5932b9`, `push: yes`)
     - Implement an overlay list to toggle providers (e.g., press `p` to show checkboxes and Enter to apply).
+43. - [x] **Step 43 – Layout & styling overhaul** (`commit: b5932b9`, `push: yes`)
+    - Rework header/table/footer layout using Lip Gloss/Bubbles patterns (help model, badges, bordered sections) for a polished look.
 42. - [ ] **Step 42 – Provider palette UI** (`commit: pending`, `push: pending`)
     - Implement an overlay list to toggle providers (e.g., press `p` to show checkboxes and Enter to apply).
 39. - [ ] **Step 39 – Aggregated stats** (`commit: pending`, `push: pending`)

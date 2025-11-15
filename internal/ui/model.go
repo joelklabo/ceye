@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -19,33 +21,71 @@ type RunUpdatedMsg struct {
 	Times     map[string]time.Time
 }
 
+type keyMap struct {
+	Provider key.Binding
+	Status   key.Binding
+	Search   key.Binding
+	Palette  key.Binding
+	Refresh  key.Binding
+	Open     key.Binding
+	Help     key.Binding
+	Quit     key.Binding
+}
+
+func newKeyMap() keyMap {
+	return keyMap{
+		Provider: key.NewBinding(key.WithKeys("tab"), key.WithHelp("tab", "cycle providers")),
+		Status:   key.NewBinding(key.WithKeys("f"), key.WithHelp("f", "cycle status")),
+		Search:   key.NewBinding(key.WithKeys("/"), key.WithHelp("/", "search")),
+		Palette:  key.NewBinding(key.WithKeys("p"), key.WithHelp("p", "provider palette")),
+		Refresh:  key.NewBinding(key.WithKeys("r"), key.WithHelp("r", "refresh")),
+		Open:     key.NewBinding(key.WithKeys("o"), key.WithHelp("o", "open run")),
+		Help:     key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "toggle help")),
+		Quit:     key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "quit")),
+	}
+}
+
+func (k keyMap) ShortHelp() []key.Binding {
+	return []key.Binding{k.Provider, k.Status, k.Refresh, k.Help}
+}
+
+func (k keyMap) FullHelp() [][]key.Binding {
+	return [][]key.Binding{
+		{k.Provider, k.Status, k.Search, k.Palette},
+		{k.Refresh, k.Open, k.Help, k.Quit},
+	}
+}
+
 // Model represents the Bubble Tea UI state.
 type Model struct {
-	Store             *core.Store
-	Table             table.Model
-	ActiveProvider    string
-	Providers         []string
-	visibleProviders  map[string]bool
-	statusFilters     []string
-	statusIndex       int
-	Refresh           func()
-	openURL           func(string)
-	helpVisible       bool
-	searchActive      bool
-	searchQuery       string
-	paletteVisible    bool
-	paletteCursor     int
-	Statuses          map[string]string
-	ProviderTimes     map[string]time.Time
-	visibleRuns       []core.Run
-	runTotals         map[string]int
-	lastUpdate        time.Time
-	headerStyle       lipgloss.Style
-	footerStyle       lipgloss.Style
-	errorStyle        lipgloss.Style
-	successStyle      lipgloss.Style
-	failStyle         lipgloss.Style
-	runningStyle      lipgloss.Style
+	Store            *core.Store
+	Table            table.Model
+	ActiveProvider   string
+	Providers        []string
+	visibleProviders map[string]bool
+	statusFilters    []string
+	statusIndex      int
+	Refresh          func()
+	openURL          func(string)
+	helpModel        help.Model
+	keys             keyMap
+	searchActive     bool
+	searchQuery      string
+	paletteVisible   bool
+	paletteCursor    int
+	Statuses         map[string]string
+	ProviderTimes    map[string]time.Time
+	visibleRuns      []core.Run
+	runTotals        map[string]int
+	lastUpdate       time.Time
+	headerStyle      lipgloss.Style
+	footerStyle      lipgloss.Style
+	bodyBoxStyle     lipgloss.Style
+	panelStyle       lipgloss.Style
+	errorStyle       lipgloss.Style
+	successStyle     lipgloss.Style
+	failStyle        lipgloss.Style
+	runningStyle     lipgloss.Style
 }
 
 // NewModel constructs a UI model.
@@ -68,30 +108,36 @@ func NewModel(store *core.Store, providers []string, refresh func(), openURL fun
 		statusMap[name] = ""
 		visibleProviders[name] = true
 	}
+	keys := newKeyMap()
+	helpModel := help.New()
+	helpModel.ShowAll = false
 	m := Model{
-		Store:             store,
-		Table:             tbl,
-		ActiveProvider:    providerList[0],
-		Providers:         providerList,
-		visibleProviders:  visibleProviders,
-		statusFilters:     []string{"all", "running", "queued", "failed", "success"},
-		statusIndex:       0,
-		Refresh:           refresh,
-		openURL:           openURL,
-		helpVisible:       false,
-		searchActive:      false,
-		searchQuery:       "",
-		paletteVisible:    false,
-		paletteCursor:     0,
-		Statuses:          statusMap,
-		ProviderTimes:     make(map[string]time.Time),
-		runTotals:         make(map[string]int),
-		headerStyle:       lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("205")),
-		footerStyle:       lipgloss.NewStyle().Foreground(lipgloss.Color("241")),
-		errorStyle:        lipgloss.NewStyle().Foreground(lipgloss.Color("196")),
-		successStyle:      lipgloss.NewStyle().Foreground(lipgloss.Color("46")).Bold(true),
-		failStyle:         lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Bold(true),
-		runningStyle:      lipgloss.NewStyle().Foreground(lipgloss.Color("226")),
+		Store:            store,
+		Table:            tbl,
+		ActiveProvider:   providerList[0],
+		Providers:        providerList,
+		visibleProviders: visibleProviders,
+		statusFilters:    []string{"all", "running", "queued", "failed", "success"},
+		statusIndex:      0,
+		Refresh:          refresh,
+		openURL:          openURL,
+		helpModel:        helpModel,
+		keys:             keys,
+		searchActive:     false,
+		searchQuery:      "",
+		paletteVisible:   false,
+		paletteCursor:    0,
+		Statuses:         statusMap,
+		ProviderTimes:    make(map[string]time.Time),
+		runTotals:        make(map[string]int),
+		headerStyle:      lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("213")),
+		footerStyle:      lipgloss.NewStyle().Foreground(lipgloss.Color("240")),
+		bodyBoxStyle:     lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("63")).Padding(0, 1),
+		panelStyle:       lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("23")).Padding(0, 1),
+		errorStyle:       lipgloss.NewStyle().Foreground(lipgloss.Color("196")),
+		successStyle:     lipgloss.NewStyle().Foreground(lipgloss.Color("46")).Bold(true),
+		failStyle:        lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Bold(true),
+		runningStyle:     lipgloss.NewStyle().Foreground(lipgloss.Color("226")),
 	}
 	return m
 }
@@ -104,12 +150,12 @@ func (m Model) Init() tea.Cmd {
 // Update implements tea.Model.Update.
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if m.paletteVisible {
-		if key, ok := msg.(tea.KeyMsg); ok {
-			if m.handlePaletteInput(key) {
+		if keyMsg, ok := msg.(tea.KeyMsg); ok {
+			if m.handlePaletteInput(keyMsg) {
 				return m, nil
 			}
+			return m, nil
 		}
-		return m, nil
 	}
 
 	switch msg := msg.(type) {
@@ -157,11 +203,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "/":
 				m.startSearch()
 				return m, nil
-			case "?":
-				m.helpVisible = !m.helpVisible
-				return m, nil
 			case "o":
 				m.openSelectedURL()
+				return m, nil
+			case "?":
+				m.helpModel.ShowAll = !m.helpModel.ShowAll
 				return m, nil
 			}
 		}
@@ -178,8 +224,8 @@ func (m Model) View() string {
 	if !m.lastUpdate.IsZero() {
 		last = m.lastUpdate.Format("15:04:05")
 	}
-	header := m.headerStyle.Render(fmt.Sprintf("Viewing: %s | Last update: %s", titleCase(m.ActiveProvider), last))
-	body := m.Table.View()
+	header := m.panelStyle.Render(m.headerStyle.Render(fmt.Sprintf("Viewing: %s | Last update: %s", titleCase(m.ActiveProvider), last)))
+	body := m.bodyBoxStyle.Render(m.Table.View())
 	detail := m.renderDetails()
 	statusLine := m.renderStatuses()
 	footer := lipgloss.JoinVertical(lipgloss.Left,
@@ -350,13 +396,7 @@ func (m Model) openSelectedURL() {
 }
 
 func (m Model) renderHelp() string {
-	if m.helpVisible {
-		return lipgloss.JoinVertical(lipgloss.Left,
-			m.footerStyle.Render("Help: Tab provider, f status, / search, p providers, r refresh, o open, q quit"),
-			m.footerStyle.Render("Use ↑/↓ or j/k to move, pgup/pgdn to page, Enter to select, ? hide help"),
-		)
-	}
-	return m.footerStyle.Render("Press ? for help | Tab provider, f status, / search, p providers, r refresh, o open")
+	return m.footerStyle.Render(m.helpModel.View(m.keys))
 }
 
 func (m *Model) handlePaletteInput(msg tea.KeyMsg) bool {
@@ -376,7 +416,7 @@ func (m *Model) handlePaletteInput(msg tea.KeyMsg) bool {
 	case "esc":
 		m.paletteVisible = false
 	default:
-		return true
+		return false
 	}
 	return true
 }
@@ -417,7 +457,7 @@ func (m *Model) togglePalette() {
 }
 
 func (m Model) paletteItems() []string {
-	items := make([]string, 0, len(m.Providers))
+	items := make([]string, 0, len(m.visibleProviders))
 	for _, name := range m.Providers {
 		if name == "all" {
 			continue
@@ -432,14 +472,14 @@ func (m Model) renderPalette() string {
 	if len(items) == 0 {
 		return ""
 	}
-	lines := []string{m.footerStyle.Render("Providers: space toggles, enter closes, esc cancels")}
+	lines := []string{m.panelStyle.Render("Providers: space toggles, enter closes, esc cancels")}
 	for i, name := range items {
 		line := fmt.Sprintf("[%s] %s", checkbox(m.visibleProviders[name]), titleCase(name))
+		style := m.footerStyle
 		if i == m.paletteCursor {
-			lines = append(lines, m.headerStyle.Render(line))
-		} else {
-			lines = append(lines, m.footerStyle.Render(line))
+			style = m.headerStyle
 		}
+		lines = append(lines, style.Render(line))
 	}
 	return strings.Join(lines, "\n")
 }
