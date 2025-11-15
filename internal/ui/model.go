@@ -45,6 +45,7 @@ func NewModel(store *core.Store, providers []string, refresh func()) Model {
 		{Title: "Branch", Width: 15},
 	}
 	tbl := table.New(table.WithColumns(columns), table.WithRows([]table.Row{}))
+	tbl.Focus()
 	providerList := buildProviderList(providers)
 	statusMap := make(map[string]string)
 	for _, name := range providerList {
@@ -126,7 +127,8 @@ func (m Model) View() string {
 	detail := m.renderDetails()
 	statusLine := m.renderStatuses()
 	footer := lipgloss.JoinVertical(lipgloss.Left,
-		m.footerStyle.Render("Tab: cycle providers  |  r: refresh  |  q: quit"),
+		m.footerStyle.Render("Tab: filters  |  r: refresh  |  q: quit"),
+		m.footerStyle.Render("Use ↑/↓ or j/k to move, pgup/pgdn to page"),
 		m.footerStyle.Render(detail),
 		m.footerStyle.Render(statusLine),
 	)
