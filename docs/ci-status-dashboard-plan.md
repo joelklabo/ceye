@@ -51,7 +51,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Write failing test loading sample YAML via Viper into config structs.
 15. - [x] **Step 15 – Config Parsing Implementation** (`commit: c97f43e`, `push: yes`)
     - Implement `LoadConfig` to satisfy Step 14 test.
-16. - [ ] **Step 16 – Main Wiring** (`commit: pending`, `push: pending`)
+16. - [x] **Step 16 – Main Wiring** (`commit: 72e7a4a`, `push: yes`)
     - Integrate config, provider factory, store, aggregator goroutine, and Bubble Tea bootstrap.
 17. - [ ] **Step 17 – Initial TUI Model** (`commit: pending`, `push: pending`)
     - Create Bubble Tea model with table, store hooks, header/footer view skeleton.
