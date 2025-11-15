@@ -24,6 +24,8 @@ type Model struct {
 	Table          table.Model
 	ActiveProvider string
 	Providers      []string
+	statusFilters  []string
+	statusIndex    int
 	Refresh        func()
 	Statuses       map[string]string
 	visibleRuns    []core.Run
@@ -59,6 +61,8 @@ func NewModel(store *core.Store, providers []string, refresh func()) Model {
 		Table:          tbl,
 		ActiveProvider: providerList[0],
 		Providers:      providerList,
+		statusFilters:  []string{"all", "running", "queued", "failed", "success"},
+		statusIndex:    0,
 		Refresh:        refresh,
 		Statuses:       statusMap,
 		headerStyle:    lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("205")),
@@ -106,6 +110,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if m.Refresh != nil {
 					m.Refresh()
 				}
+				return m, nil
+			case "f":
+				m.cycleStatus()
+				m.refreshTable()
 				return m, nil
 			}
 		}
@@ -160,11 +168,17 @@ func (m *Model) refreshTable() {
 		filter = m.ActiveProvider
 	}
 	runs := m.Store.ListRuns(filter)
-	m.visibleRuns = runs
+	filtered := make([]core.Run, 0, len(runs))
 	rows := make([]table.Row, 0, len(runs))
+	statusFilter := m.statusFilters[m.statusIndex]
 	for _, run := range runs {
+		if !matchesStatusFilter(run, statusFilter) {
+			continue
+		}
 		rows = append(rows, table.Row{run.Provider, run.WorkflowName, m.formatStatus(run), run.Branch})
+		filtered = append(filtered, run)
 	}
+	m.visibleRuns = filtered
 	m.Table.SetRows(rows)
 }
 
@@ -201,17 +215,26 @@ func (m *Model) cycleProvider() {
 	m.ActiveProvider = m.Providers[next]
 }
 
+func (m *Model) cycleStatus() {
+	if len(m.statusFilters) == 0 {
+		return
+	}
+	m.statusIndex = (m.statusIndex + 1) % len(m.statusFilters)
+}
+
 func (m Model) renderDetails() string {
+	filterLabel := fmt.Sprintf("Status filter: %s", titleCase(m.statusFilters[m.statusIndex]))
 	if len(m.visibleRuns) == 0 {
-		return "Details: no runs loaded"
+		return filterLabel + " | Details: no runs"
 	}
 	idx := m.Table.Cursor()
 	if idx < 0 || idx >= len(m.visibleRuns) {
-		return "Details: select a run to view more info"
+		return filterLabel + " | Details: select a run"
 	}
 	run := m.visibleRuns[idx]
 	return fmt.Sprintf(
-		"Details: %s | %s | SHA %s | %s",
+		"%s | Details: %s | %s | SHA %s | %s",
+		filterLabel,
 		run.Repo,
 		run.Branch,
 		shortSHA(run.CommitSHA),
@@ -224,6 +247,30 @@ func shortSHA(sha string) string {
 		return sha[:7]
 	}
 	return sha
+}
+
+func matchesStatusFilter(run core.Run, filter string) bool {
+	switch filter {
+	case "all":
+		return true
+	case "running":
+		return run.Status == core.RunStatusInProgress
+	case "queued":
+		return run.Status == core.RunStatusQueued
+	case "failed":
+		if run.Status == core.RunStatusFailed || run.Status == core.RunStatusCancelled {
+			return true
+		}
+		if run.Status == core.RunStatusCompleted {
+			c := strings.ToLower(run.Conclusion)
+			return c == "failure" || c == "failed" || c == "cancelled" || c == "canceled"
+		}
+		return false
+	case "success":
+		return run.Status == core.RunStatusCompleted && (run.Conclusion == "" || strings.EqualFold(run.Conclusion, "success") || strings.EqualFold(run.Conclusion, "succeeded"))
+	default:
+		return true
+	}
 }
 
 func buildProviderList(names []string) []string {
