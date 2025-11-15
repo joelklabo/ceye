@@ -30,6 +30,7 @@ type RunUpdatedMsg struct {
 	Message   string
 	Level     string
 	Health    map[string]core.ProviderHealth
+	Lag       map[string]time.Duration
 }
 
 type flashExpiredMsg struct{}
@@ -102,6 +103,7 @@ type Model struct {
 	sortIndex        int
 	Statuses         map[string]string
 	ProviderTimes    map[string]time.Time
+	ProviderLag      map[string]time.Duration
 	ProviderHealth   map[string]core.ProviderHealth
 	visibleRuns      []core.Run
 	runTotals        map[string]int
@@ -172,6 +174,7 @@ func NewModel(store *core.Store, providers []string, refresh func(), openURL fun
 		helpVisible:      false,
 		Statuses:         statusMap,
 		ProviderTimes:    make(map[string]time.Time),
+		ProviderLag:      make(map[string]time.Duration),
 		ProviderHealth:   make(map[string]core.ProviderHealth),
 		runTotals:        make(map[string]int),
 		logEntries:       make([]logEntry, 0),
@@ -226,6 +229,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		if msg.Health != nil {
 			m.ProviderHealth = msg.Health
+		}
+		if msg.Lag != nil {
+			m.ProviderLag = msg.Lag
 		}
 		if msg.Message != "" {
 			entry := logEntry{text: msg.Message, timestamp: msg.Timestamp, level: msg.Level}
@@ -449,9 +455,22 @@ func (m Model) renderProviderBadges() []string {
 		} else if health.LastSuccess.After(time.Time{}) {
 			label = fmt.Sprintf("%s [%s]", label, health.LastSuccess.Format("15:04:05"))
 		}
+		if lag, ok := m.ProviderLag[name]; ok && lag > 0 {
+			label = fmt.Sprintf("%s • lag %s", label, formatLag(lag))
+			if lag > 20*time.Second {
+				style = m.tagWarnStyle
+			}
+		}
 		parts = append(parts, style.Render(label))
 	}
 	return parts
+}
+
+func formatLag(d time.Duration) string {
+	if d < time.Second {
+		return fmt.Sprintf("%dms", d.Milliseconds())
+	}
+	return fmt.Sprintf("%ds", int(d.Seconds()))
 }
 
 func (m Model) renderLogs() string {

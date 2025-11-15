@@ -108,6 +108,8 @@ func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, dem
 	providerStatus := make(map[string]string)
 	providerTimes := make(map[string]time.Time)
 	providerHealth := make(map[string]core.ProviderHealth)
+	providerLastPoll := make(map[string]time.Time)
+	providerLag := make(map[string]time.Duration)
 	for _, pCfg := range cfg.Providers {
 		provider, err := providers.CreateProvider(pCfg, deps)
 		if err != nil {
@@ -159,40 +161,48 @@ func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, dem
 				if ts.IsZero() {
 					ts = time.Now()
 				}
-				if event.Provider != "" {
-					if event.Err != nil {
-						providerStatus[event.Provider] = event.Err.Error()
-						message = fmt.Sprintf("%s: %v", event.Provider, event.Err)
-						level = "error"
-						health := providerHealth[event.Provider]
-						health.ErrorCount++
-						health.LastError = ts
-						providerHealth[event.Provider] = health
-					} else {
-						providerStatus[event.Provider] = ""
-						switch {
-						case event.Message != "":
-							message = fmt.Sprintf("%s: %s", event.Provider, event.Message)
-						case len(event.Runs) > 0:
-							message = fmt.Sprintf("%s refreshed %d run(s)", event.Provider, len(event.Runs))
-						default:
-							message = fmt.Sprintf("%s refreshed", event.Provider)
+					if event.Provider != "" {
+						if event.Err != nil {
+							providerStatus[event.Provider] = event.Err.Error()
+							message = fmt.Sprintf("%s: %v", event.Provider, event.Err)
+							level = "error"
+							health := providerHealth[event.Provider]
+							health.ErrorCount++
+							health.LastError = ts
+							providerHealth[event.Provider] = health
+						} else {
+							providerStatus[event.Provider] = ""
+							switch {
+							case event.Message != "":
+								message = fmt.Sprintf("%s: %s", event.Provider, event.Message)
+							case len(event.Runs) > 0:
+								message = fmt.Sprintf("%s refreshed %d run(s)", event.Provider, len(event.Runs))
+							default:
+								message = fmt.Sprintf("%s refreshed", event.Provider)
+							}
+							health := providerHealth[event.Provider]
+							health.LastSuccess = ts
+							health.ErrorCount = 0
+							providerHealth[event.Provider] = health
+							if last, ok := providerLastPoll[event.Provider]; ok && last.After(time.Time{}) {
+								delta := ts.Sub(last)
+								providerLag[event.Provider] = delta
+								if delta > 10*time.Second {
+									message = fmt.Sprintf("%s (slow poll %s)", message, delta.Round(time.Second))
+								}
+							}
+							level = "info"
 						}
-						level = "info"
-						health := providerHealth[event.Provider]
-						health.LastSuccess = ts
-						health.ErrorCount = 0
-						providerHealth[event.Provider] = health
+						providerLastPoll[event.Provider] = ts
+						providerTimes[event.Provider] = ts
+					} else if event.Message != "" {
+						message = event.Message
+						if event.Err != nil {
+							level = "error"
+						} else {
+							level = "info"
+						}
 					}
-					providerTimes[event.Provider] = ts
-				} else if event.Message != "" {
-					message = event.Message
-					if event.Err != nil {
-						level = "error"
-					} else {
-						level = "info"
-					}
-				}
 				program.Send(ui.RunUpdatedMsg{
 					Timestamp: ts,
 					Status:    copyStatus(providerStatus),
@@ -200,6 +210,7 @@ func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, dem
 					Message:   message,
 					Level:     level,
 					Health:    copyHealth(providerHealth),
+					Lag:       copyLag(providerLag),
 				})
 			}
 		}
@@ -243,6 +254,14 @@ func copyTimes(in map[string]time.Time) map[string]time.Time {
 
 func copyHealth(in map[string]core.ProviderHealth) map[string]core.ProviderHealth {
 	out := make(map[string]core.ProviderHealth, len(in))
+	for k, v := range in {
+		out[k] = v
+	}
+	return out
+}
+
+func copyLag(in map[string]time.Duration) map[string]time.Duration {
+	out := make(map[string]time.Duration, len(in))
 	for k, v := range in {
 		out[k] = v
 	}
