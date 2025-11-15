@@ -145,7 +145,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Track last success/error + error counts per provider and display them in the status badges to make real providers easier to diagnose.
 62. - [x] **Step 62 – Provider metrics/alerts** (`commit: 1ceb900`, `push: yes`)
     - Surface provider lag/failures in the UI (badges, notifications, or logs) and record metrics for slow polls.
-63. - [x] **Step 63 – CI snapshots** (`commit: pending`, `push: pending`)
+63. - [x] **Step 63 – CI snapshots** (`commit: 25ef8b7`, `push: yes`)
     - Run `make snapshot` as part of CI so every push captures the latest demo screen + event log for regression evidence.
 
 ## Tracking Updates
