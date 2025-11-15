@@ -14,6 +14,7 @@ import (
 	"github.com/joelklabo/ceye/internal/config"
 	"github.com/joelklabo/ceye/internal/core"
 	"github.com/joelklabo/ceye/internal/providers"
+	githubprovider "github.com/joelklabo/ceye/internal/providers/github"
 	"github.com/joelklabo/ceye/internal/ui"
 )
 
@@ -46,7 +47,9 @@ func run(ctx context.Context, cfgPath string) error {
 		return fmt.Errorf("load config: %w", err)
 	}
 
-	deps := providers.Dependencies{}
+	deps := providers.Dependencies{
+		GitHubClient: githubprovider.NewHTTPClient(githubToken()),
+	}
 
 	var providerInstances []core.Provider
 	var providerNames []string
@@ -103,4 +106,11 @@ func run(ctx context.Context, cfgPath string) error {
 		return fmt.Errorf("run UI: %w", err)
 	}
 	return nil
+}
+
+func githubToken() string {
+	if token := os.Getenv("CEYE_GITHUB_TOKEN"); token != "" {
+		return token
+	}
+	return os.Getenv("GITHUB_TOKEN")
 }

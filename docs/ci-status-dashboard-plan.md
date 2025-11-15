@@ -75,6 +75,8 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Introduce Lip Gloss-styled header/footer with last update timestamp and key hints.
 27. - [x] **Step 27 – Refresh Key** (`commit: f76f887`, `push: yes`)
     - Handle `r` keybinding to trigger immediate refresh: aggregator should notify providers via a channel or context poke.
+28. - [ ] **Step 28 – GitHub HTTP client** (`commit: pending`, `push: pending`)
+    - Implement real GitHub API client using `net/http`, injecting it into provider factory with auth token support (supports credentials from config/environment).
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.

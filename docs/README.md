@@ -13,7 +13,7 @@ CI Status Dashboard is a terminal UI written in Go that aggregates workflow/buil
 
 ### Prerequisites
 - Go 1.21+
-- Valid credentials for the providers you plan to monitor (e.g., `GITHUB_TOKEN`, Azure DevOps PAT).
+- Valid credentials for the providers you plan to monitor (e.g., `GITHUB_TOKEN`/`CEYE_GITHUB_TOKEN` for GitHub, Azure DevOps PAT for Azure).
 
 ### Installation & Build
 ```bash
@@ -50,6 +50,7 @@ providers:
 ```
 
 Set provider credentials via environment variables (`GITHUB_TOKEN`, `AZURE_DEVOPS_PAT`, etc.). The config loader searches `./ceye.yaml` then `~/.config/ceye/ceye.yaml` by default, and respects `CEYE_*` env overrides.
+The GitHub provider automatically reads `CEYE_GITHUB_TOKEN` (preferred) or `GITHUB_TOKEN` for authentication.
 
 ## Usage
 Once running, the dashboard will start polling providers and updating the table automatically. Key bindings:
