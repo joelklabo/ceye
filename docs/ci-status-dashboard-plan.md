@@ -129,7 +129,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Show brief confirmation toasts (e.g., “Copied run URL”) so feedback is visible after key actions.
 54. - [x] **Step 54 – Keyboard shortcut docs** (`commit: a4794c7`, `push: yes`)
     - Sync README/docs with the latest keybindings (focus mode, sorting, copy actions, etc.).
-55. - [ ] **Step 55 – Demo provider** (`commit: pending`, `push: pending`)
+55. - [x] **Step 55 – Demo provider** (`commit: 2932655`, `push: yes`)
     - Add a built-in demo provider so we can verify the UI without real credentials.
 
 ## Tracking Updates
