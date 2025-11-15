@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -205,5 +206,29 @@ func TestModelEnterOpensURL(t *testing.T) {
 	m.Update(tea.KeyMsg{Type: tea.KeyEnter})
 	if opened != url {
 		t.Fatalf("expected enter to open URL, got %q", opened)
+	}
+}
+
+func TestModelCopySummaryKey(t *testing.T) {
+	store := core.NewStore()
+	url := "https://example.com/run/summary"
+	store.Merge(core.RunEvent{Provider: "github", Runs: []core.Run{{
+		ID:           "1",
+		Provider:     "github",
+		WorkflowName: "Build",
+		Branch:       "feat",
+		Repo:         "org/repo",
+		Status:       core.RunStatusInProgress,
+		UpdatedAt:    time.Now(),
+		URL:          url,
+	}}})
+	copied := ""
+	copyFn := func(text string) { copied = text }
+	m := NewModel(store, []string{"github"}, nil, nil, copyFn)
+	next, _ := m.Update(RunUpdatedMsg{Timestamp: time.Now()})
+	m = next.(Model)
+	m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'c'}})
+	if !strings.Contains(copied, "org/repo") || !strings.Contains(copied, url) {
+		t.Fatalf("expected summary to include repo and url, got %q", copied)
 	}
 }
