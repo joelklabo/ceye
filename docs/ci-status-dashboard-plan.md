@@ -57,7 +57,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Create Bubble Tea model with table, store hooks, header/footer view skeleton.
 18. - [x] **Step 18 – TUI Update Tests** (`commit: 1d36e0f`, `push: yes`)
     - Unit tests covering `RunUpdatedMsg` handling and provider filtering.
-19. - [ ] **Step 19 – Key Handling Tests** (`commit: pending`, `push: pending`)
+19. - [x] **Step 19 – Key Handling Tests** (`commit: f74060d`, `push: yes`)
     - Test quitting, provider cycling, and table integration for navigation keys.
 20. - [ ] **Step 20 – TUI Finalization** (`commit: pending`, `push: pending`)
     - Implement keybindings, Lip Gloss styling, refresh hooks, and ensure manual UX sanity.
