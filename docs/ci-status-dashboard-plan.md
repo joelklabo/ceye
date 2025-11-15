@@ -115,6 +115,8 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Add a keybinding to switch between dashboard/panel layout and a full-width table focus mode so the UI adapts to different workflows.
 47. - [x] **Step 47 – Sort cycling** (`commit: c1bd25c`, `push: yes`)
     - Allow switching between status, updated-time, and duration orderings so the most relevant runs float to the top.
+48. - [x] **Step 48 – Color-coded activity log** (`commit: b3ef799`, `push: yes`)
+    - Track log severity (info/warn/error) so the Activity pane highlights provider errors distinctly.
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.
