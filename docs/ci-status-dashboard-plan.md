@@ -83,6 +83,8 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Surface provider errors in UI header/footer and log warnings when polls fail.
 31. - [x] **Step 31 – Table status coloring** (`commit: 362f36c`, `push: yes`)
     - Apply Lip Gloss styles to the status column (Success/Failed/Running colors) for better visibility.
+32. - [x] **Step 32 – Status-aware sorting** (`commit: 001de78`, `push: yes`)
+    - Sort runs by status buckets (running > queued > failed > success) before timestamp.
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.
