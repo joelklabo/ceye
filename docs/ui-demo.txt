@@ -1,0 +1,83 @@
+  CI Status Dashboard  •  Last update 04:55:10
+  Runs: 4 (running 1 | queued 1 | failed 1 | success 1)                                    CI Status Dashboard  •  Last update 04:55:11
+
+  Runs: 4 (running 1 | queued 1 | failed 1 | success 1)                                                                               CI Status Dashboard  •  Last update 04:55:11
+  CI Status Dashboard  •  Last update 04:55:30
+  Runs: 4 (running 1 | queued 1 | failed 1 | success 1)
+  Provider: All | Status: All | Sort: Status | Search: none
+┌───────┐ ┌─────────┐ ┌────────┐ ┌────────┐ ┌─────────┐
+│ Total │ │ Running │ │ Queued │ │ Failed │ │ Success │
+│ 4     │ │ 1       │ │ 1      │ │ 1      │ │ 1       │
+└───────┘ └─────────┘ └────────┘ └────────┘ └─────────┘
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Providers                                                                                                                           │
+│  Demo 04:55:30   Github ! github api: status 401   Azure ! parse azure runs: invalid character '<' looking for beginning of value   │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+Runs (4 showing)                                                                                                                                                                                                                                                   ┌───────────────────────────
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐│ Selection
+│  Provider    Repository                Workflow                  Status        Branch            Updated     Duration                                                                                                                                           ││ Provider filter: All
+│  demo        example/service-1         Build                     r…            main              now         1m00s                                                                                                                                              ││ Status filter: All
+│  demo        example/service-1         Build                     q…            main              now         -                                                                                                                                                  ││ Repo: example/service-1
+│  demo        example/service-3         Deploy                    failed        release           now         4m00s                                                                                                                                              ││ Workflow: Build
+│  demo        example/service-2         Test                      …             develop           now         5m00s                                                                                                                                              ││ Branch: main
+│                                                                                                                                                                                                                                                                 ││ Commit: d34db33
+│                                                                                                                                                                                                                                                                 ││ Status: running
+│                                                                                                                                                                                                                                                                 ││ Updated: 2025-11-15 04:55:
+│                                                                                                                                                                                                                                                                 ││ URL: https://example.com/d
+│                                                                                                                                                                                                                                                                 │└───────────────────────────
+│                                                                                                                                                                                                                                                                 │┌───────────────────────────
+│                                                                                                                                                                                                                                                                 ││ Activity
+│                                                                                                                                                                                                                                                                 ││ 04:55:30 — demo refreshed
+│                                                                                                                                                                                                                                                                 ││ 04:55:25 — demo refreshed
+│                                                                                                                                                                                                                                                                 ││ 04:55:20 — demo refreshed
+│                                                                                                                                                                                                                                                                 ││ 04:55:15 — demo refreshed
+│                                                                                                                                                                                                                                                                 ││ 04:55:11 — azure: parse az
+│                                                                                                                                                                                                                                                                 ││ 04:55:11 — github: github
+│                                                                                                                                                                                                                                                                 ││ 04:55:10 — demo refreshed
+│                                                                                                                                                                                                                                                                 │└───────────────────────────
+│                                                                                                                                                                                                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+  tab cycle providers • f cycle status • t cycle sort • y copy URL • c copy summary • v toggle focus view • r refresh • ? toggle help
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

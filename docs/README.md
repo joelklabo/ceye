@@ -38,6 +38,8 @@ Create `ceye.yaml` (or point `CEYE_CONFIG` to a custom file). Example (`config.e
 
 ```yaml
 providers:
+  - type: demo
+    runs: 4
   - type: github
     repos:
       - owner: octocat
@@ -51,6 +53,9 @@ providers:
 
 Set provider credentials via environment variables (`GITHUB_TOKEN`, `AZURE_DEVOPS_PAT`, etc.). The config loader searches `./ceye.yaml` then `~/.config/ceye/ceye.yaml` by default, and respects `CEYE_*` env overrides.
 The GitHub provider automatically reads `CEYE_GITHUB_TOKEN` (preferred) or `GITHUB_TOKEN` for authentication.
+
+### Demo provider
+The optional `demo` provider emits synthetic runs so you can verify the UI without real credentials. Include it in your config (as shown above) and it will stream Build/Test/Deploy runs that cycle through queued/running/success/failure states.
 
 ## Usage
 Once running, the dashboard polls providers and refreshes the table automatically. Key bindings:

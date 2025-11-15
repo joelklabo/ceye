@@ -1,4 +1,6 @@
 providers:
+  - type: demo
+    runs: 4
   - type: github
     repos:
       - owner: octocat

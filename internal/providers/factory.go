@@ -2,9 +2,11 @@ package providers
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/joelklabo/ceye/internal/core"
 	azureprovider "github.com/joelklabo/ceye/internal/providers/azure"
+	demoprovider "github.com/joelklabo/ceye/internal/providers/demo"
 	githubprovider "github.com/joelklabo/ceye/internal/providers/github"
 )
 
@@ -19,6 +21,9 @@ type ProviderConfig struct {
 	Org       string `mapstructure:"org"`
 	Project   string `mapstructure:"project"`
 	Pipelines []int  `mapstructure:"pipelines"`
+
+	// Demo-specific fields
+	Runs int `mapstructure:"runs"`
 }
 
 // Dependencies supplies shared resources (API clients, tokens, etc.) needed
@@ -48,6 +53,9 @@ func CreateProvider(cfg ProviderConfig, deps Dependencies) (core.Provider, error
 		}
 		azureCfg := azureprovider.Config{Org: cfg.Org, Project: cfg.Project, Pipelines: cfg.Pipelines}
 		return azureprovider.NewProvider(deps.AzureClient, azureCfg), nil
+	case "demo":
+		count := cfg.Runs
+		return demoprovider.New(count, 5*time.Second), nil
 	default:
 		return nil, fmt.Errorf("unknown provider type: %s", cfg.Type)
 	}
