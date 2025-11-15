@@ -157,6 +157,8 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Emit a desktop notification (via `osascript`/`notify-send`) whenever a provider reports an error so failures surface even if a terminal isn’t visible.
 68. - [x] **Step 68 – Run history panel** (`commit: 733063d`, `push: pending`)
     - Track each provider’s last few run summaries and expose them in a dedicated sidebar panel for quick inspection.
+69. - [ ] **Step 69 – Persistent run history** (`commit: pending`, `push: pending`)
+    - Persist recent run summaries to disk so history survives restarts and can be used for diagnostics later.
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.

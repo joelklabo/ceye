@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"runtime"
 	"syscall"
 	"time"
@@ -34,11 +35,12 @@ func main() {
 	var demoDuration time.Duration
 	var eventLogPath string
 	var notify bool
+	var historyPath string
 	rootCmd := &cobra.Command{
 		Use:   "ci-dash",
 		Short: "CI Status Dashboard TUI",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return run(ctx, cfgPath, demo, demoRuns, demoDuration, eventLogPath, notify)
+			return run(ctx, cfgPath, demo, demoRuns, demoDuration, eventLogPath, notify, historyPath)
 		},
 	}
 	rootCmd.PersistentFlags().StringVar(&cfgPath, "config", "", "Path to config file (defaults to ceye.yaml search paths)")
@@ -47,13 +49,14 @@ func main() {
 	rootCmd.PersistentFlags().DurationVar(&demoDuration, "demo-duration", 0, "Automatically exit demo mode after this duration (e.g. 5s)")
 	rootCmd.PersistentFlags().StringVar(&eventLogPath, "log-events", "", "Write RunEvent JSON lines to the given file")
 	rootCmd.PersistentFlags().BoolVar(&notify, "notify", false, "Emit desktop notifications when providers error")
+	rootCmd.PersistentFlags().StringVar(&historyPath, "history-path", "", "Persist run history to this JSON file (defaults to ~/.config/ceye/run-history.json)")
 
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
 		os.Exit(1)
 	}
 }
 
-func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, demoDuration time.Duration, eventLogPath string, notify bool) error {
+func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, demoDuration time.Duration, eventLogPath string, notify bool, historyPath string) error {
 	ctx, cancel := context.WithCancel(parentCtx)
 	defer cancel()
 
@@ -97,6 +100,9 @@ func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, dem
 		}
 		eventLog = f
 		defer eventLog.Close()
+	}
+	if historyPath == "" {
+		historyPath = filepath.Join(os.Getenv("HOME"), ".config", "ceye", "run-history.json")
 	}
 
 	deps := providers.Dependencies{
@@ -212,6 +218,12 @@ func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, dem
 					}
 					providerLastPoll[event.Provider] = ts
 					providerTimes[event.Provider] = ts
+					if historyPath != "" {
+						appendHistory(providerHistory, event.Provider, event.Runs, ts)
+						if err := saveHistory(historyPath, providerHistory); err != nil {
+							fmt.Fprintf(os.Stderr, "history: %v\n", err)
+						}
+					}
 				} else if event.Message != "" {
 					message = event.Message
 					if event.Err != nil {
@@ -225,16 +237,16 @@ func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, dem
 						fmt.Fprintf(os.Stderr, "notify: %v\n", err)
 					}
 				}
-					program.Send(ui.RunUpdatedMsg{
-						Timestamp: ts,
-						Status:    copyStatus(providerStatus),
-						Times:     copyTimes(providerTimes),
-						Message:   message,
-						Level:     level,
-						Health:    copyHealth(providerHealth),
-						Lag:       copyLag(providerLag),
-						History:   copyHistory(providerHistory),
-					})
+				program.Send(ui.RunUpdatedMsg{
+					Timestamp: ts,
+					Status:    copyStatus(providerStatus),
+					Times:     copyTimes(providerTimes),
+					Message:   message,
+					Level:     level,
+					Health:    copyHealth(providerHealth),
+					Lag:       copyLag(providerLag),
+					History:   copyHistory(providerHistory),
+				})
 			}
 		}
 	}()
@@ -297,6 +309,40 @@ func copyHistory(in map[string][]string) map[string][]string {
 		out[k] = append([]string(nil), v...)
 	}
 	return out
+}
+
+func appendHistory(history map[string][]string, provider string, runs []core.Run, ts time.Time) {
+	if len(runs) == 0 {
+		return
+	}
+	for _, run := range runs {
+		summary := fmt.Sprintf("%s • %s • %s", run.WorkflowName, run.Status, run.Branch)
+		if run.Conclusion != "" {
+			summary = fmt.Sprintf("%s (%s)", summary, run.Conclusion)
+		}
+		entry := fmt.Sprintf("%s @ %s", summary, ts.Format("15:04:05"))
+		history[provider] = append([]string{entry}, history[provider]...)
+		if len(history[provider]) > 20 {
+			history[provider] = history[provider][:20]
+		}
+	}
+}
+
+func saveHistory(path string, history map[string][]string) error {
+	if path == "" {
+		return nil
+	}
+	data, err := json.MarshalIndent(history, "", "  ")
+	if err != nil {
+		return err
+	}
+	dir := filepath.Dir(path)
+	if dir != "" {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			return err
+		}
+	}
+	return os.WriteFile(path, data, 0o644)
 }
 
 func sendNotification(title, message string) error {
