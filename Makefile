@@ -15,7 +15,7 @@ demo:
 
 SNAPSHOT_SECONDS ?= 5
 snapshot:
-	tmux new-session -d -s ceye-snapshot "cd $(PWD) && $(GO) run ./cmd/ci-dash --demo --demo-runs 4 --demo-duration $(SNAPSHOT_SECONDS)s"; \
+	tmux new-session -d -s ceye-snapshot "cd $(PWD) && $(GO) run ./cmd/ci-dash --demo --demo-runs 4 --demo-duration $(SNAPSHOT_SECONDS)s --log-events docs/demo-events.jsonl"; \
 	sleep $(SNAPSHOT_SECONDS); \
 	tmux capture-pane -t ceye-snapshot -p > docs/ui-demo.txt; \
 	tmux kill-session -t ceye-snapshot
