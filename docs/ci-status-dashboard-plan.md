@@ -20,7 +20,7 @@ This document is my working plan for building the CI Status Dashboard TUI in Go.
 ## Implementation Checklist
 Each item is actionable, test-first when applicable, and records the eventual commit hash + push confirmation once completed.
 
-1. - [ ] **Step 1 – Project Initialization** (`commit: pending`, `push: pending`)
+1. - [x] **Step 1 – Project Initialization** (`commit: bb90f85`, `push: yes`)
    - Go module setup (`ci-dash`), git init, baseline directories (`cmd/ci-dash`, `internal/...`).
    - Add module deps (Bubble Tea, Lip Gloss, Bubbles, Cobra, Viper) and a trivial sanity test to prove the test harness.
 2. - [ ] **Step 2 – Core Data Types** (`commit: pending`, `push: pending`)
