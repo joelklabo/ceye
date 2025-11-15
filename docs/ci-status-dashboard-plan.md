@@ -95,7 +95,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Add keybinding (e.g., `o` or Enter) to open the selected run's URL in the default browser.
 37. - [x] **Step 37 – Keyboard help** (`commit: 8fddbd9`, `push: yes`)
     - Provide an on-screen summary of keybindings or toggleable help dialog.
-38. - [ ] **Step 38 – Text filter** (`commit: pending`, `push: pending`)
+38. - [x] **Step 38 – Text filter** (`commit: 2115f57`, `push: yes`)
     - Add substring filter to show runs matching a query (e.g., `/` to enter search).
 
 ## Tracking Updates
