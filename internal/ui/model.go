@@ -29,6 +29,7 @@ type RunUpdatedMsg struct {
 	Times     map[string]time.Time
 	Message   string
 	Level     string
+	Health    map[string]core.ProviderHealth
 }
 
 type flashExpiredMsg struct{}
@@ -101,6 +102,7 @@ type Model struct {
 	sortIndex        int
 	Statuses         map[string]string
 	ProviderTimes    map[string]time.Time
+	ProviderHealth   map[string]core.ProviderHealth
 	visibleRuns      []core.Run
 	runTotals        map[string]int
 	logEntries       []logEntry
@@ -170,6 +172,7 @@ func NewModel(store *core.Store, providers []string, refresh func(), openURL fun
 		helpVisible:      false,
 		Statuses:         statusMap,
 		ProviderTimes:    make(map[string]time.Time),
+		ProviderHealth:   make(map[string]core.ProviderHealth),
 		runTotals:        make(map[string]int),
 		logEntries:       make([]logEntry, 0),
 		focusMode:        false,
@@ -220,6 +223,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		if msg.Times != nil {
 			m.ProviderTimes = msg.Times
+		}
+		if msg.Health != nil {
+			m.ProviderHealth = msg.Health
 		}
 		if msg.Message != "" {
 			entry := logEntry{text: msg.Message, timestamp: msg.Timestamp, level: msg.Level}
@@ -436,6 +442,12 @@ func (m Model) renderProviderBadges() []string {
 		} else {
 			label = fmt.Sprintf("%s waiting", label)
 			style = m.tagWarningStyle
+		}
+		if health, ok := m.ProviderHealth[name]; ok && health.ErrorCount > 0 {
+			label = fmt.Sprintf("%s (%d errs)", label, health.ErrorCount)
+			style = m.tagErrorStyle
+		} else if health.LastSuccess.After(time.Time{}) {
+			label = fmt.Sprintf("%s [%s]", label, health.LastSuccess.Format("15:04:05"))
 		}
 		parts = append(parts, style.Render(label))
 	}

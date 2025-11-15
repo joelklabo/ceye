@@ -107,6 +107,7 @@ func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, dem
 	var refreshers []func()
 	providerStatus := make(map[string]string)
 	providerTimes := make(map[string]time.Time)
+	providerHealth := make(map[string]core.ProviderHealth)
 	for _, pCfg := range cfg.Providers {
 		provider, err := providers.CreateProvider(pCfg, deps)
 		if err != nil {
@@ -145,13 +146,13 @@ func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, dem
 			select {
 			case <-ctx.Done():
 				return
-		case event := <-eventCh:
-			if eventLog != nil {
-				if err := writeEventLog(eventLog, event); err != nil {
-					fmt.Fprintf(os.Stderr, "log event: %v\n", err)
+			case event := <-eventCh:
+				if eventLog != nil {
+					if err := writeEventLog(eventLog, event); err != nil {
+						fmt.Fprintf(os.Stderr, "log event: %v\n", err)
+					}
 				}
-			}
-			store.Merge(event)
+				store.Merge(event)
 				message := ""
 				level := ""
 				ts := event.Timestamp
@@ -163,6 +164,10 @@ func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, dem
 						providerStatus[event.Provider] = event.Err.Error()
 						message = fmt.Sprintf("%s: %v", event.Provider, event.Err)
 						level = "error"
+						health := providerHealth[event.Provider]
+						health.ErrorCount++
+						health.LastError = ts
+						providerHealth[event.Provider] = health
 					} else {
 						providerStatus[event.Provider] = ""
 						switch {
@@ -174,6 +179,10 @@ func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, dem
 							message = fmt.Sprintf("%s refreshed", event.Provider)
 						}
 						level = "info"
+						health := providerHealth[event.Provider]
+						health.LastSuccess = ts
+						health.ErrorCount = 0
+						providerHealth[event.Provider] = health
 					}
 					providerTimes[event.Provider] = ts
 				} else if event.Message != "" {
@@ -190,6 +199,7 @@ func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, dem
 					Times:     copyTimes(providerTimes),
 					Message:   message,
 					Level:     level,
+					Health:    copyHealth(providerHealth),
 				})
 			}
 		}
@@ -231,6 +241,14 @@ func copyTimes(in map[string]time.Time) map[string]time.Time {
 	return out
 }
 
+func copyHealth(in map[string]core.ProviderHealth) map[string]core.ProviderHealth {
+	out := make(map[string]core.ProviderHealth, len(in))
+	for k, v := range in {
+		out[k] = v
+	}
+	return out
+}
+
 func openURL(link string) {
 	var cmd *exec.Cmd
 	switch runtime.GOOS {
@@ -257,11 +275,11 @@ func copyToClipboard(text string) {
 
 func writeEventLog(w io.Writer, event core.RunEvent) error {
 	entry := struct {
-		Timestamp time.Time    `json:"timestamp"`
-		Provider  string       `json:"provider"`
-		Runs      int          `json:"runs"`
-		Error     string       `json:"error,omitempty"`
-		Message   string       `json:"message,omitempty"`
+		Timestamp time.Time `json:"timestamp"`
+		Provider  string    `json:"provider"`
+		Runs      int       `json:"runs"`
+		Error     string    `json:"error,omitempty"`
+		Message   string    `json:"message,omitempty"`
 	}{
 		Timestamp: event.Timestamp,
 		Provider:  event.Provider,

@@ -40,10 +40,18 @@ type RunEvent struct {
 	Timestamp time.Time
 	Err       error
 	Message   string
+	Health    map[string]ProviderHealth
 }
 
 // Provider is implemented by CI backends (GitHub, Azure, etc.).
 type Provider interface {
 	Name() string
 	Start(ctx context.Context, out chan<- RunEvent) error
+}
+
+// ProviderHealth tracks recent health details for a provider.
+type ProviderHealth struct {
+	LastError   time.Time
+	ErrorCount  int
+	LastSuccess time.Time
 }
