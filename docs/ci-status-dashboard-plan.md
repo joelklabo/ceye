@@ -188,6 +188,10 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Add an inline “edit” or “duplicate” shortcut in the overlay (e.g., press `e` on a stored entry) to spawn a temporary YAML snippet for editing, or trigger `ci-dash provider update` with the current config.
     - Ensure edits respect validation (provider type + required fields) and reuse the existing provider factory/state so changes immediately refresh the list.
     - Write tests that simulate the edit action and confirm the overlay/list updates after `RunUpdatedMsg` events reflecting the edited entry.
+79. - [ ] **Step 79 – Store overlay editing workflow** (`commit: pending`, `push: pending`)
+    - Allow the overlay to edit a stored provider’s fields inline (e.g., show the YAML snippet beside the list or open a modal that lets you update owner/repo/pipeline IDs).
+    - Validate edits (type-specific required fields) using the same factory logic to prevent invalid configs, and reload the dashboard state once the change commits.
+    - Add tests that simulate invoking the edit UI, feeding updates to the store via RunUpdatedMsg, and ensuring the overlay refreshes with the new values.
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.
