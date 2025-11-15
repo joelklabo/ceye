@@ -87,6 +87,8 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Sort runs by status buckets (running > queued > failed > success) before timestamp.
 33. - [x] **Step 33 – Run details view** (`commit: 5cc6a37`, `push: yes`)
     - Add ability to select a row and show details (repo, branch, commit, URL) in a pane or popup.
+34. - [x] **Step 34 – Table keybindings** (`commit: 8b8f8e6`, `push: yes`)
+    - Explicitly handle arrow keys (↑/↓, j/k) and page navigation by delegating to the table component.
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.
