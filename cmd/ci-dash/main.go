@@ -14,6 +14,7 @@ import (
 	"github.com/joelklabo/ceye/internal/config"
 	"github.com/joelklabo/ceye/internal/core"
 	"github.com/joelklabo/ceye/internal/providers"
+	azureprovider "github.com/joelklabo/ceye/internal/providers/azure"
 	githubprovider "github.com/joelklabo/ceye/internal/providers/github"
 	"github.com/joelklabo/ceye/internal/ui"
 )
@@ -49,6 +50,7 @@ func run(ctx context.Context, cfgPath string) error {
 
 	deps := providers.Dependencies{
 		GitHubClient: githubprovider.NewHTTPClient(githubToken()),
+		AzureClient:  azureprovider.NewHTTPClient(azureToken()),
 	}
 
 	var providerInstances []core.Provider
@@ -113,4 +115,11 @@ func githubToken() string {
 		return token
 	}
 	return os.Getenv("GITHUB_TOKEN")
+}
+
+func azureToken() string {
+	if token := os.Getenv("CEYE_AZURE_PAT"); token != "" {
+		return token
+	}
+	return os.Getenv("AZURE_DEVOPS_PAT")
 }
