@@ -326,7 +326,7 @@ func (m Model) View() string {
 	if m.helpVisible {
 		view = lipgloss.JoinHorizontal(lipgloss.Top, view, m.renderHelpOverlay())
 	}
-	return view
+	return appStyle.Render(view)
 }
 
 func (m Model) renderHeader() string {
@@ -1134,6 +1134,7 @@ func titleCase(s string) string {
 var (
 	accentColor        lipgloss.Color
 	accentDarkColor    lipgloss.Color
+	appBackground      lipgloss.Color
 	subtleColor        lipgloss.Color
 	borderColor        lipgloss.Color
 	successColor       lipgloss.Color
@@ -1166,6 +1167,7 @@ var (
 	branchReleaseStyle lipgloss.Style
 	branchDefaultStyle lipgloss.Style
 	rowHighlightBg     lipgloss.Color
+	appStyle           lipgloss.Style
 )
 
 type logEntry struct {
@@ -1182,6 +1184,7 @@ func applyTheme(dark bool) {
 	if dark {
 		accentColor = lipgloss.Color("#b392f0")
 		accentDarkColor = lipgloss.Color("#342e5c")
+		appBackground = lipgloss.Color("#141225")
 		subtleColor = lipgloss.Color("#8b8fb8")
 		borderColor = lipgloss.Color("#3f3c69")
 		successColor = lipgloss.Color("#43bf6d")
@@ -1192,6 +1195,7 @@ func applyTheme(dark bool) {
 	} else {
 		accentColor = lipgloss.Color("#36236b")
 		accentDarkColor = lipgloss.Color("#cec6f2")
+		appBackground = lipgloss.Color("#0e0d1a")
 		subtleColor = lipgloss.Color("#4a4370")
 		borderColor = lipgloss.Color("#3b3660")
 		successColor = lipgloss.Color("#065229")
@@ -1237,6 +1241,7 @@ func applyTheme(dark bool) {
 		branchReleaseStyle = lipgloss.NewStyle().Foreground(errorColor).Bold(true)
 	}
 	branchDefaultStyle = lipgloss.NewStyle().Foreground(baseTextColor)
+	appStyle = lipgloss.NewStyle().Background(appBackground).Foreground(baseTextColor).Padding(0, 1)
 }
 
 func tableStyles() table.Styles {
