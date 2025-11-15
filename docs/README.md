@@ -73,6 +73,27 @@ Once running, the dashboard polls providers and refreshes the table automaticall
 
 A flash message appears beneath the header after copy operations or other actions so you know the key press succeeded.
 
+### Runtime provider store
+Dynamic providers added at runtime are kept in `~/.config/ceye/providers.json` by default (or override via `CEYE_PROVIDER_STORE`/`--provider-store`). Use the `ci-dash provider` subcommands to inspect or mutate the runtime list without editing the main config:
+- `ci-dash provider list`: show stored entries with their IDs, types, and optional `display_name`.
+- `ci-dash provider add --config provider.yaml`: add a new entry defined in a YAML/JSON snippet. Include a `display_name` if you want a friendly label. Example snippet:
+
+  ```yaml
+  type: github
+  display_name: frontend-ci
+  repos:
+    - owner: octocat
+      repo: hello-world
+      workflows:
+        - CI
+  ```
+
+- `ci-dash provider update --id <id> --config ...`: replace the stored config.
+- `ci-dash provider enable|disable --id <id>`: toggle whether a stored provider participates in polling.
+- `ci-dash provider remove --id <id>`: delete the stored entry.
+
+Stored providers are merged with your static `ceye.yaml` providers on startup, and their friendly names appear as provider tabs in the UI. Adjust `--provider-store` to point at another file when sharing dynamic lists across machines.
+
 ### Demo/diagnostic flags
 - `--demo` / `--demo-runs`: start with synthetic runs only.
 - `--demo-duration=5s`: auto-exit after the duration (useful for automated screenshots/tests).

@@ -14,6 +14,8 @@ import (
 // ProviderConfig is a generic configuration for any provider entry.
 type ProviderConfig struct {
 	Type string `mapstructure:"type"`
+	// DisplayName optionally overrides the provider label shown in the UI.
+	DisplayName string `mapstructure:"display_name"`
 
 	// GitHub-specific fields
 	Repos []githubprovider.RepoConfig `mapstructure:"repos"`

@@ -154,13 +154,11 @@ func NewModel(store *core.Store, providers []string, refresh func(), openURL fun
 	tbl.SetStyles(tableStyles())
 	providerList := buildProviderList(providers)
 	statusMap := make(map[string]string)
-	visibleProviders := make(map[string]bool)
 	for _, name := range providerList {
 		if name == "all" {
 			continue
 		}
 		statusMap[name] = ""
-		visibleProviders[name] = true
 	}
 	keys := newKeyMap()
 	helpModel := help.New()
@@ -170,7 +168,7 @@ func NewModel(store *core.Store, providers []string, refresh func(), openURL fun
 		Table:            tbl,
 		ActiveProvider:   providerList[0],
 		Providers:        providerList,
-		visibleProviders: visibleProviders,
+		visibleProviders: make(map[string]bool),
 		statusFilters:    []string{"all", "running", "queued", "failed", "success"},
 		statusIndex:      0,
 		sortModes:        []string{"status", "updated", "duration"},
@@ -209,7 +207,25 @@ func NewModel(store *core.Store, providers []string, refresh func(), openURL fun
 		detailVisible:    false,
 	}
 	m.refreshStyles()
+	m.SetProviderList(providers)
 	return m
+}
+
+// SetProviderList updates the provider filter list and refreshes the table.
+func (m *Model) SetProviderList(names []string) {
+	providerList := buildProviderList(names)
+	m.Providers = providerList
+	m.visibleProviders = make(map[string]bool)
+	for _, name := range providerList {
+		if name == "all" {
+			continue
+		}
+		m.visibleProviders[name] = true
+	}
+	if len(providerList) > 0 {
+		m.ActiveProvider = providerList[0]
+	}
+	m.refreshTable()
 }
 
 // Init implements tea.Model.Init.

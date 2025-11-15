@@ -12,6 +12,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"syscall"
 	"time"
 
@@ -24,8 +25,11 @@ import (
 	"github.com/joelklabo/ceye/internal/providers"
 	azureprovider "github.com/joelklabo/ceye/internal/providers/azure"
 	githubprovider "github.com/joelklabo/ceye/internal/providers/github"
+	"github.com/joelklabo/ceye/internal/providers/manager"
 	"github.com/joelklabo/ceye/internal/ui"
 )
+
+var providerStoreFlag string
 
 func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -43,7 +47,7 @@ func main() {
 		Use:   "ci-dash",
 		Short: "CI Status Dashboard TUI",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return run(ctx, cfgPath, demo, demoRuns, demoDuration, eventLogPath, notify, historyPath, webhookURL)
+			return run(ctx, cfgPath, demo, demoRuns, demoDuration, eventLogPath, notify, historyPath, webhookURL, resolveProviderStorePath(providerStoreFlag))
 		},
 	}
 	rootCmd.PersistentFlags().StringVar(&cfgPath, "config", "", "Path to config file (defaults to ceye.yaml search paths)")
@@ -54,13 +58,16 @@ func main() {
 	rootCmd.PersistentFlags().BoolVar(&notify, "notify", false, "Emit desktop notifications when providers error")
 	rootCmd.PersistentFlags().StringVar(&webhookURL, "webhook-url", "", "POST provider errors to this webhook URL")
 	rootCmd.PersistentFlags().StringVar(&historyPath, "history-path", "", "Persist run history to this JSON file (defaults to ~/.config/ceye/run-history.json)")
+	rootCmd.PersistentFlags().StringVar(&providerStoreFlag, "provider-store", "", "Path to provider store (defaults to ~/.config/ceye/providers.json)")
+
+	rootCmd.AddCommand(providerCmd())
 
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
 		os.Exit(1)
 	}
 }
 
-func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, demoDuration time.Duration, eventLogPath string, notify bool, historyPath string, webhookURL string) error {
+func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, demoDuration time.Duration, eventLogPath string, notify bool, historyPath string, webhookURL string, providerStorePath string) error {
 	ctx, cancel := context.WithCancel(parentCtx)
 	defer cancel()
 
@@ -96,6 +103,11 @@ func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, dem
 		}
 	}
 
+	providerStore, err := manager.New(providerStorePath)
+	if err != nil {
+		return fmt.Errorf("provider store: %w", err)
+	}
+
 	var eventLog io.WriteCloser
 	if eventLogPath != "" {
 		f, err := os.Create(eventLogPath)
@@ -123,17 +135,18 @@ func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, dem
 	providerLastPoll := make(map[string]time.Time)
 	providerLag := make(map[string]time.Duration)
 	providerHistory := make(map[string][]string)
-	for _, pCfg := range cfg.Providers {
-		provider, err := providers.CreateProvider(pCfg, deps)
+	for _, candidate := range buildProviderEntries(cfg, providerStore) {
+		provider, err := providers.CreateProvider(candidate.Config, deps)
 		if err != nil {
 			return fmt.Errorf("create provider: %w", err)
 		}
-		providerInstances = append(providerInstances, provider)
-		providerNames = append(providerNames, provider.Name())
+		alias := candidate.Alias
 		if refresher, ok := provider.(interface{ TriggerRefresh() }); ok {
 			refreshers = append(refreshers, refresher.TriggerRefresh)
 		}
-		providerStatus[provider.Name()] = ""
+		providerInstances = append(providerInstances, wrapProvider(provider, alias))
+		providerNames = append(providerNames, alias)
+		providerStatus[alias] = ""
 	}
 
 	store := core.NewStore()
@@ -398,6 +411,86 @@ func sendWebhook(ctx context.Context, url, provider, message string, timestamp t
 	return nil
 }
 
+type providerEntry struct {
+	Config providers.ProviderConfig
+	Alias  string
+}
+
+func buildProviderEntries(cfg *config.Config, store *manager.Store) []providerEntry {
+	used := make(map[string]struct{})
+	entries := make([]providerEntry, 0, len(cfg.Providers)+len(store.EnabledRecords()))
+	for idx, pCfg := range cfg.Providers {
+		fallback := fmt.Sprintf("%s-%d", strings.ToLower(pCfg.Type), idx+1)
+		alias := uniqueAlias(pCfg.DisplayName, fallback, used)
+		entries = append(entries, providerEntry{Config: pCfg, Alias: alias})
+	}
+	for _, record := range store.EnabledRecords() {
+		shortID := record.ID
+		if len(shortID) > 6 {
+			shortID = shortID[:6]
+		}
+		fallback := fmt.Sprintf("%s-%s", strings.ToLower(record.Config.Type), shortID)
+		alias := uniqueAlias(record.Config.DisplayName, fallback, used)
+		entries = append(entries, providerEntry{Config: record.Config, Alias: alias})
+	}
+	return entries
+}
+
+func uniqueAlias(preferred, fallback string, used map[string]struct{}) string {
+	alias := strings.TrimSpace(preferred)
+	if alias == "" {
+		alias = fallback
+	}
+	if alias == "" {
+		alias = "provider"
+	}
+	base := alias
+	counter := 1
+	for {
+		if _, ok := used[alias]; !ok {
+			used[alias] = struct{}{}
+			return alias
+		}
+		alias = fmt.Sprintf("%s-%d", base, counter)
+		counter++
+	}
+}
+
+func wrapProvider(p core.Provider, alias string) core.Provider {
+	if alias == "" {
+		return p
+	}
+	return &namedProvider{Provider: p, alias: alias}
+}
+
+type namedProvider struct {
+	core.Provider
+	alias string
+}
+
+func (n *namedProvider) Name() string {
+	if n.alias != "" {
+		return n.alias
+	}
+	return n.Provider.Name()
+}
+
+func resolveProviderStorePath(flag string) string {
+	if flag != "" {
+		return flag
+	}
+	if env := os.Getenv("CEYE_PROVIDER_STORE"); env != "" {
+		return env
+	}
+	return defaultProviderStorePath()
+}
+
+func defaultProviderStorePath() string {
+	if home := os.Getenv("HOME"); home != "" {
+		return filepath.Join(home, ".config", "ceye", "providers.json")
+	}
+	return "providers.json"
+}
 func openURL(link string) {
 	var cmd *exec.Cmd
 	switch runtime.GOOS {

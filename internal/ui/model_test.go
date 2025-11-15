@@ -108,6 +108,20 @@ func TestModelProviderCycleOnTab(t *testing.T) {
 	}
 }
 
+func TestModelSetProviderListUpdatesVisibility(t *testing.T) {
+	m := NewModel(core.NewStore(), []string{"github"}, nil, nil, nil)
+	m.SetProviderList([]string{"github", "azure"})
+	if m.ActiveProvider != "all" {
+		t.Fatalf("expected active provider reset to all, got %s", m.ActiveProvider)
+	}
+	if len(m.Providers) != 3 {
+		t.Fatalf("expected providers list to contain all, github, azure; got %v", m.Providers)
+	}
+	if !m.visibleProviders["github"] || !m.visibleProviders["azure"] {
+		t.Fatalf("expected visibility map to include github and azure, got %v", m.visibleProviders)
+	}
+}
+
 func TestModelRefreshKeyInvokesCallback(t *testing.T) {
 	called := 0
 	refresh := func() { called++ }
