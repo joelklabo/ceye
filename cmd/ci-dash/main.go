@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"os/signal"
+	"runtime"
 	"syscall"
 	"time"
 
@@ -87,7 +89,7 @@ func run(ctx context.Context, cfgPath string) error {
 		}
 	}
 
-	model := ui.NewModel(store, providerNames, refresh)
+	model := ui.NewModel(store, providerNames, refresh, openURL)
 	program := tea.NewProgram(model)
 
 	go func() {
@@ -139,4 +141,19 @@ func copyStatus(in map[string]string) map[string]string {
 		out[k] = v
 	}
 	return out
+}
+
+func openURL(link string) {
+	var cmd *exec.Cmd
+	switch runtime.GOOS {
+	case "linux":
+		cmd = exec.Command("xdg-open", link)
+	case "darwin":
+		cmd = exec.Command("open", link)
+	case "windows":
+		cmd = exec.Command("rundll32", "url.dll,FileProtocolHandler", link)
+	default:
+		return
+	}
+	cmd.Start()
 }

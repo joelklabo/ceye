@@ -91,6 +91,8 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Explicitly handle arrow keys (↑/↓, j/k) and page navigation by delegating to the table component.
 35. - [x] **Step 35 – Status filter** (`commit: 0a8a9d4`, `push: yes`)
     - Allow filtering runs by status (e.g., failures only) via a keybinding.
+36. - [ ] **Step 36 – URL opening** (`commit: pending`, `push: pending`)
+    - Add keybinding (e.g., `o` or Enter) to open the selected run's URL in the default browser.
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.

@@ -27,6 +27,7 @@ type Model struct {
 	statusFilters  []string
 	statusIndex    int
 	Refresh        func()
+	openURL        func(string)
 	Statuses       map[string]string
 	visibleRuns    []core.Run
 	lastUpdate     time.Time
@@ -39,7 +40,7 @@ type Model struct {
 }
 
 // NewModel constructs a UI model.
-func NewModel(store *core.Store, providers []string, refresh func()) Model {
+func NewModel(store *core.Store, providers []string, refresh func(), openURL func(string)) Model {
 	columns := []table.Column{
 		{Title: "Provider", Width: 10},
 		{Title: "Workflow", Width: 20},
@@ -64,6 +65,7 @@ func NewModel(store *core.Store, providers []string, refresh func()) Model {
 		statusFilters:  []string{"all", "running", "queued", "failed", "success"},
 		statusIndex:    0,
 		Refresh:        refresh,
+		openURL:        openURL,
 		Statuses:       statusMap,
 		headerStyle:    lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("205")),
 		footerStyle:    lipgloss.NewStyle().Foreground(lipgloss.Color("241")),
@@ -114,6 +116,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "f":
 				m.cycleStatus()
 				m.refreshTable()
+				return m, nil
+			case "o":
+				m.openSelectedURL()
 				return m, nil
 			}
 		}
@@ -247,6 +252,21 @@ func shortSHA(sha string) string {
 		return sha[:7]
 	}
 	return sha
+}
+
+func (m Model) openSelectedURL() {
+	if m.openURL == nil || len(m.visibleRuns) == 0 {
+		return
+	}
+	idx := m.Table.Cursor()
+	if idx < 0 || idx >= len(m.visibleRuns) {
+		return
+	}
+	run := m.visibleRuns[idx]
+	if run.URL == "" {
+		return
+	}
+	m.openURL(run.URL)
 }
 
 func matchesStatusFilter(run core.Run, filter string) bool {
