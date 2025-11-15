@@ -101,6 +101,7 @@ func run(ctx context.Context, cfgPath string) error {
 			case event := <-eventCh:
 				store.Merge(event)
 				message := ""
+				level := ""
 				ts := event.Timestamp
 				if ts.IsZero() {
 					ts = time.Now()
@@ -109,6 +110,7 @@ func run(ctx context.Context, cfgPath string) error {
 					if event.Err != nil {
 						providerStatus[event.Provider] = event.Err.Error()
 						message = fmt.Sprintf("%s: %v", event.Provider, event.Err)
+						level = "error"
 					} else {
 						providerStatus[event.Provider] = ""
 						switch {
@@ -119,16 +121,23 @@ func run(ctx context.Context, cfgPath string) error {
 						default:
 							message = fmt.Sprintf("%s refreshed", event.Provider)
 						}
+						level = "info"
 					}
 					providerTimes[event.Provider] = ts
 				} else if event.Message != "" {
 					message = event.Message
+					if event.Err != nil {
+						level = "error"
+					} else {
+						level = "info"
+					}
 				}
 				program.Send(ui.RunUpdatedMsg{
 					Timestamp: ts,
 					Status:    copyStatus(providerStatus),
 					Times:     copyTimes(providerTimes),
 					Message:   message,
+					Level:     level,
 				})
 			}
 		}

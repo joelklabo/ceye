@@ -21,6 +21,7 @@ type RunUpdatedMsg struct {
 	Status    map[string]string
 	Times     map[string]time.Time
 	Message   string
+	Level     string
 }
 
 type keyMap struct {
@@ -88,7 +89,7 @@ type Model struct {
 	ProviderTimes    map[string]time.Time
 	visibleRuns      []core.Run
 	runTotals        map[string]int
-	logEntries       []string
+	logEntries       []logEntry
 	lastUpdate       time.Time
 	headerStyle      lipgloss.Style
 	footerStyle      lipgloss.Style
@@ -151,7 +152,7 @@ func NewModel(store *core.Store, providers []string, refresh func(), openURL fun
 		Statuses:         statusMap,
 		ProviderTimes:    make(map[string]time.Time),
 		runTotals:        make(map[string]int),
-		logEntries:       make([]string, 0),
+		logEntries:       make([]logEntry, 0),
 		focusMode:        false,
 		headerStyle:      headerStyle,
 		footerStyle:      footerStyle,
@@ -202,7 +203,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.ProviderTimes = msg.Times
 		}
 		if msg.Message != "" {
-			m.logEntries = append([]string{fmt.Sprintf("%s — %s", msg.Timestamp.Format("15:04:05"), msg.Message)}, m.logEntries...)
+			entry := logEntry{text: msg.Message, timestamp: msg.Timestamp, level: msg.Level}
+			m.logEntries = append([]logEntry{entry}, m.logEntries...)
 			if len(m.logEntries) > 8 {
 				m.logEntries = m.logEntries[:8]
 			}
@@ -392,12 +394,24 @@ func (m Model) renderLogs() string {
 			bodyTextStyle.Render("none yet"),
 		))
 	}
-	body := strings.Join(m.logEntries, "\n")
-	return m.panelStyle.Render(lipgloss.JoinVertical(
-		lipgloss.Left,
-		sectionTitleStyle.Render("Activity"),
-		bodyTextStyle.Render(body),
-	))
+	lines := make([]string, 0, len(m.logEntries)+1)
+	lines = append(lines, sectionTitleStyle.Render("Activity"))
+	for _, entry := range m.logEntries {
+		line := fmt.Sprintf("%s — %s", entry.timestamp.Format("15:04:05"), entry.text)
+		lines = append(lines, renderLogLine(entry.level, line))
+	}
+	return m.panelStyle.Render(lipgloss.JoinVertical(lipgloss.Left, lines...))
+}
+
+func renderLogLine(level, text string) string {
+	switch level {
+	case "error":
+		return logErrorStyle.Render(text)
+	case "warn":
+		return logWarnStyle.Render(text)
+	default:
+		return logInfoStyle.Render(text)
+	}
 }
 
 func (m *Model) refreshTable() {
@@ -1007,4 +1021,13 @@ var (
 	helpBox           = lipgloss.NewStyle().BorderStyle(lipgloss.DoubleBorder()).BorderForeground(accentColor).Padding(1, 2).MarginLeft(2)
 	helpKeyStyle      = lipgloss.NewStyle().Foreground(accentColor).Bold(true)
 	helpDescStyle     = lipgloss.NewStyle().Foreground(baseTextColor)
+	logInfoStyle      = lipgloss.NewStyle().Foreground(baseTextColor)
+	logWarnStyle      = lipgloss.NewStyle().Foreground(warningColor)
+	logErrorStyle     = lipgloss.NewStyle().Foreground(errorColor).Bold(true)
 )
+
+type logEntry struct {
+	text      string
+	timestamp time.Time
+	level     string
+}
