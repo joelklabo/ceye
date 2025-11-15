@@ -89,7 +89,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Add ability to select a row and show details (repo, branch, commit, URL) in a pane or popup.
 34. - [x] **Step 34 – Table keybindings** (`commit: 8b8f8e6`, `push: yes`)
     - Explicitly handle arrow keys (↑/↓, j/k) and page navigation by delegating to the table component.
-35. - [ ] **Step 35 – Status filter** (`commit: pending`, `push: pending`)
+35. - [x] **Step 35 – Status filter** (`commit: 0a8a9d4`, `push: yes`)
     - Allow filtering runs by status (e.g., failures only) via a keybinding.
 
 ## Tracking Updates
