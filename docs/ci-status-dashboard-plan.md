@@ -99,7 +99,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Add substring filter to show runs matching a query (e.g., `/` to enter search).
 39. - [x] **Step 39 – Aggregated stats** (`commit: c80f212`, `push: yes`)
     - Display counts of running/failed/successful runs in header or summary line.
-40. - [ ] **Step 40 – Provider metrics** (`commit: pending`, `push: pending`)
+40. - [x] **Step 40 – Provider metrics** (`commit: ad31c36`, `push: yes`)
     - Track per-provider last update/error timestamps and show them alongside counts.
 39. - [ ] **Step 39 – Aggregated stats** (`commit: pending`, `push: pending`)
     - Display counts of running/failed/successful runs in header or summary line.
