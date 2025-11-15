@@ -33,7 +33,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
    - Add failing tests for parsing GitHub workflow run JSON into normalized `Run`s.
 6. - [x] **Step 6 – GitHub Parser Implementation** (`commit: 9d22057`, `push: yes`)
    - Implement `ParseGitHubRuns` to satisfy Step 5 tests.
-7. - [ ] **Step 7 – Azure Parser Tests** (`commit: pending`, `push: pending`)
+7. - [x] **Step 7 – Azure Parser Tests** (`commit: c38012e`, `push: yes`)
    - Add failing tests for Azure DevOps builds API -> `Run`s transformation.
 8. - [ ] **Step 8 – Azure Parser Implementation** (`commit: pending`, `push: pending`)
    - Implement `ParseAzureRuns` to satisfy Step 7 tests.
