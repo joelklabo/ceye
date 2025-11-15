@@ -25,7 +25,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
    - Add module deps (Bubble Tea, Lip Gloss, Bubbles, Cobra, Viper) and a trivial sanity test to prove the test harness.
 2. - [x] **Step 2 – Core Data Types** (`commit: 3be7e8f`, `push: yes`)
    - Define `RunStatus` enum, `Run`, `RunEvent`, and `Provider` interface under `internal/core`.
-3. - [ ] **Step 3 – Store Tests** (`commit: pending`, `push: pending`)
+3. - [x] **Step 3 – Store Tests** (`commit: 1959a79`, `push: yes`)
    - Write failing tests covering merge (new + updated runs) and `ListRuns` sorting/filtering.
 4. - [ ] **Step 4 – Store Implementation** (`commit: pending`, `push: pending`)
    - Implement thread-safe store with merge + list logic to satisfy Step 3 tests.
