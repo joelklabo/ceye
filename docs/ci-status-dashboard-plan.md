@@ -85,7 +85,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Apply Lip Gloss styles to the status column (Success/Failed/Running colors) for better visibility.
 32. - [x] **Step 32 – Status-aware sorting** (`commit: 001de78`, `push: yes`)
     - Sort runs by status buckets (running > queued > failed > success) before timestamp.
-33. - [ ] **Step 33 – Run details view** (`commit: pending`, `push: pending`)
+33. - [x] **Step 33 – Run details view** (`commit: 5cc6a37`, `push: yes`)
     - Add ability to select a row and show details (repo, branch, commit, URL) in a pane or popup.
 
 ## Tracking Updates
