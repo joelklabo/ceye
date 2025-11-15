@@ -29,6 +29,7 @@ type keyMap struct {
 	Palette  key.Binding
 	Refresh  key.Binding
 	Open     key.Binding
+	Focus    key.Binding
 	Help     key.Binding
 	Quit     key.Binding
 }
@@ -41,19 +42,21 @@ func newKeyMap() keyMap {
 		Palette:  key.NewBinding(key.WithKeys("p"), key.WithHelp("p", "provider palette")),
 		Refresh:  key.NewBinding(key.WithKeys("r"), key.WithHelp("r", "refresh")),
 		Open:     key.NewBinding(key.WithKeys("o"), key.WithHelp("o", "open run")),
+		Focus:    key.NewBinding(key.WithKeys("v"), key.WithHelp("v", "toggle focus view")),
 		Help:     key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "toggle help")),
 		Quit:     key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "quit")),
 	}
 }
 
 func (k keyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Provider, k.Status, k.Refresh, k.Help}
+	return []key.Binding{k.Provider, k.Status, k.Focus, k.Refresh, k.Help}
 }
 
 func (k keyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.Provider, k.Status, k.Search, k.Palette},
-		{k.Refresh, k.Open, k.Help, k.Quit},
+		{k.Focus, k.Refresh, k.Open, k.Help},
+		{k.Quit},
 	}
 }
 
@@ -75,6 +78,7 @@ type Model struct {
 	paletteVisible   bool
 	paletteCursor    int
 	helpVisible      bool
+	focusMode        bool
 	Statuses         map[string]string
 	ProviderTimes    map[string]time.Time
 	visibleRuns      []core.Run
@@ -141,6 +145,7 @@ func NewModel(store *core.Store, providers []string, refresh func(), openURL fun
 		ProviderTimes:    make(map[string]time.Time),
 		runTotals:        make(map[string]int),
 		logEntries:       make([]string, 0),
+		focusMode:        false,
 		headerStyle:      headerStyle,
 		footerStyle:      footerStyle,
 		bodyBoxStyle:     bodyBox,
@@ -234,6 +239,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "o":
 				m.openSelectedURL()
 				return m, nil
+			case "v":
+				m.toggleFocusMode()
+				return m, nil
 			case "?":
 				m.toggleHelpOverlay()
 				return m, nil
@@ -250,15 +258,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m Model) View() string {
 	header := m.renderHeader()
 	stats := m.renderStatsBar()
-	table := m.renderRunsTable()
-	sidebar := lipgloss.JoinVertical(lipgloss.Left, m.renderDetails(), m.renderLogs())
-	body := lipgloss.JoinHorizontal(lipgloss.Top, table, sidebar)
-	providers := m.renderStatuses()
 	sections := []string{header}
 	if stats != "" {
 		sections = append(sections, stats)
 	}
-	sections = append(sections, providers, body, m.renderHelp())
+	if m.focusMode {
+		sections = append(sections, m.renderFocusBody())
+	} else {
+		sections = append(sections, m.renderStatuses(), m.renderDashboardBody())
+	}
+	sections = append(sections, m.renderHelp())
 	view := lipgloss.JoinVertical(lipgloss.Left, sections...)
 	if m.paletteVisible {
 		view = lipgloss.JoinHorizontal(lipgloss.Top, view, m.renderPalette())
@@ -302,6 +311,18 @@ func (m Model) renderHeader() string {
 func (m Model) renderRunsTable() string {
 	title := sectionTitleStyle.Render(fmt.Sprintf("Runs (%d showing)", len(m.visibleRuns)))
 	return lipgloss.JoinVertical(lipgloss.Left, title, m.bodyBoxStyle.Render(m.Table.View()))
+}
+
+func (m Model) renderDashboardBody() string {
+	table := m.renderRunsTable()
+	sidebar := lipgloss.JoinVertical(lipgloss.Left, m.renderDetails(), m.renderLogs())
+	return lipgloss.JoinHorizontal(lipgloss.Top, table, sidebar)
+}
+
+func (m Model) renderFocusBody() string {
+	banner := m.panelStyle.Render(bodyTextStyle.Render("Focus mode: table maximized (press 'v' to return to dashboard view)"))
+	lower := lipgloss.JoinHorizontal(lipgloss.Top, m.renderDetails(), m.renderLogs())
+	return lipgloss.JoinVertical(lipgloss.Left, banner, m.renderRunsTable(), lower, m.renderStatuses())
 }
 
 func (m Model) renderStatsBar() string {
@@ -476,6 +497,10 @@ func (m *Model) startSearch() {
 func (m *Model) toggleHelpOverlay() {
 	m.helpVisible = !m.helpVisible
 	m.helpModel.ShowAll = m.helpVisible
+}
+
+func (m *Model) toggleFocusMode() {
+	m.focusMode = !m.focusMode
 }
 
 func (m Model) renderDetails() string {
@@ -711,6 +736,7 @@ func (m Model) renderHelpOverlay() string {
 		}),
 		renderHelpSection("Actions", [][2]string{
 			{"r", "Force refresh providers"},
+			{"v", "Toggle focus/dashboard view"},
 			{"?", "Toggle help overlay"},
 			{"q / ctrl+c", "Quit"},
 		}),

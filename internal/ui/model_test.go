@@ -134,3 +134,19 @@ func TestModelHelpOverlayToggle(t *testing.T) {
 		t.Fatalf("expected help overlay hidden after '?' again")
 	}
 }
+
+func TestModelFocusModeToggle(t *testing.T) {
+	m := NewModel(core.NewStore(), nil, nil, nil)
+
+	next, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'v'}})
+	actual := next.(Model)
+	if !actual.focusMode {
+		t.Fatalf("expected focus mode enabled after 'v'")
+	}
+
+	next, _ = actual.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'v'}})
+	actual = next.(Model)
+	if actual.focusMode {
+		t.Fatalf("expected focus mode disabled after second 'v'")
+	}
+}
