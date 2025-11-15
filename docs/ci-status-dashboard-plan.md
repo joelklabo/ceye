@@ -45,7 +45,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Stub-client test mirroring Step 9 for Azure pipelines.
 12. - [x] **Step 12 – Azure Provider Start Implementation** (`commit: 5d89830`, `push: yes`)
     - Implement Azure polling with adaptive intervals and context handling.
-13. - [ ] **Step 13 – Provider Factory** (`commit: pending`, `push: pending`)
+13. - [x] **Step 13 – Provider Factory** (`commit: fadb214`, `push: yes`)
     - Introduce registry/factory to instantiate providers from config + unit tests.
 14. - [ ] **Step 14 – Config Parsing Test** (`commit: pending`, `push: pending`)
     - Write failing test loading sample YAML via Viper into config structs.
