@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"strings"
+
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 
@@ -27,7 +29,14 @@ func NewModel(store *core.Store, providers []string) Model {
 		{Title: "Branch", Width: 15},
 	}
 	tbl := table.New(table.WithColumns(columns), table.WithRows([]table.Row{}))
-	return Model{Store: store, Table: tbl, ActiveProvider: "all", Providers: providers}
+	providerList := buildProviderList(providers)
+	m := Model{
+		Store:          store,
+		Table:          tbl,
+		ActiveProvider: providerList[0],
+		Providers:      providerList,
+	}
+	return m
 }
 
 // Init implements tea.Model.Init.
@@ -37,9 +46,27 @@ func (m Model) Init() tea.Cmd {
 
 // Update implements tea.Model.Update.
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg.(type) {
+	switch msg := msg.(type) {
 	case RunUpdatedMsg:
 		m.refreshTable()
+		return m, nil
+	case tea.KeyMsg:
+		switch {
+		case msg.Type == tea.KeyCtrlC:
+			return m, tea.Quit
+		case msg.Type == tea.KeyTab:
+			m.cycleProvider()
+			m.refreshTable()
+			return m, nil
+		case msg.Type == tea.KeyRunes:
+			if len(msg.Runes) == 0 {
+				break
+			}
+			r := strings.ToLower(string(msg.Runes))
+			if r == "q" {
+				return m, tea.Quit
+			}
+		}
 	}
 
 	var cmd tea.Cmd
@@ -63,4 +90,39 @@ func (m *Model) refreshTable() {
 		rows = append(rows, table.Row{run.Provider, run.WorkflowName, string(run.Status), run.Branch})
 	}
 	m.Table.SetRows(rows)
+}
+
+func (m *Model) cycleProvider() {
+	if len(m.Providers) == 0 {
+		return
+	}
+	current := m.currentProviderIndex()
+	next := (current + 1) % len(m.Providers)
+	m.ActiveProvider = m.Providers[next]
+}
+
+func buildProviderList(names []string) []string {
+	seen := map[string]bool{"all": true}
+	list := []string{"all"}
+	for _, n := range names {
+		if n == "" {
+			continue
+		}
+		n = strings.ToLower(n)
+		if seen[n] {
+			continue
+		}
+		list = append(list, n)
+		seen[n] = true
+	}
+	return list
+}
+
+func (m *Model) currentProviderIndex() int {
+	for i, name := range m.Providers {
+		if name == m.ActiveProvider {
+			return i
+		}
+	}
+	return 0
 }
