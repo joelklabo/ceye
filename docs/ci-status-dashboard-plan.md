@@ -79,6 +79,8 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Implement real GitHub API client using `net/http`, injecting it into provider factory with auth token support (supports credentials from config/environment).
 29. - [x] **Step 29 – Azure HTTP client** (`commit: 7196660`, `push: yes`)
     - Implement Azure DevOps REST client and wire PAT support via config/env.
+30. - [ ] **Step 30 – Provider errors & status** (`commit: pending`, `push: pending`)
+    - Surface provider errors in UI header/footer and log warnings when polls fail.
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.

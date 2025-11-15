@@ -2,6 +2,7 @@ package github
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/joelklabo/ceye/internal/core"
@@ -30,6 +31,7 @@ type Provider struct {
 	fastInterval time.Duration
 	slowInterval time.Duration
 	refreshCh    chan struct{}
+	lastError    error
 }
 
 // NewProvider constructs a GitHub provider with the supplied client and repo list.
@@ -68,18 +70,17 @@ func (p *Provider) Start(ctx context.Context, out chan<- core.RunEvent) error {
 		for _, repo := range p.repos {
 			runs, err := p.client.ListWorkflowRuns(repo.Owner, repo.Repo)
 			if err != nil {
-				// Skip this repo on error; in a fuller implementation we would log it.
+				p.lastError = err
+				log.Printf("github provider error for %s/%s: %v", repo.Owner, repo.Repo, err)
+				p.emitEvent(ctx, out, nil, err)
 				continue
 			}
 			combined = append(combined, runs...)
 		}
 
 		if len(combined) > 0 {
-			select {
-			case out <- core.RunEvent{Provider: p.Name(), Runs: combined, Timestamp: time.Now()}:
-			case <-ctx.Done():
-				return ctx.Err()
-			}
+			p.lastError = nil
+			p.emitEvent(ctx, out, combined, nil)
 		}
 
 		interval = p.nextInterval(combined, interval)
@@ -119,5 +120,17 @@ func (p *Provider) TriggerRefresh() {
 	select {
 	case p.refreshCh <- struct{}{}:
 	default:
+	}
+}
+
+// LastError returns the last polling error encountered.
+func (p *Provider) LastError() error {
+	return p.lastError
+}
+
+func (p *Provider) emitEvent(ctx context.Context, out chan<- core.RunEvent, runs []core.Run, err error) {
+	select {
+	case out <- core.RunEvent{Provider: p.Name(), Runs: runs, Timestamp: time.Now(), Err: err}:
+	case <-ctx.Done():
 	}
 }

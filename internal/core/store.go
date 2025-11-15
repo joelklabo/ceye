@@ -24,6 +24,10 @@ func (s *Store) Merge(event RunEvent) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	if event.Err != nil {
+		return
+	}
+
 	for _, run := range event.Runs {
 		if run.Provider == "" {
 			run.Provider = event.Provider

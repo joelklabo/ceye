@@ -35,9 +35,10 @@ type Run struct {
 
 // RunEvent batches run updates emitted by providers.
 type RunEvent struct {
-	Provider  string
-	Runs      []Run
-	Timestamp time.Time
+    Provider  string
+    Runs      []Run
+    Timestamp time.Time
+    Err       error
 }
 
 // Provider is implemented by CI backends (GitHub, Azure, etc.).

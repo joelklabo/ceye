@@ -56,6 +56,7 @@ func run(ctx context.Context, cfgPath string) error {
 	var providerInstances []core.Provider
 	var providerNames []string
 	var refreshers []func()
+	providerStatus := make(map[string]string)
 	for _, pCfg := range cfg.Providers {
 		provider, err := providers.CreateProvider(pCfg, deps)
 		if err != nil {
@@ -66,6 +67,7 @@ func run(ctx context.Context, cfgPath string) error {
 		if refresher, ok := provider.(interface{ TriggerRefresh() }); ok {
 			refreshers = append(refreshers, refresher.TriggerRefresh)
 		}
+		providerStatus[provider.Name()] = ""
 	}
 
 	store := core.NewStore()
@@ -95,11 +97,18 @@ func run(ctx context.Context, cfgPath string) error {
 				return
 			case event := <-eventCh:
 				store.Merge(event)
+				if event.Provider != "" {
+					if event.Err != nil {
+						providerStatus[event.Provider] = event.Err.Error()
+					} else {
+						providerStatus[event.Provider] = ""
+					}
+				}
 				ts := event.Timestamp
 				if ts.IsZero() {
 					ts = time.Now()
 				}
-				program.Send(ui.RunUpdatedMsg{Timestamp: ts})
+				program.Send(ui.RunUpdatedMsg{Timestamp: ts, Status: copyStatus(providerStatus)})
 			}
 		}
 	}()
@@ -122,4 +131,12 @@ func azureToken() string {
 		return token
 	}
 	return os.Getenv("AZURE_DEVOPS_PAT")
+}
+
+func copyStatus(in map[string]string) map[string]string {
+	out := make(map[string]string, len(in))
+	for k, v := range in {
+		out[k] = v
+	}
+	return out
 }
