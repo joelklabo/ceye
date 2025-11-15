@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/atotto/clipboard"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 
@@ -90,7 +91,7 @@ func run(ctx context.Context, cfgPath string) error {
 		}
 	}
 
-	model := ui.NewModel(store, providerNames, refresh, openURL)
+	model := ui.NewModel(store, providerNames, refresh, openURL, copyToClipboard)
 	program := tea.NewProgram(model)
 
 	go func() {
@@ -192,4 +193,13 @@ func openURL(link string) {
 		return
 	}
 	cmd.Start()
+}
+
+func copyToClipboard(text string) {
+	if text == "" {
+		return
+	}
+	if err := clipboard.WriteAll(text); err != nil {
+		fmt.Fprintf(os.Stderr, "copy to clipboard: %v\n", err)
+	}
 }

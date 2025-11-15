@@ -22,7 +22,7 @@ func TestModelRunUpdatedMsgRefreshesTable(t *testing.T) {
 			UpdatedAt:    time.Now(),
 		}},
 	})
-	m := NewModel(store, []string{"github"}, nil, nil)
+	m := NewModel(store, []string{"github"}, nil, nil, nil)
 
 	updatedModel, _ := m.Update(RunUpdatedMsg{Timestamp: time.Now()})
 	actual := updatedModel.(Model)
@@ -41,7 +41,7 @@ func TestModelRunUpdatedMsgRespectsProviderFilter(t *testing.T) {
 	store.Merge(core.RunEvent{Provider: "github", Runs: []core.Run{{ID: "1", Provider: "github", WorkflowName: "Build", Branch: "main", Status: core.RunStatusInProgress, UpdatedAt: time.Now()}}})
 	store.Merge(core.RunEvent{Provider: "azure", Runs: []core.Run{{ID: "2", Provider: "azure", WorkflowName: "Deploy", Branch: "main", Status: core.RunStatusCompleted, UpdatedAt: time.Now()}}})
 
-	m := NewModel(store, []string{"github", "azure"}, nil, nil)
+	m := NewModel(store, []string{"github", "azure"}, nil, nil, nil)
 	m.ActiveProvider = "github"
 
 	updatedModel, _ := m.Update(RunUpdatedMsg{Timestamp: time.Now()})
@@ -57,7 +57,7 @@ func TestModelRunUpdatedMsgRespectsProviderFilter(t *testing.T) {
 }
 
 func TestModelTableUpdatePassthrough(t *testing.T) {
-	m := NewModel(core.NewStore(), nil, nil, nil)
+	m := NewModel(core.NewStore(), nil, nil, nil, nil)
 
 	_, cmd := m.Update("noop")
 	if cmd != nil {
@@ -66,7 +66,7 @@ func TestModelTableUpdatePassthrough(t *testing.T) {
 }
 
 func TestModelQuitKeys(t *testing.T) {
-	m := NewModel(core.NewStore(), nil, nil, nil)
+	m := NewModel(core.NewStore(), nil, nil, nil, nil)
 
 	tests := []tea.KeyMsg{
 		{Type: tea.KeyCtrlC},
@@ -90,7 +90,7 @@ func TestModelQuitKeys(t *testing.T) {
 
 func TestModelProviderCycleOnTab(t *testing.T) {
 	store := core.NewStore()
-	m := NewModel(store, []string{"github", "azure"}, nil, nil)
+	m := NewModel(store, []string{"github", "azure"}, nil, nil, nil)
 	m.ActiveProvider = "github"
 
 	next, _ := m.Update(tea.KeyMsg{Type: tea.KeyTab})
@@ -110,7 +110,7 @@ func TestModelProviderCycleOnTab(t *testing.T) {
 func TestModelRefreshKeyInvokesCallback(t *testing.T) {
 	called := 0
 	refresh := func() { called++ }
-	m := NewModel(core.NewStore(), nil, refresh, nil)
+	m := NewModel(core.NewStore(), nil, refresh, nil, nil)
 
 	m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'r'}})
 
@@ -120,7 +120,7 @@ func TestModelRefreshKeyInvokesCallback(t *testing.T) {
 }
 
 func TestModelHelpOverlayToggle(t *testing.T) {
-	m := NewModel(core.NewStore(), nil, nil, nil)
+	m := NewModel(core.NewStore(), nil, nil, nil, nil)
 
 	next, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'?'}})
 	actual := next.(Model)
@@ -136,7 +136,7 @@ func TestModelHelpOverlayToggle(t *testing.T) {
 }
 
 func TestModelFocusModeToggle(t *testing.T) {
-	m := NewModel(core.NewStore(), nil, nil, nil)
+	m := NewModel(core.NewStore(), nil, nil, nil, nil)
 
 	next, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'v'}})
 	actual := next.(Model)
@@ -152,7 +152,7 @@ func TestModelFocusModeToggle(t *testing.T) {
 }
 
 func TestModelCycleSort(t *testing.T) {
-	m := NewModel(core.NewStore(), nil, nil, nil)
+	m := NewModel(core.NewStore(), nil, nil, nil, nil)
 	initial := m.sortIndex
 	m.cycleSort()
 	if m.sortIndex == initial {
@@ -166,7 +166,7 @@ func TestModelSortByUpdated(t *testing.T) {
 	newer := time.Now()
 	store.Merge(core.RunEvent{Provider: "github", Runs: []core.Run{{ID: "1", Provider: "github", WorkflowName: "Build", Branch: "main", Status: core.RunStatusInProgress, UpdatedAt: old}}})
 	store.Merge(core.RunEvent{Provider: "github", Runs: []core.Run{{ID: "2", Provider: "github", WorkflowName: "Test", Branch: "dev", Status: core.RunStatusCompleted, Conclusion: "success", UpdatedAt: newer}}})
-	m := NewModel(store, []string{"github"}, nil, nil)
+	m := NewModel(store, []string{"github"}, nil, nil, nil)
 	m.sortIndex = 1 // updated
 	m.refreshTable()
 	rows := m.Table.Rows()
@@ -175,5 +175,20 @@ func TestModelSortByUpdated(t *testing.T) {
 	}
 	if rows[0][2] != "Test" {
 		t.Fatalf("expected newest run first, got %v", rows[0])
+	}
+}
+
+func TestModelCopyURLKey(t *testing.T) {
+	store := core.NewStore()
+	url := "https://example.com/run/1"
+	store.Merge(core.RunEvent{Provider: "github", Runs: []core.Run{{ID: "1", Provider: "github", WorkflowName: "Build", Branch: "main", Status: core.RunStatusInProgress, UpdatedAt: time.Now(), URL: url}}})
+	copied := ""
+	copyFn := func(text string) { copied = text }
+	m := NewModel(store, []string{"github"}, nil, nil, copyFn)
+	next, _ := m.Update(RunUpdatedMsg{Timestamp: time.Now()})
+	m = next.(Model)
+	m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'y'}})
+	if copied != url {
+		t.Fatalf("expected URL copied, got %q", copied)
 	}
 }

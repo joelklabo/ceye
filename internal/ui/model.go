@@ -33,6 +33,7 @@ type keyMap struct {
 	Open     key.Binding
 	Focus    key.Binding
 	Sort     key.Binding
+	Copy     key.Binding
 	Help     key.Binding
 	Quit     key.Binding
 }
@@ -47,20 +48,21 @@ func newKeyMap() keyMap {
 		Open:     key.NewBinding(key.WithKeys("o"), key.WithHelp("o", "open run")),
 		Focus:    key.NewBinding(key.WithKeys("v"), key.WithHelp("v", "toggle focus view")),
 		Sort:     key.NewBinding(key.WithKeys("t"), key.WithHelp("t", "cycle sort")),
+		Copy:     key.NewBinding(key.WithKeys("y"), key.WithHelp("y", "copy URL")),
 		Help:     key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "toggle help")),
 		Quit:     key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "quit")),
 	}
 }
 
 func (k keyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Provider, k.Status, k.Sort, k.Focus, k.Refresh, k.Help}
+	return []key.Binding{k.Provider, k.Status, k.Sort, k.Copy, k.Focus, k.Refresh, k.Help}
 }
 
 func (k keyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.Provider, k.Status, k.Sort, k.Search},
 		{k.Palette, k.Focus, k.Refresh, k.Open},
-		{k.Quit},
+		{k.Copy, k.Help, k.Quit},
 	}
 }
 
@@ -75,6 +77,7 @@ type Model struct {
 	statusIndex      int
 	Refresh          func()
 	openURL          func(string)
+	copyText         func(string)
 	helpModel        help.Model
 	keys             keyMap
 	searchActive     bool
@@ -107,7 +110,7 @@ type Model struct {
 }
 
 // NewModel constructs a UI model.
-func NewModel(store *core.Store, providers []string, refresh func(), openURL func(string)) Model {
+func NewModel(store *core.Store, providers []string, refresh func(), openURL func(string), copyText func(string)) Model {
 	columns := []table.Column{
 		{Title: "Provider", Width: 10},
 		{Title: "Repository", Width: 24},
@@ -144,6 +147,7 @@ func NewModel(store *core.Store, providers []string, refresh func(), openURL fun
 		sortIndex:        0,
 		Refresh:          refresh,
 		openURL:          openURL,
+		copyText:         copyText,
 		helpModel:        helpModel,
 		keys:             keys,
 		searchActive:     false,
@@ -249,6 +253,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			case "o":
 				m.openSelectedURL()
+				return m, nil
+			case "y":
+				m.copySelectedURL()
 				return m, nil
 			case "t":
 				m.cycleSort()
@@ -733,6 +740,21 @@ func (m Model) openSelectedURL() {
 	m.openURL(run.URL)
 }
 
+func (m Model) copySelectedURL() {
+	if m.copyText == nil || len(m.visibleRuns) == 0 {
+		return
+	}
+	idx := m.Table.Cursor()
+	if idx < 0 || idx >= len(m.visibleRuns) {
+		return
+	}
+	run := m.visibleRuns[idx]
+	if run.URL == "" {
+		return
+	}
+	m.copyText(run.URL)
+}
+
 func (m Model) renderHelp() string {
 	return m.footerStyle.Render(m.helpModel.View(m.keys))
 }
@@ -871,6 +893,7 @@ func (m Model) renderHelpOverlay() string {
 		}),
 		renderHelpSection("Actions", [][2]string{
 			{"r", "Force refresh providers"},
+			{"y", "Copy run URL"},
 			{"v", "Toggle focus/dashboard view"},
 			{"?", "Toggle help overlay"},
 			{"q / ctrl+c", "Quit"},
