@@ -34,7 +34,7 @@ $ make run -- --config path/to/ceye.yaml
 Alternatively, you can run `go run ./cmd/ci-dash --config path/to/config.yaml` once CLI flags are wired.
 
 ## Configuration
-Create `ceye.yaml` (or point `CEYE_CONFIG` to a custom file). Example:
+Create `ceye.yaml` (or point `CEYE_CONFIG` to a custom file). Example (`config.example.yaml` is checked into the repo for convenience):
 
 ```yaml
 providers:

@@ -69,6 +69,8 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - `go test ./...`, manual CI provider smoke test, fmt/vet, and final cleanup.
 24. - [x] **Step 24 – CLI Flags** (`commit: da28875`, `push: yes`)
     - Add Cobra-based CLI entrypoint with `--config` flag and route execution through root command.
+25. - [ ] **Step 25 – Example Config** (`commit: pending`, `push: pending`)
+    - Add `config.example.yaml` plus README note so users can copy/edit quickly.
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.

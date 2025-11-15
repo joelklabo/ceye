@@ -1,0 +1,14 @@
+providers:
+  - type: github
+    repos:
+      - owner: octocat
+        repo: hello-world
+        workflows:
+          - CI
+          - Deploy
+  - type: azure
+    org: myorg
+    project: MyProject
+    pipelines:
+      - 42
+      - 43
