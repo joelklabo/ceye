@@ -71,7 +71,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Add Cobra-based CLI entrypoint with `--config` flag and route execution through root command.
 25. - [x] **Step 25 – Example Config** (`commit: 9e89cfd`, `push: yes`)
     - Add `config.example.yaml` plus README note so users can copy/edit quickly.
-26. - [ ] **Step 26 – UI Header & Styling** (`commit: pending`, `push: pending`)
+26. - [x] **Step 26 – UI Header & Styling** (`commit: ca0469d`, `push: yes`)
     - Introduce Lip Gloss-styled header/footer with last update timestamp and key hints.
 
 ## Tracking Updates
