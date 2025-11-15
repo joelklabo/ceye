@@ -29,6 +29,7 @@ type Provider struct {
 	repos        []RepoConfig
 	fastInterval time.Duration
 	slowInterval time.Duration
+	refreshCh    chan struct{}
 }
 
 // NewProvider constructs a GitHub provider with the supplied client and repo list.
@@ -38,6 +39,7 @@ func NewProvider(client GitHubClient, repos []RepoConfig) *Provider {
 		repos:        repos,
 		fastInterval: defaultFastInterval,
 		slowInterval: defaultSlowInterval,
+		refreshCh:    make(chan struct{}, 1),
 	}
 }
 
@@ -85,6 +87,8 @@ func (p *Provider) Start(ctx context.Context, out chan<- core.RunEvent) error {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
+		case <-p.refreshCh:
+			continue
 		case <-time.After(interval):
 		}
 	}
@@ -108,4 +112,12 @@ func hasActiveRuns(runs []core.Run) bool {
 		}
 	}
 	return false
+}
+
+// TriggerRefresh requests an immediate polling cycle.
+func (p *Provider) TriggerRefresh() {
+	select {
+	case p.refreshCh <- struct{}{}:
+	default:
+	}
 }

@@ -6,7 +6,7 @@ CI Status Dashboard is a terminal UI written in Go that aggregates workflow/buil
 - **Provider abstraction:** GitHub and Azure DevOps implementations share a `core.Provider` interface, enabling easy expansion to other CI backends.
 - **Thread-safe store:** A central store merges provider events into a normalized run map, providing sorted slices to the TUI.
 - **Adaptive polling loops:** Providers adjust their polling interval based on active runs to balance responsiveness and rate limits.
-- **Bubble Tea UI:** Runs are displayed in a stylized table with provider tabs, real-time updates, and keybindings (`Tab` to cycle providers, `r` reserved for refresh, `q`/Ctrl+C to quit).
+- **Bubble Tea UI:** Runs are displayed in a stylized table with provider tabs, real-time updates, and keybindings (`Tab` to cycle providers, `r` to force refresh, `q`/Ctrl+C to quit).
 - **Cobra/Viper-based config:** Configuration is loaded from `ceye.yaml` (or a path passed via `CEYE_CONFIG`) and supports environment overrides.
 
 ## Getting Started
@@ -54,6 +54,7 @@ Set provider credentials via environment variables (`GITHUB_TOKEN`, `AZURE_DEVOP
 ## Usage
 Once running, the dashboard will start polling providers and updating the table automatically. Key bindings:
 - `Tab`: Cycle provider filter (All → GitHub → Azure → ...)
+- `r`: Force an immediate refresh of all providers
 - `q` or `Ctrl+C`: Quit
 - Arrow keys / `j`, `k`: Navigate table rows (handled by Bubbles table component)
 

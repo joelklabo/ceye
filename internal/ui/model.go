@@ -23,13 +23,14 @@ type Model struct {
 	Table          table.Model
 	ActiveProvider string
 	Providers      []string
+	Refresh        func()
 	lastUpdate     time.Time
 	headerStyle    lipgloss.Style
 	footerStyle    lipgloss.Style
 }
 
 // NewModel constructs a UI model.
-func NewModel(store *core.Store, providers []string) Model {
+func NewModel(store *core.Store, providers []string, refresh func()) Model {
 	columns := []table.Column{
 		{Title: "Provider", Width: 10},
 		{Title: "Workflow", Width: 20},
@@ -43,6 +44,7 @@ func NewModel(store *core.Store, providers []string) Model {
 		Table:          tbl,
 		ActiveProvider: providerList[0],
 		Providers:      providerList,
+		Refresh:        refresh,
 		headerStyle:    lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("205")),
 		footerStyle:    lipgloss.NewStyle().Foreground(lipgloss.Color("241")),
 	}
@@ -74,8 +76,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				break
 			}
 			r := strings.ToLower(string(msg.Runes))
-			if r == "q" {
+			switch r {
+			case "q":
 				return m, tea.Quit
+			case "r":
+				if m.Refresh != nil {
+					m.Refresh()
+				}
+				return m, nil
 			}
 		}
 	}

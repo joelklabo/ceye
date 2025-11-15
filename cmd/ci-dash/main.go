@@ -50,6 +50,7 @@ func run(ctx context.Context, cfgPath string) error {
 
 	var providerInstances []core.Provider
 	var providerNames []string
+	var refreshers []func()
 	for _, pCfg := range cfg.Providers {
 		provider, err := providers.CreateProvider(pCfg, deps)
 		if err != nil {
@@ -57,6 +58,9 @@ func run(ctx context.Context, cfgPath string) error {
 		}
 		providerInstances = append(providerInstances, provider)
 		providerNames = append(providerNames, provider.Name())
+		if refresher, ok := provider.(interface{ TriggerRefresh() }); ok {
+			refreshers = append(refreshers, refresher.TriggerRefresh)
+		}
 	}
 
 	store := core.NewStore()
@@ -70,7 +74,13 @@ func run(ctx context.Context, cfgPath string) error {
 		}(provider)
 	}
 
-	model := ui.NewModel(store, providerNames)
+	refresh := func() {
+		for _, fn := range refreshers {
+			fn()
+		}
+	}
+
+	model := ui.NewModel(store, providerNames, refresh)
 	program := tea.NewProgram(model)
 
 	go func() {
@@ -80,7 +90,11 @@ func run(ctx context.Context, cfgPath string) error {
 				return
 			case event := <-eventCh:
 				store.Merge(event)
-				program.Send(ui.RunUpdatedMsg{Timestamp: time.Now()})
+				ts := event.Timestamp
+				if ts.IsZero() {
+					ts = time.Now()
+				}
+				program.Send(ui.RunUpdatedMsg{Timestamp: ts})
 			}
 		}
 	}()

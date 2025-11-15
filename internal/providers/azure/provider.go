@@ -30,11 +30,18 @@ type Provider struct {
 	cfg          Config
 	fastInterval time.Duration
 	slowInterval time.Duration
+	refreshCh    chan struct{}
 }
 
 // NewProvider constructs an Azure provider.
 func NewProvider(client AzureClient, cfg Config) *Provider {
-	return &Provider{client: client, cfg: cfg, fastInterval: azureFastInterval, slowInterval: azureSlowInterval}
+	return &Provider{
+		client:       client,
+		cfg:          cfg,
+		fastInterval: azureFastInterval,
+		slowInterval: azureSlowInterval,
+		refreshCh:    make(chan struct{}, 1),
+	}
 }
 
 // Name implements core.Provider.
@@ -67,6 +74,8 @@ func (p *Provider) Start(ctx context.Context, out chan<- core.RunEvent) error {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
+		case <-p.refreshCh:
+			continue
 		case <-time.After(interval):
 		}
 	}
@@ -90,4 +99,12 @@ func hasActiveRuns(runs []core.Run) bool {
 		}
 	}
 	return false
+}
+
+// TriggerRefresh requests an immediate polling cycle.
+func (p *Provider) TriggerRefresh() {
+	select {
+	case p.refreshCh <- struct{}{}:
+	default:
+	}
 }
