@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/fs"
 	"net/http"
 	"os"
 	"os/exec"
@@ -28,6 +29,8 @@ import (
 	"github.com/joelklabo/ceye/internal/providers/manager"
 	"github.com/joelklabo/ceye/internal/ui"
 )
+
+const envConfigRoot = "CEYE_CONFIG_ROOT"
 
 var providerStoreFlag string
 var configDirFlag string
@@ -527,15 +530,22 @@ func loadDistributedConfigs(cfgPath, configDir string) (*config.Config, error) {
 	if cfgPath != "" {
 		return config.Load(cfgPath)
 	}
-	if configDir == "" {
-		configDir = "."
+	root, err := resolveConfigRoot(configDir)
+	if err != nil {
+		return nil, err
 	}
+	configDir = root
 	matches, err := config.DiscoverConfigs(configDir)
 	if err != nil {
 		return nil, fmt.Errorf("discover configs: %w", err)
 	}
 	if len(matches) == 0 {
-		return nil, fmt.Errorf("no config files found under %s", configDir)
+		repos, repoErr := discoverGitRepos(configDir)
+		msg := fmt.Sprintf("no config files found under %s", configDir)
+		if repoErr == nil && len(repos) > 0 {
+			msg = fmt.Sprintf("%s (found git repos: %s)", msg, strings.Join(repos, ", "))
+		}
+		return nil, fmt.Errorf("%s", msg)
 	}
 	var merged config.Config
 	for _, match := range matches {
@@ -546,6 +556,60 @@ func loadDistributedConfigs(cfgPath, configDir string) (*config.Config, error) {
 		merged.Providers = append(merged.Providers, cfg.Providers...)
 	}
 	return &merged, nil
+}
+
+func resolveConfigRoot(configDir string) (string, error) {
+	if override := os.Getenv(envConfigRoot); override != "" {
+		return override, nil
+	}
+	if configDir != "" {
+		return configDir, nil
+	}
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	return workspaceRootBase(cwd), nil
+}
+
+func workspaceRoot() (string, error) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	return workspaceRootBase(cwd), nil
+}
+
+func workspaceRootBase(cwd string) string {
+	root := cwd
+	for {
+		if filepath.Base(root) == "code" {
+			return root
+		}
+		parent := filepath.Dir(root)
+		if parent == root {
+			return cwd
+		}
+		root = parent
+	}
+}
+
+func discoverGitRepos(root string) ([]string, error) {
+	var repos []string
+	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !d.IsDir() {
+			return nil
+		}
+		if d.Name() == ".git" {
+			repos = append(repos, filepath.Dir(path))
+			return fs.SkipDir
+		}
+		return nil
+	})
+	return repos, err
 }
 
 type providerEntry struct {
