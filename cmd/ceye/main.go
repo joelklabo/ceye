@@ -716,15 +716,15 @@ func loadDistributedConfigs(cfgPath, configDir, githubOrg, azureOrg, azureProjec
 		autoCfg, err := autoConfigFromCLIs(githubOrg, azureOrg, azureProject)
 		if err == nil {
 			githubCount, azureCount := countAutoProviders(autoCfg)
-			fmt.Fprintf(os.Stderr, "ci-dash: auto-discovered %d GitHub repos and %d Azure pipelines via gh/az CLI\n", githubCount, azureCount)
+			fmt.Fprintf(os.Stderr, "ceye: auto-discovered %d GitHub repos and %d Azure pipelines via gh/az CLI\n", githubCount, azureCount)
 			return autoCfg, root, nil, nil
 		}
-		fmt.Fprintf(os.Stderr, "ci-dash: CLI discovery failed: %v\n", err)
+		fmt.Fprintf(os.Stderr, "ceye: CLI discovery failed: %v\n", err)
 		repos, _ := discoverGitRepos(root)
 		if len(repos) > 0 {
 			return &config.Config{}, root, repos, nil
 		}
-		fmt.Fprintf(os.Stderr, "ci-dash: no config files found under %s, falling back to demo provider\n", root)
+		fmt.Fprintf(os.Stderr, "ceye: no config files found under %s, falling back to demo provider\n", root)
 		return &config.Config{Providers: []providers.ProviderConfig{{Type: "demo", Runs: 4}}}, root, nil, nil
 	}
 	var merged config.Config
@@ -1025,12 +1025,12 @@ func newGitHubClient() githubprovider.GitHubClient {
 		return githubprovider.NewHTTPClient(token)
 	}
 	path, err := exec.LookPath("gh")
-	fmt.Fprintf(os.Stderr, "ci-dash: GH lookup -> path=%q err=%v\n", path, err)
+	fmt.Fprintf(os.Stderr, "ceye: GH lookup -> path=%q err=%v\n", path, err)
 	if err == nil {
-		fmt.Fprintf(os.Stderr, "ci-dash: using gh CLI-based GitHub client (%s)\n", path)
+		fmt.Fprintf(os.Stderr, "ceye: using gh CLI-based GitHub client (%s)\n", path)
 		return githubprovider.NewCLIClient()
 	}
-	fmt.Fprintln(os.Stderr, "ci-dash: no GitHub token found, falling back to unauthenticated REST client (requests may be rate-limited)")
+	fmt.Fprintln(os.Stderr, "ceye: no GitHub token found, falling back to unauthenticated REST client (requests may be rate-limited)")
 	return githubprovider.NewHTTPClient("")
 }
 
