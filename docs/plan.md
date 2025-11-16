@@ -190,9 +190,9 @@ Add historical data tracking, trends analysis, alerting, and performance metrics
 - [x] Detect anomalies (high failure rate >20%, duration spikes >2x avg)
 - [x] 7 comprehensive tests for trend calculations
 
-**Phase 2.2.2: Trends Panel** (2 days) - 🚧 IN PROGRESS
+**Phase 2.2.2: Trends Panel** (2 days) - ✅ COMPLETE (TUI)
 - [x] Storage integration in main application
-- [x] Trend analyzer initialization
+- [x] Trend analyzer initialization  
 - [x] Trends panel rendering foundation
   ```
   ┌─ Trends (Last 7 Days) ────────────┐
@@ -202,10 +202,10 @@ Add historical data tracking, trends analysis, alerting, and performance metrics
   │ Failure Rate:    5% (↓ 2%)        │
   └────────────────────────────────────┘
   ```
-- [ ] Display trends panel in TUI View()
-- [ ] Add keyboard shortcut to toggle trends
-- [ ] Add trends to web UI with charts (Chart.js)
-- [ ] Add export to CSV/JSON
+- [x] Display trends panel in TUI View()
+- [x] Add keyboard shortcut to toggle trends (T key)
+- [ ] Add trends to web UI with charts (Chart.js) - deferred to 2.2.3
+- [ ] Add export to CSV/JSON - deferred
 
 **Phase 2.2.3: Analytics Dashboard** (2 days)
 - [ ] Create `/analytics` endpoint in web server
