@@ -173,6 +173,7 @@ type Model struct {
 	providerStoreEditEntry    manager.ProviderRecord
 	providerStoreTextInput    textinput.Model
 	providerStoreEditField    string
+	durationHistory           map[string][]time.Duration // key: "repo/workflow"
 	providerStoreInstructions string
 }
 
@@ -252,6 +253,7 @@ func NewModelWithBuildInfo(store *core.Store, providers []string, refresh func()
 		missingIndex:           0,
 		providerStoreTextInput: ti,
 		buildInfo:              buildInfo,
+		durationHistory:        make(map[string][]time.Duration),
 		headerStyle:            headerStyle,
 		footerStyle:            footerStyle,
 		bodyBoxStyle:           bodyBox,
@@ -589,6 +591,11 @@ func (m Model) renderDashboardBody() string {
 		sidebarParts = append(sidebarParts, failureRate)
 	}
 	
+	// Add duration trends panel
+	if durationTrends := m.renderDurationTrendsPanel(); durationTrends != "" {
+		sidebarParts = append(sidebarParts, durationTrends)
+	}
+	
 	sidebarParts = append(sidebarParts, m.renderLogs())
 	
 	if audit := m.renderAuditPanel(); audit != "" {
@@ -882,6 +889,123 @@ func (m Model) renderFailureRatePanel() string {
 	return m.panelStyle.Render(lipgloss.JoinVertical(lipgloss.Left, lines...))
 }
 
+func (m Model) renderDurationTrendsPanel() string {
+	if len(m.durationHistory) == 0 {
+		return ""
+	}
+	
+	type workflowTrend struct {
+		key        string
+		avgCurrent time.Duration
+		avgPrev    time.Duration
+		trend      string
+		pctChange  float64
+	}
+	
+	trends := []workflowTrend{}
+	
+	for key, history := range m.durationHistory {
+		if len(history) < 2 {
+			continue // Need at least 2 data points
+		}
+		
+		// Calculate current average (last 5 runs)
+		currentCount := 5
+		if len(history) < 5 {
+			currentCount = len(history)
+		}
+		currentRuns := history[len(history)-currentCount:]
+		var currentSum time.Duration
+		for _, d := range currentRuns {
+			currentSum += d
+		}
+		avgCurrent := currentSum / time.Duration(len(currentRuns))
+		
+		// Calculate previous average (runs before the last 5)
+		prevStart := 0
+		prevEnd := len(history) - currentCount
+		if prevEnd <= 0 {
+			continue // Not enough data for trend
+		}
+		prevRuns := history[prevStart:prevEnd]
+		var prevSum time.Duration
+		for _, d := range prevRuns {
+			prevSum += d
+		}
+		avgPrev := prevSum / time.Duration(len(prevRuns))
+		
+		// Calculate trend
+		pctChange := float64(avgCurrent-avgPrev) / float64(avgPrev) * 100
+		trendIcon := "→"
+		if pctChange > 5 {
+			trendIcon = "↑"
+		} else if pctChange < -5 {
+			trendIcon = "↓"
+		}
+		
+		trends = append(trends, workflowTrend{
+			key:        key,
+			avgCurrent: avgCurrent,
+			avgPrev:    avgPrev,
+			trend:      trendIcon,
+			pctChange:  pctChange,
+		})
+	}
+	
+	if len(trends) == 0 {
+		return ""
+	}
+	
+	// Sort by run count (most active first)
+	sort.Slice(trends, func(i, j int) bool {
+		return len(m.durationHistory[trends[i].key]) > len(m.durationHistory[trends[j].key])
+	})
+	
+	// Limit to top 5
+	if len(trends) > 5 {
+		trends = trends[:5]
+	}
+	
+	lines := []string{
+		sectionTitleStyle.Render("Duration Trends"),
+	}
+	
+	for _, trend := range trends {
+		// Extract workflow name from key
+		parts := strings.Split(trend.key, "/")
+		workflowName := trend.key
+		if len(parts) >= 2 {
+			workflowName = parts[len(parts)-1]
+		}
+		workflowShort := truncate(workflowName, 10)
+		
+		avgStr := formatDuration(trend.avgCurrent, time.Time{}, time.Time{})
+		changeStr := fmt.Sprintf("%s %.0f%%", trend.trend, trend.pctChange)
+		if trend.pctChange > 0 {
+			changeStr = fmt.Sprintf("%s +%.0f%%", trend.trend, trend.pctChange)
+		}
+		
+		line := fmt.Sprintf("%s: avg %s %s",
+			workflowShort,
+			avgStr,
+			changeStr,
+		)
+		
+		// Color code based on trend
+		if trend.trend == "↑" {
+			line = m.tagWarningStyle.Render(line)
+		} else if trend.trend == "↓" {
+			line = m.successStyle.Render(line)
+		} else {
+			line = bodyTextStyle.Render(line)
+		}
+		
+		lines = append(lines, line)
+	}
+	
+	return m.panelStyle.Render(lipgloss.JoinVertical(lipgloss.Left, lines...))
+}
+
 func (m Model) renderProviderBadges() []string {
 	parts := make([]string, 0)
 	for _, name := range m.Providers {
@@ -1097,6 +1221,30 @@ func (m *Model) refreshTable() {
 		})
 	}
 	m.visibleRuns = sorted
+	
+	// Track duration history for completed runs
+	for _, run := range sorted {
+		if run.Status == core.RunStatusCompleted && run.Duration > 0 {
+			key := run.Repo + "/" + run.WorkflowName
+			history := m.durationHistory[key]
+			
+			// Check if this run is already tracked (by checking if latest duration matches)
+			alreadyTracked := false
+			if len(history) > 0 && history[len(history)-1] == run.Duration {
+				alreadyTracked = true
+			}
+			
+			if !alreadyTracked {
+				history = append(history, run.Duration)
+				// Keep only last 10 runs for each workflow
+				if len(history) > 10 {
+					history = history[len(history)-10:]
+				}
+				m.durationHistory[key] = history
+			}
+		}
+	}
+	
 	m.Table.SetRows(rows)
 }
 
