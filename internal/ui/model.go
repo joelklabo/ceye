@@ -876,11 +876,11 @@ func (m *Model) refreshTable() {
 	rows := make([]table.Row, 0, len(sorted))
 	for _, run := range sorted {
 		rows = append(rows, table.Row{
-			strings.ToLower(run.Provider),
-			run.Repo,
-			run.WorkflowName,
+			truncate(strings.ToLower(run.Provider), 10),
+			truncate(run.Repo, 24),
+			truncate(run.WorkflowName, 24),
 			m.formatStatus(run),
-			formatBranchName(run.Branch),
+			truncate(formatBranchName(run.Branch), 18),
 			formatRelativeTime(run.UpdatedAt),
 			formatDuration(run.Duration, run.StartedAt, run.UpdatedAt),
 		})
@@ -890,26 +890,36 @@ func (m *Model) refreshTable() {
 }
 
 func (m *Model) formatStatus(run core.Run) string {
+	var icon, text string
+	var style lipgloss.Style
+	
 	switch run.Status {
 	case core.RunStatusCompleted:
 		conclusion := strings.ToLower(run.Conclusion)
 		switch conclusion {
 		case "", "success", "succeeded":
-			return m.successStyle.Render(fmt.Sprintf("%s success", statusIconSuccess))
+			icon, text, style = statusIconSuccess, "success", m.successStyle
 		case "cancelled", "canceled":
-			return m.failStyle.Render(fmt.Sprintf("%s canceled", statusIconFailed))
+			icon, text, style = statusIconFailed, "canceled", m.failStyle
 		default:
-			return m.failStyle.Render(fmt.Sprintf("%s %s", statusIconFailed, conclusion))
+			icon, text, style = statusIconFailed, conclusion, m.failStyle
 		}
 	case core.RunStatusInProgress:
-		return m.runningStyle.Render(fmt.Sprintf("%s running", statusIconRunning))
+		icon, text, style = statusIconRunning, "running", m.runningStyle
 	case core.RunStatusQueued:
-		return m.runningStyle.Render(fmt.Sprintf("%s queued", statusIconQueued))
+		icon, text, style = statusIconQueued, "queued", m.runningStyle
 	case core.RunStatusFailed, core.RunStatusCancelled:
-		return m.failStyle.Render(fmt.Sprintf("%s failed", statusIconFailed))
+		icon, text, style = statusIconFailed, "failed", m.failStyle
 	default:
-		return bodyTextStyle.Render(fmt.Sprintf("%s %s", statusIconRunning, strings.ToLower(string(run.Status))))
+		icon, text, style = statusIconRunning, strings.ToLower(string(run.Status)), bodyTextStyle
 	}
+	
+	// Truncate long status text
+	if len(text) > 15 {
+		text = text[:12] + "..."
+	}
+	
+	return style.Render(fmt.Sprintf("%s %s", icon, text))
 }
 
 func (m *Model) sortRuns(runs []core.Run) []core.Run {
@@ -983,6 +993,16 @@ func formatStatusText(run core.Run) string {
 	default:
 		return strings.ToLower(string(run.Status))
 	}
+}
+
+func truncate(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	if maxLen <= 3 {
+		return s[:maxLen]
+	}
+	return s[:maxLen-1] + "…"
 }
 
 func formatBranchName(branch string) string {
@@ -1551,6 +1571,22 @@ func (m *Model) updateTableSize() {
 		width = 40
 	}
 	m.Table.SetWidth(width)
+	
+	// Set table height based on available space
+	headerHeight := 15 // header + stats + filters
+	footerHeight := 2  // help line
+	if m.height > 0 {
+		availableHeight := m.height - headerHeight - footerHeight
+		if m.focusMode {
+			availableHeight = m.height - 8
+		} else if !m.compactLayout() {
+			availableHeight = m.height - 18
+		}
+		if availableHeight < 5 {
+			availableHeight = 5
+		}
+		m.Table.SetHeight(availableHeight)
+	}
 }
 
 func (m *Model) togglePalette() {
@@ -1974,12 +2010,16 @@ func tableStyles() table.Styles {
 		BorderBottom(true).
 		BorderForeground(borderColor).
 		Padding(0, 1).
-		Bold(true)
-	styles.Cell = styles.Cell.PaddingLeft(1).PaddingRight(1)
+		Bold(true).
+		Foreground(baseTextColor)
+	styles.Cell = styles.Cell.
+		PaddingLeft(1).
+		PaddingRight(1).
+		MaxWidth(50)
 	styles.Selected = styles.Selected.
 		Foreground(baseTextColor).
 		Background(rowHighlightBg).
-		Bold(true)
+		Bold(false)
 	return styles
 }
 

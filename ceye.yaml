@@ -1,0 +1,7 @@
+providers:
+  - type: github
+    repos:
+      - owner: joelklabo
+        repo: ceye
+        workflows:
+          - Snapshot Demo
