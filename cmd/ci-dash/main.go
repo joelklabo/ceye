@@ -102,9 +102,13 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 			cfgPath = os.Getenv("CEYE_CONFIG")
 		}
 
-		cfg, err = loadDistributedConfigs(cfgPath, configDir)
+		var missing []string
+		cfg, missing, err = loadDistributedConfigs(cfgPath, configDir)
 		if err != nil {
 			return err
+		}
+		if len(missing) > 0 {
+			providerHistory["missing"] = missing
 		}
 	}
 
@@ -140,6 +144,7 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 	providerLastPoll := make(map[string]time.Time)
 	providerLag := make(map[string]time.Duration)
 	providerHistory := make(map[string][]string)
+	missingConfigs := missing
 	for _, candidate := range buildProviderEntries(cfg, providerStore) {
 		provider, err := providers.CreateProvider(candidate.Config, deps)
 		if err != nil {
@@ -367,6 +372,7 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 					Lag:       copyLag(providerLag),
 					History:   copyHistory(providerHistory),
 					Store:     copyProviderRecords(providerStore.List()),
+					MissingRepos: copyMissing(missingConfigs),
 				})
 			}
 		}
@@ -429,6 +435,15 @@ func copyHistory(in map[string][]string) map[string][]string {
 	for k, v := range in {
 		out[k] = append([]string(nil), v...)
 	}
+	return out
+}
+
+func copyMissing(in []string) []string {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]string, len(in))
+	copy(out, in)
 	return out
 }
 
@@ -526,18 +541,19 @@ func sendWebhook(ctx context.Context, url, provider, message string, timestamp t
 	return nil
 }
 
-func loadDistributedConfigs(cfgPath, configDir string) (*config.Config, error) {
+func loadDistributedConfigs(cfgPath, configDir string) (*config.Config, []string, error) {
 	if cfgPath != "" {
-		return config.Load(cfgPath)
+		cfg, err := config.Load(cfgPath)
+		return cfg, nil, err
 	}
 	root, err := resolveConfigRoot(configDir)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	configDir = root
 	matches, err := config.DiscoverConfigs(configDir)
 	if err != nil {
-		return nil, fmt.Errorf("discover configs: %w", err)
+		return nil, nil, fmt.Errorf("discover configs: %w", err)
 	}
 	if len(matches) == 0 {
 		repos, repoErr := discoverGitRepos(configDir)
@@ -545,7 +561,10 @@ func loadDistributedConfigs(cfgPath, configDir string) (*config.Config, error) {
 		if repoErr == nil && len(repos) > 0 {
 			msg = fmt.Sprintf("%s (found git repos: %s)", msg, strings.Join(repos, ", "))
 		}
-		return nil, fmt.Errorf("%s", msg)
+		if len(repos) > 0 {
+			return &config.Config{}, repos, nil
+		}
+		return nil, nil, fmt.Errorf("%s", msg)
 	}
 	var merged config.Config
 	for _, match := range matches {
@@ -555,7 +574,7 @@ func loadDistributedConfigs(cfgPath, configDir string) (*config.Config, error) {
 		}
 		merged.Providers = append(merged.Providers, cfg.Providers...)
 	}
-	return &merged, nil
+	return &merged, nil, nil
 }
 
 func resolveConfigRoot(configDir string) (string, error) {

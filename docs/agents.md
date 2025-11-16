@@ -9,3 +9,5 @@ sudo cp bin/ci-dash /usr/local/bin/ci-dash
 ```
 
 This ensures the command you run from `~/code` (or anywhere else) executes the latest binary that includes config discovery, provider store overlays, and all the recent work.
+
+Make this the first step after pulling or editing the repo so `ci-dash` on your `PATH` never lags behind the code inside `~/code/ceye`. Repeat the commands above each time you pull or modify the CLI.

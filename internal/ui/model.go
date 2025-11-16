@@ -2,6 +2,9 @@ package ui
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -38,6 +41,7 @@ type RunUpdatedMsg struct {
 	Lag       map[string]time.Duration
 	History   map[string][]string
 	Store     []manager.ProviderRecord
+	MissingRepos []string
 }
 
 type flashExpiredMsg struct{}
@@ -158,6 +162,8 @@ type Model struct {
 	providerStoreVisible      bool
 	providerStoreCursor       int
 	providerStoreEntries      []manager.ProviderRecord
+	MissingRepos              []string
+	missingIndex              int
 	providerStoreEditing      bool
 	providerStoreEditEntry    manager.ProviderRecord
 	providerStoreTextInput    textinput.Model
@@ -231,6 +237,8 @@ func NewModel(store *core.Store, providers []string, refresh func(), openURL fun
 		providerStoreVisible:   false,
 		providerStoreCursor:    0,
 		providerStoreEntries:   make([]manager.ProviderRecord, 0),
+		MissingRepos:           []string{},
+		missingIndex:           0,
 		providerStoreTextInput: ti,
 		headerStyle:            headerStyle,
 		footerStyle:            footerStyle,
@@ -336,6 +344,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.History != nil {
 			m.ProviderHistory = msg.History
 		}
+		if msg.MissingRepos != nil {
+			m.MissingRepos = msg.MissingRepos
+			if m.missingIndex >= len(m.MissingRepos) {
+				m.missingIndex = 0
+			}
+		}
 		if msg.Store != nil {
 			m.providerStoreEntries = msg.Store
 			if m.providerStoreCursor >= len(m.providerStoreEntries) {
@@ -394,6 +408,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			case "p":
 				m.togglePalette()
+				return m, nil
+			case "n":
+				m.cycleMissingRepo()
+				return m, nil
+			case "a":
+				m.createMissingConfig()
 				return m, nil
 			case "/":
 				m.startSearch()
@@ -526,6 +546,9 @@ func (m Model) renderRunsTable() string {
 func (m Model) renderDashboardBody() string {
 	table := m.renderRunsTable()
 	sidebar := lipgloss.JoinVertical(lipgloss.Left, m.renderDetails(), m.renderDetailView(), m.renderLogs(), m.renderHistoryPanel(), m.renderAlertLog())
+	if missing := m.renderMissingPanel(); missing != "" {
+		sidebar = lipgloss.JoinVertical(lipgloss.Left, sidebar, missing)
+	}
 	return lipgloss.JoinHorizontal(lipgloss.Top, table, sidebar)
 }
 
@@ -538,6 +561,9 @@ func (m Model) renderCompactBody() string {
 	}
 	if alertLog != "" {
 		sidebar = append(sidebar, alertLog)
+	}
+	if missing := m.renderMissingPanel(); missing != "" {
+		sidebar = append(sidebar, missing)
 	}
 	return lipgloss.JoinVertical(lipgloss.Left,
 		m.renderStatuses(),
@@ -580,6 +606,24 @@ func (m Model) renderStatuses() string {
 	}
 	content := lipgloss.JoinVertical(lipgloss.Left, sectionTitleStyle.Render("Providers"), bodyTextStyle.Render(body))
 	return m.panelStyle.Render(content)
+}
+
+func (m Model) renderMissingPanel() string {
+	if len(m.MissingRepos) == 0 {
+		return ""
+	}
+	lines := []string{
+		sectionTitleStyle.Render("Missing configs"),
+		bodyTextStyle.Render("Press n to cycle, a to create config"),
+	}
+	for i, repo := range m.MissingRepos {
+		prefix := " "
+		if i == m.missingIndex {
+			prefix = ">"
+		}
+		lines = append(lines, bodyTextStyle.Render(fmt.Sprintf("%s %s", prefix, filepath.Base(repo))))
+	}
+	return m.panelStyle.Render(lipgloss.JoinVertical(lipgloss.Left, lines...))
 }
 
 func (m Model) renderProviderBadges() []string {
@@ -1209,6 +1253,64 @@ func (m *Model) handleProviderStoreInput(msg tea.KeyMsg) bool {
 	return true
 }
 
+func (m *Model) cycleMissingRepo() {
+	if len(m.MissingRepos) == 0 {
+		return
+	}
+	m.missingIndex = (m.missingIndex + 1) % len(m.MissingRepos)
+}
+
+func (m *Model) createMissingConfig() {
+	if len(m.MissingRepos) == 0 {
+		m.flashMessage = "no missing configs to create"
+		return
+	}
+	index := m.missingIndex
+	repoPath := m.MissingRepos[index]
+	cfgPath := filepath.Join(repoPath, "ceye.yaml")
+	if _, err := os.Stat(cfgPath); err == nil {
+		m.flashMessage = fmt.Sprintf("config already exists at %s", cfgPath)
+		return
+	}
+	owner, repo := guessOwnerRepo(repoPath)
+	if repo == "" {
+		repo = filepath.Base(repoPath)
+	}
+	if owner == "" {
+		owner = "OWNER"
+	}
+	content := fmt.Sprintf("providers:\n  - type: github\n    repos:\n      - owner: \"%s\"\n        repo: \"%s\"\n", owner, repo)
+	if err := os.WriteFile(cfgPath, []byte(content), 0o644); err != nil {
+		m.flashMessage = fmt.Sprintf("write config: %v", err)
+		return
+	}
+	m.flashMessage = fmt.Sprintf("created %s", cfgPath)
+	m.MissingRepos = append(m.MissingRepos[:index], m.MissingRepos[index+1:]...)
+	if m.missingIndex >= len(m.MissingRepos) {
+		m.missingIndex = 0
+	}
+}
+
+func guessOwnerRepo(path string) (string, string) {
+	cmd := exec.Command("git", "-C", path, "config", "--get", "remote.origin.url")
+	out, err := cmd.Output()
+	if err != nil {
+		return "", filepath.Base(path)
+	}
+	url := strings.TrimSpace(string(out))
+	url = strings.TrimSuffix(url, ".git")
+	if idx := strings.Index(url, ":"); idx != -1 && strings.Contains(url[:idx], "@") {
+		url = url[idx+1:]
+	}
+	url = strings.TrimPrefix(url, "https://")
+	url = strings.TrimPrefix(url, "http://")
+	segments := strings.Split(url, "/")
+	if len(segments) >= 2 {
+		return segments[len(segments)-2], segments[len(segments)-1]
+	}
+	return "", filepath.Base(path)
+}
+
 func (m *Model) startProviderStoreEdit(entry manager.ProviderRecord) {
 	m.providerStoreEditing = true
 	m.providerStoreEditEntry = entry
@@ -1470,6 +1572,8 @@ func (m Model) renderHelpOverlay() string {
 			{"/", "Start text search"},
 			{"p", "Toggle provider palette"},
 			{"P", "View stored providers"},
+			{"n", "Cycle missing repo entries"},
+			{"a", "Create config for highlighted repo"},
 			{"E", "Edit stored provider display name"},
 		}),
 		renderHelpSection("Actions", [][2]string{
