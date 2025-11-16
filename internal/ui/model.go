@@ -1561,11 +1561,21 @@ func (m *Model) updateTableSize() {
 	if m.width <= 0 {
 		return
 	}
-	margin := 32
-	if m.focusMode || m.compactLayout() {
-		margin = 8
+	
+	// Reserve space for sidebar in normal dashboard mode
+	sidebarWidth := 45
+	margin := 8
+	
+	width := m.width - sidebarWidth - margin
+	
+	if m.focusMode {
+		// In focus mode, use more width since sidebar is below
+		width = m.width - margin
+	} else if m.compactLayout() {
+		// Compact mode also uses full width
+		width = m.width - margin
 	}
-	width := m.width - margin
+	
 	if width < 40 {
 		width = 40
 	}
