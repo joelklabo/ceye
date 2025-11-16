@@ -30,6 +30,7 @@ import (
 )
 
 var providerStoreFlag string
+var configDirFlag string
 
 func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -47,7 +48,7 @@ func main() {
 		Use:   "ci-dash",
 		Short: "CI Status Dashboard TUI",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return run(ctx, cfgPath, demo, demoRuns, demoDuration, eventLogPath, notify, historyPath, webhookURL, resolveProviderStorePath(providerStoreFlag))
+			return run(ctx, cfgPath, configDirFlag, demo, demoRuns, demoDuration, eventLogPath, notify, historyPath, webhookURL, resolveProviderStorePath(providerStoreFlag))
 		},
 	}
 	rootCmd.PersistentFlags().StringVar(&cfgPath, "config", "", "Path to config file (defaults to ceye.yaml search paths)")
@@ -59,6 +60,7 @@ func main() {
 	rootCmd.PersistentFlags().StringVar(&webhookURL, "webhook-url", "", "POST provider errors to this webhook URL")
 	rootCmd.PersistentFlags().StringVar(&historyPath, "history-path", "", "Persist run history to this JSON file (defaults to ~/.config/ceye/run-history.json)")
 	rootCmd.PersistentFlags().StringVar(&providerStoreFlag, "provider-store", "", "Path to provider store (defaults to ~/.config/ceye/providers.json)")
+	rootCmd.PersistentFlags().StringVar(&configDirFlag, "config-dir", ".", "Root directory to scan for config files (defaults to current dir)")
 
 	rootCmd.AddCommand(providerCmd())
 
@@ -67,7 +69,7 @@ func main() {
 	}
 }
 
-func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, demoDuration time.Duration, eventLogPath string, notify bool, historyPath string, webhookURL string, providerStorePath string) error {
+func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRuns int, demoDuration time.Duration, eventLogPath string, notify bool, historyPath string, webhookURL string, providerStorePath string) error {
 	ctx, cancel := context.WithCancel(parentCtx)
 	defer cancel()
 
@@ -97,9 +99,9 @@ func run(parentCtx context.Context, cfgPath string, demo bool, demoRuns int, dem
 			cfgPath = os.Getenv("CEYE_CONFIG")
 		}
 
-		cfg, err = config.Load(cfgPath)
+		cfg, err = loadDistributedConfigs(cfgPath, configDir)
 		if err != nil {
-			return fmt.Errorf("load config: %w", err)
+			return err
 		}
 	}
 
