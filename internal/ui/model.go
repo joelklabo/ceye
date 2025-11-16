@@ -184,13 +184,13 @@ func NewModel(store *core.Store, providers []string, refresh func(), openURL fun
 // NewModelWithBuildInfo constructs a UI model and displays the provided build info in the header.
 func NewModelWithBuildInfo(store *core.Store, providers []string, refresh func(), openURL func(string), copyText func(string), buildInfo string) Model {
 	columns := []table.Column{
-		{Title: "Provider", Width: 10},
-		{Title: "Repository", Width: 24},
-		{Title: "Workflow", Width: 24},
-		{Title: "Status", Width: 20},
-		{Title: "Branch", Width: 18},
-		{Title: "Updated", Width: 10},
-		{Title: "Duration", Width: 9},
+		{Title: "Provider", Width: 8},
+		{Title: "Repository", Width: 18},
+		{Title: "Workflow", Width: 16},
+		{Title: "Status", Width: 12},
+		{Title: "Branch", Width: 12},
+		{Title: "Updated", Width: 8},
+		{Title: "Duration", Width: 8},
 	}
 	tbl := table.New(table.WithColumns(columns), table.WithRows([]table.Row{}))
 	tbl.Focus()
@@ -876,11 +876,11 @@ func (m *Model) refreshTable() {
 	rows := make([]table.Row, 0, len(sorted))
 	for _, run := range sorted {
 		rows = append(rows, table.Row{
-			truncate(strings.ToLower(run.Provider), 10),
-			truncate(run.Repo, 24),
-			truncate(run.WorkflowName, 24),
+			truncate(strings.ToLower(run.Provider), 8),
+			truncate(run.Repo, 18),
+			truncate(run.WorkflowName, 16),
 			m.formatStatus(run),
-			truncate(formatBranchName(run.Branch), 18),
+			truncate(formatBranchName(run.Branch), 12),
 			formatRelativeTime(run.UpdatedAt),
 			formatDuration(run.Duration, run.StartedAt, run.UpdatedAt),
 		})
@@ -891,35 +891,34 @@ func (m *Model) refreshTable() {
 
 func (m *Model) formatStatus(run core.Run) string {
 	var icon, text string
-	var style lipgloss.Style
 	
 	switch run.Status {
 	case core.RunStatusCompleted:
 		conclusion := strings.ToLower(run.Conclusion)
 		switch conclusion {
 		case "", "success", "succeeded":
-			icon, text, style = statusIconSuccess, "success", m.successStyle
+			icon, text = statusIconSuccess, "OK"
 		case "cancelled", "canceled":
-			icon, text, style = statusIconFailed, "canceled", m.failStyle
+			icon, text = statusIconFailed, "cancel"
 		default:
-			icon, text, style = statusIconFailed, conclusion, m.failStyle
+			icon, text = statusIconFailed, conclusion
 		}
 	case core.RunStatusInProgress:
-		icon, text, style = statusIconRunning, "running", m.runningStyle
+		icon, text = statusIconRunning, "run"
 	case core.RunStatusQueued:
-		icon, text, style = statusIconQueued, "queued", m.runningStyle
+		icon, text = statusIconQueued, "queue"
 	case core.RunStatusFailed, core.RunStatusCancelled:
-		icon, text, style = statusIconFailed, "failed", m.failStyle
+		icon, text = statusIconFailed, "fail"
 	default:
-		icon, text, style = statusIconRunning, strings.ToLower(string(run.Status)), bodyTextStyle
+		icon, text = statusIconRunning, strings.ToLower(string(run.Status))
 	}
 	
 	// Truncate long status text
-	if len(text) > 15 {
-		text = text[:12] + "..."
+	if len(text) > 8 {
+		text = text[:7] + "…"
 	}
 	
-	return style.Render(fmt.Sprintf("%s %s", icon, text))
+	return fmt.Sprintf("%s %s", icon, text)
 }
 
 func (m *Model) sortRuns(runs []core.Run) []core.Run {
