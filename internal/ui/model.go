@@ -572,8 +572,15 @@ func (m Model) renderDashboardBody() string {
 	sidebarParts := []string{
 		m.renderDetails(),
 		m.renderDetailView(),
-		m.renderLogs(),
 	}
+	
+	// Add active runs panel
+	if activeRuns := m.renderActiveRunsPanel(); activeRuns != "" {
+		sidebarParts = append(sidebarParts, activeRuns)
+	}
+	
+	sidebarParts = append(sidebarParts, m.renderLogs())
+	
 	if audit := m.renderAuditPanel(); audit != "" {
 		sidebarParts = append(sidebarParts, audit)
 	}
@@ -668,6 +675,53 @@ func (m Model) renderMissingPanel() string {
 		}
 		lines = append(lines, bodyTextStyle.Render(fmt.Sprintf("%s %s", prefix, filepath.Base(repo))))
 	}
+	return m.panelStyle.Render(lipgloss.JoinVertical(lipgloss.Left, lines...))
+}
+
+func (m Model) renderActiveRunsPanel() string {
+	activeRuns := []core.Run{}
+	for _, run := range m.visibleRuns {
+		if run.Status == core.RunStatusInProgress || run.Status == core.RunStatusQueued {
+			activeRuns = append(activeRuns, run)
+		}
+	}
+	
+	if len(activeRuns) == 0 {
+		return ""
+	}
+	
+	// Limit to 5 most recent
+	if len(activeRuns) > 5 {
+		activeRuns = activeRuns[:5]
+	}
+	
+	lines := []string{
+		sectionTitleStyle.Render(fmt.Sprintf("Running Now (%d)", len(activeRuns))),
+	}
+	
+	for _, run := range activeRuns {
+		elapsed := time.Since(run.StartedAt)
+		if run.StartedAt.IsZero() {
+			elapsed = time.Since(run.UpdatedAt)
+		}
+		
+		icon := statusIconRunning
+		if run.Status == core.RunStatusQueued {
+			icon = statusIconQueued
+		}
+		
+		repoShort := truncate(run.Repo, 15)
+		workflowShort := truncate(run.WorkflowName, 15)
+		
+		line := fmt.Sprintf("%s %s/%s %s",
+			icon,
+			repoShort,
+			workflowShort,
+			formatDuration(elapsed, run.StartedAt, time.Now()),
+		)
+		lines = append(lines, bodyTextStyle.Render(line))
+	}
+	
 	return m.panelStyle.Render(lipgloss.JoinVertical(lipgloss.Left, lines...))
 }
 
