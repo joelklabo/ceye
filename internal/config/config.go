@@ -34,7 +34,7 @@ func Load(path string) (*Config, error) {
 		v.SetConfigFile(path)
 	} else {
 		v.SetConfigName("ceye")
-		v.SetConfigType("yaml")
+
 		for _, p := range defaultSearchPaths {
 			if p == "" {
 				continue
