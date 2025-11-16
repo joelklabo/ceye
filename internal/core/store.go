@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"fmt"
+	"log"
 	"sort"
 	"strings"
 	"sync"
@@ -47,6 +48,8 @@ func (s *Store) Merge(event RunEvent) {
 		return
 	}
 
+	log.Printf("STORE: merge called - %d runs from provider '%s'", len(event.Runs), event.Provider)
+
 	var completedRuns []Run
 
 	for _, run := range event.Runs {
@@ -74,6 +77,8 @@ func (s *Store) Merge(event RunEvent) {
 		
 		s.runs[key] = run
 	}
+
+	log.Printf("STORE: now contains %d total runs", len(s.runs))
 
 	// Persist completed runs asynchronously (don't block on storage)
 	if len(completedRuns) > 0 && s.storage != nil {

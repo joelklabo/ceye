@@ -60,6 +60,7 @@ func (p *Provider) Start(ctx context.Context, out chan<- core.RunEvent) error {
 	}
 
 	interval := p.fastInterval
+	pollCount := 0
 
 	for {
 		select {
@@ -68,17 +69,24 @@ func (p *Provider) Start(ctx context.Context, out chan<- core.RunEvent) error {
 		default:
 		}
 
+		pollCount++
+		log.Printf("github: poll cycle #%d starting (%d repos, interval %v)", pollCount, len(p.repos), interval)
+
 		var combined []core.Run
+		rateLimitHit := false
 		for _, repo := range p.repos {
 			runs, err := p.client.ListWorkflowRuns(repo.Owner, repo.Repo)
 			if err != nil {
 				// Check for rate limiting
 				errStr := err.Error()
 				if strings.Contains(errStr, "rate limit") {
-					log.Printf("github provider: ⚠️  RATE LIMIT EXCEEDED - reduce number of repos or increase polling interval")
+					if pollCount == 1 || pollCount%10 == 0 {
+						log.Printf("github provider: ⚠️  RATE LIMIT EXCEEDED - will retry with backoff (cycle %d)", pollCount)
+					}
 					p.lastError = fmt.Errorf("rate limit exceeded")
 					p.emitEvent(ctx, out, nil, err)
-					break // Stop trying other repos
+					rateLimitHit = true
+					break // Stop trying other repos this cycle
 				} else if strings.Contains(errStr, "exit status 1") {
 					// Silently skip repos without workflows - this is expected
 					continue
@@ -92,12 +100,20 @@ func (p *Provider) Start(ctx context.Context, out chan<- core.RunEvent) error {
 			combined = append(combined, runs...)
 		}
 
+		log.Printf("github: poll cycle #%d complete - fetched %d runs", pollCount, len(combined))
+
 		if len(combined) > 0 {
 			p.lastError = nil
 			p.emitEvent(ctx, out, combined, nil)
 		}
 
-		interval = p.nextInterval(combined, interval)
+		// Handle rate limit backoff
+		if rateLimitHit {
+			interval = p.slowInterval * 4 // 240s backoff when rate limited
+			log.Printf("github: backing off to %v due to rate limit", interval)
+		} else {
+			interval = p.nextInterval(combined, interval)
+		}
 
 		select {
 		case <-ctx.Done():
