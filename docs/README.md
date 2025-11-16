@@ -105,6 +105,7 @@ Stored providers are merged with your static `ceye.yaml` providers on startup, a
 - `--notify`: emit a desktop notification whenever a provider reports an error (macOS/Linux only).
 - `--history-path=<path>`: write the recent run history for each provider to a JSON file (default `~/.config/ceye/run-history.json`).
 - `--webhook-url=<url>`: POST provider errors to this webhook endpoint (e.g., Slack/Teams) so you can hook alerts into other systems.
+- `--config-dir=<path>`: walk the directory tree rooted at the provided path and auto-discover every `ceye.*` config file (defaults to `.`). Run it from `~/code` to monitor multiple repos at once.
 - `D`: toggle the detail pane that shows durations/log summaries for the selected run.
 - `run history`: the right sidebar shows each provider’s last few run summaries for quick inspection.
 - `make demo`: convenience wrapper for `go run ./cmd/ci-dash --demo --demo-runs 4`.

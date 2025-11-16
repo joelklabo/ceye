@@ -523,6 +523,31 @@ func sendWebhook(ctx context.Context, url, provider, message string, timestamp t
 	return nil
 }
 
+func loadDistributedConfigs(cfgPath, configDir string) (*config.Config, error) {
+	if cfgPath != "" {
+		return config.Load(cfgPath)
+	}
+	if configDir == "" {
+		configDir = "."
+	}
+	matches, err := config.DiscoverConfigs(configDir)
+	if err != nil {
+		return nil, fmt.Errorf("discover configs: %w", err)
+	}
+	if len(matches) == 0 {
+		return nil, fmt.Errorf("no config files found under %s", configDir)
+	}
+	var merged config.Config
+	for _, match := range matches {
+		cfg, err := config.Load(match)
+		if err != nil {
+			return nil, fmt.Errorf("load config %s: %w", match, err)
+		}
+		merged.Providers = append(merged.Providers, cfg.Providers...)
+	}
+	return &merged, nil
+}
+
 type providerEntry struct {
 	Config providers.ProviderConfig
 	Alias  string
