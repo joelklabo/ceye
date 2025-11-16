@@ -151,23 +151,23 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Surface provider lag/failures in the UI (badges, notifications, or logs) and record metrics for slow polls.
 63. - [x] **Step 63 – CI snapshots** (`commit: 25ef8b7`, `push: yes`)
     - Run `make snapshot` as part of CI so every push captures the latest demo screen + event log for regression evidence.
-64. - [x] **Step 64 – Additional providers** (`commit: 3dd1b97`, `push: pending`)
+64. - [x] **Step 64 – Additional providers** (`commit: 3dd1b97`, `push: yes`)
     - Add support (config, factory, docs, tests) for a new provider such as GitLab so the dashboard can expand beyond GitHub/Azure.
 65. - [x] **Step 65 – Accessibility/high-contrast theme** (`commit: 0b05288`, `push: yes`)
     - Add a high-contrast toggle, brighter colors, and new keyboard help so the UI stays readable on any background.
-66. - [x] **Step 66 – Provider notifications** (`commit: d272644`, `push: pending`)
+66. - [x] **Step 66 – Provider notifications** (`commit: d272644`, `push: yes`)
     - Show a transient alert when a provider errors so regressions are obvious without scanning logs.
 67. - [x] **Step 67 – Desktop alerts** (`commit: a0e2a71`, `push: yes`)
     - Emit a desktop notification (via `osascript`/`notify-send`) whenever a provider reports an error so failures surface even if a terminal isn’t visible.
-68. - [x] **Step 68 – Run history panel** (`commit: 733063d`, `push: pending`)
+68. - [x] **Step 68 – Run history panel** (`commit: 733063d`, `push: yes`)
     - Track each provider’s last few run summaries and expose them in a dedicated sidebar panel for quick inspection.
-69. - [x] **Step 69 – Persistent run history** (`commit: c9cdeac`, `push: pending`)
+69. - [x] **Step 69 – Persistent run history** (`commit: c9cdeac`, `push: yes`)
     - Persist recent run summaries to disk so history survives restarts and can be used for diagnostics later.
-70. - [x] **Step 70 – Alerts channel** (`commit: 61c6e65`, `push: pending`)
+70. - [x] **Step 70 – Alerts channel** (`commit: 61c6e65`, `push: yes`)
     - Push provider failures to an external webhook (Slack/Teams/HTTP) so downstream systems can react automatically.
-71. - [x] **Step 71 – Run filtering & tabs** (`commit: fba3d51`, `push: pending`)
+71. - [x] **Step 71 – Run filtering & tabs** (`commit: fba3d51`, `push: yes`)
     - Introduce per-provider tabs and status filters so users can focus on a single provider or status subset without scrolling.
-72. - [x] **Step 72 – Provider detail view** (`commit: 629c4ff`, `push: pending`)
+72. - [x] **Step 72 – Provider detail view** (`commit: 629c4ff`, `push: yes`)
     - Allow expanding a provider or run row to reveal detailed information (timings, logs, quick actions) without leaving the UI.
 73. - [x] **Step 73 – Alert log** (`commit: 21691fa`, `push: yes`)
     - Record each provider alert/webhook event in an “Alert log” panel so historical notifications are easy to review.
@@ -208,7 +208,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Add `ci-dash provider export --file` to dump the store to JSON so the configuration can be shared.
     - Add `ci-dash provider import` with optional `--replace` so backed-up entries can be reapplied.
     - Document the commands and write tests (unit or integration) that verify JSON import/export behavior.
-83. - [x] **Step 83 – Store change auditing** (`commit: pending`, `push: pending`)
+83. - [x] **Step 83 – Store change auditing** (`commit: a61fe2b`, `push: yes`)
     - Track a history of provider store mutations (add/enable/disable/remove/edit) with timestamps and user actions.
     - Display the audit trail in the UI (within a dedicated sidebar panel) and persist the log alongside the provider store so it survives restarts.
     - Add tests that assert the audit log records the correct events when store commands or overlay actions run.
@@ -223,7 +223,7 @@ When a step finishes, update its checklist line to `[x]`, replace `commit: pendi
     - Introduce an override (`CEYE_CONFIG_ROOT`) so discovery scans the correct workspace root on machines with a different parent directory.
     - Keep `--config-dir` for ad-hoc overrides; env vars take precedence.
     - Document the override and add tests for the resolution logic.
-86. - [x] **Step 86 – Auto config onboarding** (`commit: pending`, `push: pending`)
-    - Re-scan the workspace root (or picked config directory) for git repositories missing any `ceye.*` file and show them in the “Missing configs” panel so operators have quick awareness.
+86. - [x] **Step 86 – Auto config onboarding** (`commit: 1592f9d`, `push: yes`)
+    - Re-scan the workspace root (or picked config directory) for git repositories missing any `ceye.*` file and show them in the "Missing configs" panel so operators have quick awareness.
     - Wire the `n/a` cycle keys plus `a` action so the highlighted repo can drop a template `ceye.yaml` (owner/repo guessed from `git remote origin`) and immediately disappear from the list.
     - Calling the action refreshes the missing-config scan (the model pushes the new list via `RunUpdatedMsg`) and tests cover `listMissingConfigs()` before/after writing a file.
