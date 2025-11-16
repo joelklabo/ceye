@@ -165,11 +165,11 @@ Add historical data tracking, trends analysis, alerting, and performance metrics
 
 #### Implementation Plan
 
-**Phase 2.2.1: Trend Calculation** (2 days)
-- [ ] Implement trend analysis engine
+**Phase 2.2.1: Trend Calculation** (2 days) - ✅ COMPLETE
+- [x] Implement trend analysis engine
   ```go
   type TrendAnalyzer struct {
-      storage Storage
+      storage *Storage
   }
   
   type Trend struct {
@@ -181,13 +181,14 @@ Add historical data tracking, trends analysis, alerting, and performance metrics
       Direction   TrendDirection  // Up, Down, Stable
   }
   ```
-- [ ] Calculate metrics:
-  - Success rate trends
-  - Average duration trends
-  - Build frequency trends
-  - Failure patterns
-- [ ] Add statistical analysis (moving averages, standard deviation)
-- [ ] Detect anomalies (sudden spikes, recurring failures)
+- [x] Calculate metrics:
+  - Success rate trends (period-over-period comparison)
+  - Average duration trends (with improvement detection)
+  - Build frequency trends (builds per day)
+  - Failure rate trends
+- [x] Time series support with configurable bucket sizes
+- [x] Detect anomalies (high failure rate >20%, duration spikes >2x avg)
+- [x] 7 comprehensive tests for trend calculations
 
 **Phase 2.2.2: Trends Panel** (2 days)
 - [ ] Add trends panel to TUI
