@@ -579,6 +579,11 @@ func (m Model) renderDashboardBody() string {
 		sidebarParts = append(sidebarParts, activeRuns)
 	}
 	
+	// Add provider health panel
+	if providerHealth := m.renderProviderHealthPanel(); providerHealth != "" {
+		sidebarParts = append(sidebarParts, providerHealth)
+	}
+	
 	sidebarParts = append(sidebarParts, m.renderLogs())
 	
 	if audit := m.renderAuditPanel(); audit != "" {
@@ -720,6 +725,65 @@ func (m Model) renderActiveRunsPanel() string {
 			formatDuration(elapsed, run.StartedAt, time.Now()),
 		)
 		lines = append(lines, bodyTextStyle.Render(line))
+	}
+	
+	return m.panelStyle.Render(lipgloss.JoinVertical(lipgloss.Left, lines...))
+}
+
+func (m Model) renderProviderHealthPanel() string {
+	if len(m.Providers) == 0 {
+		return ""
+	}
+	
+	lines := []string{
+		sectionTitleStyle.Render("Provider Health"),
+	}
+	
+	for _, name := range m.Providers {
+		health, hasHealth := m.ProviderHealth[name]
+		lag, hasLag := m.ProviderLag[name]
+		
+		// Determine health status
+		statusIcon := "✓"
+		statusColor := m.successStyle
+		statusText := "healthy"
+		
+		if hasHealth && health.ErrorCount > 0 {
+			statusIcon = "✗"
+			statusColor = m.errorStyle
+			statusText = "errors"
+		} else if hasLag && lag > 2*time.Second {
+			statusIcon = "⚠"
+			statusColor = m.tagWarningStyle
+			statusText = "slow"
+		}
+		
+		// Provider name line with status
+		providerLine := fmt.Sprintf("%s %s: %s",
+			statusIcon,
+			truncate(name, 12),
+			statusText,
+		)
+		lines = append(lines, statusColor.Render(providerLine))
+		
+		// Details line
+		var details []string
+		if hasLag {
+			lagStr := "Lag: " + lag.Round(time.Millisecond).String()
+			details = append(details, lagStr)
+		}
+		if hasHealth && health.ErrorCount > 0 {
+			errStr := fmt.Sprintf("Errors: %d", health.ErrorCount)
+			if !health.LastError.IsZero() {
+				errStr += fmt.Sprintf(" (%s ago)", time.Since(health.LastError).Round(time.Second))
+			}
+			details = append(details, errStr)
+		}
+		
+		if len(details) > 0 {
+			detailLine := "  " + strings.Join(details, "  ")
+			lines = append(lines, bodyTextStyle.Render(truncate(detailLine, 30)))
+		}
 	}
 	
 	return m.panelStyle.Render(lipgloss.JoinVertical(lipgloss.Left, lines...))
