@@ -237,23 +237,35 @@ func (s *Storage) GetRunHistory(ctx context.Context, provider, repo, workflow st
 
 // GetProviderMetrics calculates aggregate metrics for a provider
 func (s *Storage) GetProviderMetrics(ctx context.Context, provider string, since time.Time) (*Metrics, error) {
+	return s.GetProviderMetricsRange(ctx, provider, since, time.Time{})
+}
+
+// GetProviderMetricsRange calculates aggregate metrics for a provider within a time range
+func (s *Storage) GetProviderMetricsRange(ctx context.Context, provider string, start, end time.Time) (*Metrics, error) {
 	query := `
 		SELECT
 			COUNT(*) as total,
-			SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
-			SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed,
-			SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled,
+			COALESCE(SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END), 0) as completed,
+			COALESCE(SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END), 0) as failed,
+			COALESCE(SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END), 0) as cancelled,
 			AVG(duration_ns) as avg_duration_ns,
 			MIN(duration_ns) as min_duration_ns,
 			MAX(duration_ns) as max_duration_ns
 		FROM runs
 		WHERE provider = ? AND started_at >= ?
 	`
+	
+	args := []interface{}{provider, start.Unix()}
+	
+	if !end.IsZero() {
+		query += " AND started_at < ?"
+		args = append(args, end.Unix())
+	}
 
 	var m Metrics
 	var avgDurNs, minDurNs, maxDurNs sql.NullFloat64
 
-	err := s.db.QueryRowContext(ctx, query, provider, since.Unix()).Scan(
+	err := s.db.QueryRowContext(ctx, query, args...).Scan(
 		&m.Total,
 		&m.Completed,
 		&m.Failed,
