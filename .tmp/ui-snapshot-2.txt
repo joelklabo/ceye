@@ -1,0 +1,24 @@
+                    ││                                           │
+
+ │
+                    │╰───────────────────────────────────────────╯
+
+ │
+                    │┌───────────────────────────────────────────────┐
+
+ │
+                    ││ Activity                                      │
+
+ │
+                    ││ 13:56:41 — github: gh run list: exit status 1 │
+
+ └──────────────────────────────────────────────────────────────────────────────
+────────────────────┘└───────────────────────────────────────────────┘
+
+
+
+
+
+   tab cycle providers • f cycle status • t cycle sort • y copy URL • c copy sum
+mary • v toggle focus view • H toggle high contrast • r refresh • ? toggle help
+• P show provider store

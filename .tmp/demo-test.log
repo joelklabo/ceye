@@ -1,0 +1,126 @@
+ci-dash: GH lookup -> path="/opt/homebrew/bin/gh" err=<nil>
+ci-dash: using gh CLI-based GitHub client (/opt/homebrew/bin/gh)
+[?25l[?2004h   CI Status Dashboard (dev (unknown))  •  Last update 13:59:11                                                                                                                           
+   Runs: 5 (running 2 | queued 1 | failed 1 | success 1)                                                                                                                                  
+   Provider: All | Status: All | Sort: Status | Search: none                                                                                                                              
+  [1] Demo-1                                                                                                                                                                              
+  All   Running   Queued   Failed   Success                                                                                                                                               
+ ┌───────┐ ┌─────────┐ ┌────────┐ ┌────────┐ ┌─────────┐                                                                                                                                  
+ │ Total │ │ Running │ │ Queued │ │ Failed │ │ Success │                                                                                                                                  
+ │ 5     │ │ 2       │ │ 1      │ │ 1      │ │ 1       │                                                                                                                                  
+ └───────┘ └─────────┘ └────────┘ └────────┘ └─────────┘                                                                                                                                  
+ ┌───────────────────┐                                                                                                                                                                    
+ │ Providers         │                                                                                                                                                                    
+ │  Demo-1 waiting   │                                                                                                                                                                    
+ └───────────────────┘                                                                                                                                                                    
+ Runs (5 showing)                                                                                    ┌─────────────────────────────────┐                                                  
+ ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐│ Selection                       │                                                  
+ │  Provider  Repository          Workflow          Status        Branch        Updated   Duration  ││ Provider filter: All            │                                                  
+ │ ──────────────────────────────────────────────────────────────────────────────────────────────── ││ Status filter: All              │                                                  
+ │  demo      example/service-2   Test              ▸ run         develop       now       5m00s     ││ Repo: example/service-2         │                                                  
+ │  demo      example/service-1   Build             ▸ run         main          now       1m00s     ││ Workflow: Test                  │                                                  
+ │  demo      example/service-1   Build             … queue       main          now       -         ││ Branch: develop                 │                                                  
+ │  demo      example/service-3   Deploy            ✗ fail        release       now       4m00s     ││ Commit: d34db33                 │                                                  
+ │  demo      example/service-2   Test              ✓ OK          develop       now       5m00s     ││ Status: running                 │                                                  
+ │                                                                                                  ││ Updated: 2025-11-16 13:59:11    │                                                  
+ │                                                                                                  ││ URL: https://example.com/demo/5 │                                                  
+ │                                                                                                  │└─────────────────────────────────┘                                                  
+ │                                                                                                  │                                                                                     
+ │                                                                                                  │┌──────────────────────────────┐                                                     
+ │                                                                                                  ││ Commit Details               │                                                     
+ │                                                                                                  ││ d34db33 (now)                │                                                     
+ │                                                                                                  ││ (commit details not fetched) │                                                     
+ │                                                                                                  │└──────────────────────────────┘                                                     
+ │                                                                                                  │┌───────────────────────────────┐                                                    
+ │                                                                                                  ││ Running Now (3)               │                                                    
+ │                                                                                                  ││ ▸ example/servic…/Test 5m00s  │                                                    
+ │                                                                                                  ││ ▸ example/servic…/Build 1m00s │                                                    
+ │                                                                                                  ││ … example/servic…/Build 0s    │                                                    
+ │                                                                                                  │└───────────────────────────────┘                                                    
+ └──────────────────────────────────────────────────────────────────────────────────────────────────┘┌───────────────────┐                                                                
+                                                                                                     │ Provider Health   │                                                                
+                                                                                                     │ ✓ all: healthy    │                                                                
+                                                                                                     │ ✓ demo-1: healthy │                                                                
+                                                                                                     └───────────────────┘                                                                
+                                                                                                     ╭───────────────────────────────────────────╮                                        
+                                                                                                     │ Trends (Last 7 Days)                      │                                        
+                                                                                                     │                                           │                                        
+                                                                                                     │ Success Rate:             N/A  (→ stable) │                                        
+                                                                                                     │ Avg Duration:             N/A  (→ stable) │                                        
+                                                                                                     │ Builds/Day:               N/A  (→ stable) │                                        
+                                                                                                     │ Failure Rate:             N/A  (→ stable) │                                        
+                                                                                                     │                                           │                                        
+                                                                                                     ╰───────────────────────────────────────────╯                                        
+                                                                                                     ┌────────────────────────────┐                                                       
+                                                                                                     │ Success Rates              │                                                       
+                                                                                                     │ example/ser…: 100% ✓ (1/1) │                                                       
+                                                                                                     └────────────────────────────┘                                                       
+                                                                                                     ┌────────────────────────────────────┐                                               
+                                                                                                     │ Activity                           │                                               
+                                                                                                     │ 13:59:11 — demo refreshed 5 run(s) │                                               
+                                                                                                     └────────────────────────────────────┘                                               
+                                                                                                                                                                                          
+                                                                                                                                                                                          
+   tab cycle providers • f cycle status • t cycle sort • y copy URL • c copy summary • v toggle focus view • H toggle high contrast • r refresh • ? toggle help • P show provider store   [61A   CI Status Dashboard (dev (unknown))  •  Last update 13:59:16                                                                                                                           
+   Runs: 5 (running 1 | queued 1 | failed 1 | success 2)                                                                                                                                  
+
+
+
+
+
+ │ 5     │ │ 1       │ │ 1      │ │ 1      │ │ 2       │                                                                                                                                  
+
+
+
+
+
+
+
+
+
+ │  demo      example/service-1   Build             ▸ run         main          now       4m00s     ││ Repo: example/service-1         │                                                  
+ │  demo      example/service-3   Deploy            … queue       release       now       -         ││ Workflow: Build                 │                                                  
+ │  demo      example/service-2   Test              ✗ fail        develop       now       4m00s     ││ Branch: main                    │                                                  
+ │  demo      example/service-2   Test              ✓ OK          develop       now       5m00s     ││ Commit: d34db33                 │                                                  
+ │  demo      example/service-1   Build             ✓ OK          main          now       5m00s     ││ Status: running                 │                                                  
+ │                                                                                                  ││ Updated: 2025-11-16 13:59:16    │                                                  
+ │                                                                                                  ││ URL: https://example.com/demo/4 │                                                  
+
+
+
+
+
+
+
+
+ │                                                                                                  ││ Running Now (2)               │                                                    
+ │                                                                                                  ││ ▸ example/servic…/Build 4m00s │                                                    
+ │                                                                                                  ││ … example/servic…/Deploy 0s   │                                                    
+ │                                                                                                  │└───────────────────────────────┘                                                    
+ │                                                                                                  │┌───────────────────┐                                                                
+ └──────────────────────────────────────────────────────────────────────────────────────────────────┘│ Provider Health   │                                                                
+                                                                                                     │ ✓ all: healthy    │                                                                
+                                                                                                     │ ✓ demo-1: healthy │                                                                
+                                                                                                     └───────────────────┘                                                                
+                                                                                                     ╭───────────────────────────────────────────╮                                        
+                                                                                                     │ Trends (Last 7 Days)                      │                                        
+                                                                                                     │                                           │                                        
+                                                                                                     │ Success Rate:             N/A  (→ stable) │                                        
+                                                                                                     │ Avg Duration:             N/A  (→ stable) │                                        
+                                                                                                     │ Builds/Day:               N/A  (→ stable) │                                        
+                                                                                                     │ Failure Rate:             N/A  (→ stable) │                                        
+                                                                                                     │                                           │                                        
+                                                                                                     ╰───────────────────────────────────────────╯                                        
+                                                                                                     ┌────────────────────────────┐                                                       
+                                                                                                     │ Success Rates              │                                                       
+                                                                                                     │ example/ser…: 100% ✓ (1/1) │                                                       
+
+
+
+
+                                                                                                     │ 13:59:16 — demo refreshed 5 run(s) │                                               
+                                                                                                     │ 13:59:11 — demo refreshed 5 run(s) │                                               
+                                                                                                     └────────────────────────────────────┘                                               
+
+                                                                                                                                                                                          
+   tab cycle providers • f cycle status • t cycle sort • y copy URL • c copy summary • v toggle focus view • H toggle high contrast • r refresh • ? toggle help • P show provider store   

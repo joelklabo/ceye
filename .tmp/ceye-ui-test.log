@@ -1,0 +1,209 @@
+ci-dash: GH lookup -> path="/opt/homebrew/bin/gh" err=<nil>
+ci-dash: using gh CLI-based GitHub client (/opt/homebrew/bin/gh)
+[?25l[?2004h   CI Status Dashboard (dev (unknown))  •  Last update 13:56:41                                                                                                                           
+   Runs: 0 (running 0 | queued 0 | failed 0 | success 0)                                                                                                                                  
+   Provider: All | Status: All | Sort: Status | Search: none                                                                                                                              
+  [1] Github-1                                                                                                                                                                            
+  All   Running   Queued   Failed   Success                                                                                                                                               
+ ┌───────┐ ┌─────────┐ ┌────────┐ ┌────────┐ ┌─────────┐                                                                                                                                  
+ │ Total │ │ Running │ │ Queued │ │ Failed │ │ Success │                                                                                                                                  
+ │ 0     │ │ 0       │ │ 0      │ │ 0      │ │ 0       │                                                                                                                                  
+ └───────┘ └─────────┘ └────────┘ └────────┘ └─────────┘                                                                                                                                  
+ ┌─────────────────────┐                                                                                                                                                                  
+ │ Providers           │                                                                                                                                                                  
+ │  Github-1 waiting   │                                                                                                                                                                  
+ └─────────────────────┘                                                                                                                                                                  
+ Runs (0 showing)                                                                                    ┌──────────────────────┐                                                             
+ ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐│ Selection            │                                                             
+ │  Provider  Repository          Workflow          Status        Branch        Updated   Duration  ││ Provider filter: All │                                                             
+ │ ──────────────────────────────────────────────────────────────────────────────────────────────── ││ Status filter: All   │                                                             
+ │                                                                                                  ││ No runs to display   │                                                             
+ │                                                                                                  │└──────────────────────┘                                                             
+ │                                                                                                  │                                                                                     
+ │                                                                                                  │┌─────────────────────┐                                                              
+ │                                                                                                  ││ Provider Health     │                                                              
+ │                                                                                                  ││ ✓ all: healthy      │                                                              
+ │                                                                                                  ││ ✓ github-1: healthy │                                                              
+ │                                                                                                  │└─────────────────────┘                                                              
+ │                                                                                                  │╭───────────────────────────────────────────╮                                        
+ │                                                                                                  ││ Trends (Last 7 Days)                      │                                        
+ │                                                                                                  ││                                           │                                        
+ │                                                                                                  ││ Success Rate:             N/A  (→ stable) │                                        
+ │                                                                                                  ││ Avg Duration:             N/A  (→ stable) │                                        
+ │                                                                                                  ││ Builds/Day:               N/A  (→ stable) │                                        
+ │                                                                                                  ││ Failure Rate:             N/A  (→ stable) │                                        
+ │                                                                                                  ││                                           │                                        
+ │                                                                                                  │╰───────────────────────────────────────────╯                                        
+ │                                                                                                  │┌──────────┐                                                                         
+ │                                                                                                  ││ Activity │                                                                         
+ │                                                                                                  ││ none yet │                                                                         
+ └──────────────────────────────────────────────────────────────────────────────────────────────────┘└──────────┘                                                                         
+                                                                                                                                                                                          
+                                                                                                                                                                                          
+   tab cycle providers • f cycle status • t cycle sort • y copy URL • c copy summary • v toggle focus view • H toggle high contrast • r refresh • ? toggle help • P show provider store   2025/11/16 13:56:41 github provider error for joelklabo/ceye: gh run list: exit status 1
+[40A
+
+
+
+
+ github: gh run list: exit status 1                                                                                                                                                       
+ ┌───────┐ ┌─────────┐ ┌────────┐ ┌────────┐ ┌─────────┐                                                                                                                                  
+ │ Total │ │ Running │ │ Queued │ │ Failed │ │ Success │                                                                                                                                  
+ │ 0     │ │ 0       │ │ 0      │ │ 0      │ │ 0       │                                                                                                                                  
+ └───────┘ └─────────┘ └────────┘ └────────┘ └─────────┘                                                                                                                                  
+ ┌─────────────────────┐                                                                                                                                                                  
+ │ Providers           │                                                                                                                                                                  
+ │  Github-1 waiting   │                                                                                                                                                                  
+ └─────────────────────┘                                                                                                                                                                  
+ Runs (0 showing)                                                                                    ┌──────────────────────┐                                                             
+ ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐│ Selection            │                                                             
+ │  Provider  Repository          Workflow          Status        Branch        Updated   Duration  ││ Provider filter: All │                                                             
+ │ ──────────────────────────────────────────────────────────────────────────────────────────────── ││ Status filter: All   │                                                             
+ │                                                                                                  ││ No runs to display   │                                                             
+ │                                                                                                  │└──────────────────────┘                                                             
+ │                                                                                                  │                                                                                     
+ │                                                                                                  │┌─────────────────────┐                                                              
+ │                                                                                                  ││ Provider Health     │                                                              
+ │                                                                                                  ││ ✓ all: healthy      │                                                              
+ │                                                                                                  ││ ✓ github-1: healthy │                                                              
+ │                                                                                                  │└─────────────────────┘                                                              
+ │                                                                                                  │╭───────────────────────────────────────────╮                                        
+ │                                                                                                  ││ Trends (Last 7 Days)                      │                                        
+ │                                                                                                  ││                                           │                                        
+ │                                                                                                  ││ Success Rate:             N/A  (→ stable) │                                        
+ │                                                                                                  ││ Avg Duration:             N/A  (→ stable) │                                        
+ │                                                                                                  ││ Builds/Day:               N/A  (→ stable) │                                        
+ │                                                                                                  ││ Failure Rate:             N/A  (→ stable) │                                        
+ │                                                                                                  ││                                           │                                        
+ │                                                                                                  │╰───────────────────────────────────────────╯                                        
+ │                                                                                                  │┌───────────────────────────────────────────────┐                                    
+ │                                                                                                  ││ Activity                                      │                                    
+ │                                                                                                  ││ 13:56:41 — github: gh run list: exit status 1 │                                    
+ └──────────────────────────────────────────────────────────────────────────────────────────────────┘└───────────────────────────────────────────────┘                                    
+
+                                                                                                                                                                                          
+   tab cycle providers • f cycle status • t cycle sort • y copy URL • c copy summary • v toggle focus view • H toggle high contrast • r refresh • ? toggle help • P show provider store   [41A
+
+
+
+
+ ┌───────┐ ┌─────────┐ ┌────────┐ ┌────────┐ ┌─────────┐                                                                                                                                  
+ │ Total │ │ Running │ │ Queued │ │ Failed │ │ Success │                                                                                                                                  
+ │ 0     │ │ 0       │ │ 0      │ │ 0      │ │ 0       │                                                                                                                                  
+ └───────┘ └─────────┘ └────────┘ └────────┘ └─────────┘                                                                                                                                  
+ ┌─────────────────────┐                                                                                                                                                                  
+ │ Providers           │                                                                                                                                                                  
+ │  Github-1 waiting   │                                                                                                                                                                  
+ └─────────────────────┘                                                                                                                                                                  
+ Runs (0 showing)                                                                                    ┌──────────────────────┐                                                             
+ ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐│ Selection            │                                                             
+ │  Provider  Repository          Workflow          Status        Branch        Updated   Duration  ││ Provider filter: All │                                                             
+ │ ──────────────────────────────────────────────────────────────────────────────────────────────── ││ Status filter: All   │                                                             
+ │                                                                                                  ││ No runs to display   │                                                             
+ │                                                                                                  │└──────────────────────┘                                                             
+ │                                                                                                  │                                                                                     
+ │                                                                                                  │┌─────────────────────┐                                                              
+ │                                                                                                  ││ Provider Health     │                                                              
+ │                                                                                                  ││ ✓ all: healthy      │                                                              
+ │                                                                                                  ││ ✓ github-1: healthy │                                                              
+ │                                                                                                  │└─────────────────────┘                                                              
+ │                                                                                                  │╭───────────────────────────────────────────╮                                        
+ │                                                                                                  ││ Trends (Last 7 Days)                      │                                        
+ │                                                                                                  ││                                           │                                        
+ │                                                                                                  ││ Success Rate:             N/A  (→ stable) │                                        
+ │                                                                                                  ││ Avg Duration:             N/A  (→ stable) │                                        
+ │                                                                                                  ││ Builds/Day:               N/A  (→ stable) │                                        
+ │                                                                                                  ││ Failure Rate:             N/A  (→ stable) │                                        
+ │                                                                                                  ││                                           │                                        
+ │                                                                                                  │╰───────────────────────────────────────────╯                                        
+ │                                                                                                  │┌───────────────────────────────────────────────┐                                    
+ │                                                                                                  ││ Activity                                      │                                    
+ │                                                                                                  ││ 13:56:41 — github: gh run list: exit status 1 │                                    
+ └──────────────────────────────────────────────────────────────────────────────────────────────────┘└───────────────────────────────────────────────┘                                    
+                                                                                                                                                                                          
+
+   tab cycle providers • f cycle status • t cycle sort • y copy URL • c copy summary • v toggle focus view • H toggle high contrast • r refresh • ? toggle help • P show provider store   [J2025/11/16 13:57:09 github provider error for joelklabo/ceye: gh run list: exit status 1
+[40A   CI Status Dashboard (dev (unknown))  •  Last update 13:57:09                                                                                                                           
+
+
+
+
+ github: gh run list: exit status 1                                                                                                                                                       
+ ┌───────┐ ┌─────────┐ ┌────────┐ ┌────────┐ ┌─────────┐                                                                                                                                  
+ │ Total │ │ Running │ │ Queued │ │ Failed │ │ Success │                                                                                                                                  
+ │ 0     │ │ 0       │ │ 0      │ │ 0      │ │ 0       │                                                                                                                                  
+ └───────┘ └─────────┘ └────────┘ └────────┘ └─────────┘                                                                                                                                  
+ ┌─────────────────────┐                                                                                                                                                                  
+ │ Providers           │                                                                                                                                                                  
+ │  Github-1 waiting   │                                                                                                                                                                  
+ └─────────────────────┘                                                                                                                                                                  
+ Runs (0 showing)                                                                                    ┌──────────────────────┐                                                             
+ ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐│ Selection            │                                                             
+ │  Provider  Repository          Workflow          Status        Branch        Updated   Duration  ││ Provider filter: All │                                                             
+ │ ──────────────────────────────────────────────────────────────────────────────────────────────── ││ Status filter: All   │                                                             
+ │                                                                                                  ││ No runs to display   │                                                             
+ │                                                                                                  │└──────────────────────┘                                                             
+ │                                                                                                  │                                                                                     
+ │                                                                                                  │┌─────────────────────┐                                                              
+ │                                                                                                  ││ Provider Health     │                                                              
+ │                                                                                                  ││ ✓ all: healthy      │                                                              
+ │                                                                                                  ││ ✓ github-1: healthy │                                                              
+ │                                                                                                  │└─────────────────────┘                                                              
+ │                                                                                                  │╭───────────────────────────────────────────╮                                        
+ │                                                                                                  ││ Trends (Last 7 Days)                      │                                        
+ │                                                                                                  ││                                           │                                        
+ │                                                                                                  ││ Success Rate:             N/A  (→ stable) │                                        
+ │                                                                                                  ││ Avg Duration:             N/A  (→ stable) │                                        
+ │                                                                                                  ││ Builds/Day:               N/A  (→ stable) │                                        
+ │                                                                                                  ││ Failure Rate:             N/A  (→ stable) │                                        
+ │                                                                                                  ││                                           │                                        
+ │                                                                                                  │╰───────────────────────────────────────────╯                                        
+ │                                                                                                  │┌───────────────────────────────────────────────┐                                    
+ │                                                                                                  ││ Activity                                      │                                    
+ │                                                                                                  ││ 13:57:09 — github: gh run list: exit status 1 │                                    
+ └──────────────────────────────────────────────────────────────────────────────────────────────────┘│ 13:56:41 — github: gh run list: exit status 1 │                                    
+                                                                                                     └───────────────────────────────────────────────┘                                    
+                                                                                                                                                                                          
+                                                                                                                                                                                          
+   tab cycle providers • f cycle status • t cycle sort • y copy URL • c copy summary • v toggle focus view • H toggle high contrast • r refresh • ? toggle help • P show provider store   [42A
+
+
+
+
+ ┌───────┐ ┌─────────┐ ┌────────┐ ┌────────┐ ┌─────────┐                                                                                                                                  
+ │ Total │ │ Running │ │ Queued │ │ Failed │ │ Success │                                                                                                                                  
+ │ 0     │ │ 0       │ │ 0      │ │ 0      │ │ 0       │                                                                                                                                  
+ └───────┘ └─────────┘ └────────┘ └────────┘ └─────────┘                                                                                                                                  
+ ┌─────────────────────┐                                                                                                                                                                  
+ │ Providers           │                                                                                                                                                                  
+ │  Github-1 waiting   │                                                                                                                                                                  
+ └─────────────────────┘                                                                                                                                                                  
+ Runs (0 showing)                                                                                    ┌──────────────────────┐                                                             
+ ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐│ Selection            │                                                             
+ │  Provider  Repository          Workflow          Status        Branch        Updated   Duration  ││ Provider filter: All │                                                             
+ │ ──────────────────────────────────────────────────────────────────────────────────────────────── ││ Status filter: All   │                                                             
+ │                                                                                                  ││ No runs to display   │                                                             
+ │                                                                                                  │└──────────────────────┘                                                             
+ │                                                                                                  │                                                                                     
+ │                                                                                                  │┌─────────────────────┐                                                              
+ │                                                                                                  ││ Provider Health     │                                                              
+ │                                                                                                  ││ ✓ all: healthy      │                                                              
+ │                                                                                                  ││ ✓ github-1: healthy │                                                              
+ │                                                                                                  │└─────────────────────┘                                                              
+ │                                                                                                  │╭───────────────────────────────────────────╮                                        
+ │                                                                                                  ││ Trends (Last 7 Days)                      │                                        
+ │                                                                                                  ││                                           │                                        
+ │                                                                                                  ││ Success Rate:             N/A  (→ stable) │                                        
+ │                                                                                                  ││ Avg Duration:             N/A  (→ stable) │                                        
+ │                                                                                                  ││ Builds/Day:               N/A  (→ stable) │                                        
+ │                                                                                                  ││ Failure Rate:             N/A  (→ stable) │                                        
+ │                                                                                                  ││                                           │                                        
+ │                                                                                                  │╰───────────────────────────────────────────╯                                        
+ │                                                                                                  │┌───────────────────────────────────────────────┐                                    
+ │                                                                                                  ││ Activity                                      │                                    
+ │                                                                                                  ││ 13:57:09 — github: gh run list: exit status 1 │                                    
+ └──────────────────────────────────────────────────────────────────────────────────────────────────┘│ 13:56:41 — github: gh run list: exit status 1 │                                    
+                                                                                                     └───────────────────────────────────────────────┘                                    
+                                                                                                                                                                                          
+
+   tab cycle providers • f cycle status • t cycle sort • y copy URL • c copy summary • v toggle focus view • H toggle high contrast • r refresh • ? toggle help • P show provider store   [J[2K[?2004l[?25h[?1002l[?1003l[?1006l

@@ -2,7 +2,9 @@ package github
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/joelklabo/ceye/internal/core"
@@ -70,9 +72,21 @@ func (p *Provider) Start(ctx context.Context, out chan<- core.RunEvent) error {
 		for _, repo := range p.repos {
 			runs, err := p.client.ListWorkflowRuns(repo.Owner, repo.Repo)
 			if err != nil {
-				p.lastError = err
-				log.Printf("github provider error for %s/%s: %v", repo.Owner, repo.Repo, err)
-				p.emitEvent(ctx, out, nil, err)
+				// Check for rate limiting
+				errStr := err.Error()
+				if strings.Contains(errStr, "rate limit") {
+					log.Printf("github provider: ⚠️  RATE LIMIT EXCEEDED - reduce number of repos or increase polling interval")
+					p.lastError = fmt.Errorf("rate limit exceeded")
+					p.emitEvent(ctx, out, nil, err)
+					break // Stop trying other repos
+				} else if strings.Contains(errStr, "exit status 1") {
+					// Silently skip repos without workflows - this is expected
+					continue
+				} else {
+					log.Printf("github provider error for %s/%s: %v", repo.Owner, repo.Repo, err)
+					p.lastError = err
+					p.emitEvent(ctx, out, nil, err)
+				}
 				continue
 			}
 			combined = append(combined, runs...)

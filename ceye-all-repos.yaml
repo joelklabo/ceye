@@ -1,0 +1,11 @@
+providers:
+  - type: github
+    repos:
+      - owner: joelklabo
+        repo: SwiftTOON
+      - owner: joelklabo
+        repo: ceye
+      - owner: joelklabo
+        repo: planloop
+      - owner: joelklabo
+        repo: XcodeBuildMCP

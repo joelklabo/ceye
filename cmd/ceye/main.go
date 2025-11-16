@@ -901,13 +901,21 @@ func discoverGitRepos(root string) ([]string, error) {
 	var repos []string
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
+			// Skip directories we don't have permission to read
+			if os.IsPermission(err) {
+				return fs.SkipDir
+			}
 			return err
 		}
 		if !d.IsDir() {
 			return nil
 		}
-		if d.Name() == ".git" {
-			repos = append(repos, filepath.Dir(path))
+		// Skip common directories that shouldn't be scanned
+		name := d.Name()
+		if name == ".Trash" || name == "node_modules" || name == ".git" && filepath.Base(filepath.Dir(path)) != "" {
+			if name == ".git" {
+				repos = append(repos, filepath.Dir(path))
+			}
 			return fs.SkipDir
 		}
 		return nil
