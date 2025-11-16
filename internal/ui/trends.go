@@ -10,8 +10,14 @@ import (
 )
 
 // TrendsPanel renders trend information for a provider
-func renderTrendsPanel(analyzer *storage.TrendAnalyzer, provider string, width int) string {
-	if analyzer == nil {
+func renderTrendsPanel(analyzerInterface interface{}, provider string, width int) string {
+	if analyzerInterface == nil {
+		return ""
+	}
+
+	// Type assert to storage.TrendAnalyzer
+	analyzer, ok := analyzerInterface.(*storage.TrendAnalyzer)
+	if !ok {
 		return ""
 	}
 

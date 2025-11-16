@@ -610,6 +610,13 @@ func (m Model) renderDashboardBody() string {
 		sidebarParts = append(sidebarParts, providerHealth)
 	}
 	
+	// Add trends panel (if storage is available)
+	if m.showTrends && m.trendAnalyzer != nil {
+		if trendsPanel := m.renderTrendsPanelForProvider(); trendsPanel != "" {
+			sidebarParts = append(sidebarParts, trendsPanel)
+		}
+	}
+	
 	// Add failure rate panel
 	if failureRate := m.renderFailureRatePanel(); failureRate != "" {
 		sidebarParts = append(sidebarParts, failureRate)
@@ -809,6 +816,26 @@ func (m Model) renderCommitDetailsPanel() string {
 	}
 	
 	return m.panelStyle.Render(lipgloss.JoinVertical(lipgloss.Left, lines...))
+}
+
+func (m Model) renderTrendsPanelForProvider() string {
+	if m.trendAnalyzer == nil {
+		return ""
+	}
+	
+	// Get the current provider (use first available if "all" is selected)
+	provider := m.ActiveProvider
+	if provider == "all" && len(m.Providers) > 1 {
+		provider = m.Providers[1] // Skip "all", use first real provider
+	}
+	
+	if provider == "" || provider == "all" {
+		return ""
+	}
+	
+	// Call the rendering function from trends.go
+	width := 45 // Fixed width for sidebar panels
+	return renderTrendsPanel(m.trendAnalyzer, provider, width)
 }
 
 func (m Model) renderProviderHealthPanel() string {
