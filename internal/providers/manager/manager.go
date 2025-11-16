@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -19,14 +20,65 @@ type ProviderRecord struct {
 	Config  providers.ProviderConfig `json:"config"`
 }
 
+// StoreAuditEntry captures a provider store mutation for diagnostics and UI display.
+type StoreAuditEntry struct {
+	Timestamp    time.Time `json:"timestamp"`
+	Actor        string    `json:"actor"`
+	Action       string    `json:"action"`
+	ProviderType string    `json:"provider_type,omitempty"`
+	DisplayName  string    `json:"display_name,omitempty"`
+	ID           string    `json:"id,omitempty"`
+	Details      string    `json:"details,omitempty"`
+}
+
+const maxAuditEntries = 200
+
+type auditOptions struct {
+	action  string
+	details string
+}
+
+// AuditOption customizes how an audit entry is recorded.
+type AuditOption func(*auditOptions)
+
+// WithAuditAction overrides the default action verb stored in the audit entry.
+func WithAuditAction(action string) AuditOption {
+	return func(o *auditOptions) {
+		o.action = action
+	}
+}
+
+// WithAuditDetails adds supporting details to the audit entry.
+func WithAuditDetails(details string) AuditOption {
+	return func(o *auditOptions) {
+		o.details = details
+	}
+}
+
+func applyAuditOptions(defaultAction, defaultDetails string, opts []AuditOption) (string, string) {
+	res := auditOptions{action: defaultAction, details: defaultDetails}
+	for _, opt := range opts {
+		if opt == nil {
+			continue
+		}
+		opt(&res)
+	}
+	if res.action == "" {
+		res.action = defaultAction
+	}
+	return res.action, res.details
+}
+
 type persistentStore struct {
-	Entries []ProviderRecord `json:"entries"`
+	Entries []ProviderRecord  `json:"entries"`
+	Audit   []StoreAuditEntry `json:"audit,omitempty"`
 }
 
 // Store manages provider records stored on disk.
 type Store struct {
 	path    string
 	entries []ProviderRecord
+	audit   []StoreAuditEntry
 	mu      sync.RWMutex
 }
 
@@ -51,12 +103,31 @@ func (s *Store) List() []ProviderRecord {
 	return records
 }
 
+// Audit returns the most recent provider store mutation entries (newest first).
+func (s *Store) Audit() []StoreAuditEntry {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	records := make([]StoreAuditEntry, len(s.audit))
+	copy(records, s.audit)
+	return records
+}
+
 // Replace replaces the store entries with the provided list, writing new data.
-func (s *Store) Replace(entries []ProviderRecord) error {
+func (s *Store) Replace(actor string, entries []ProviderRecord, opts ...AuditOption) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	prevEntries := append([]ProviderRecord(nil), s.entries...)
 	s.entries = append([]ProviderRecord(nil), entries...)
-	return s.save()
+	defaultDetails := fmt.Sprintf("replaced %d entries", len(entries))
+	action, details := applyAuditOptions("replace", defaultDetails, opts)
+	record := ProviderRecord{Config: providers.ProviderConfig{DisplayName: "provider store"}}
+	revert := s.recordAuditLocked(actor, action, record, details)
+	if err := s.save(); err != nil {
+		s.entries = prevEntries
+		revert()
+		return err
+	}
+	return nil
 }
 
 // EnabledRecords returns the records that are currently enabled.
@@ -85,19 +156,22 @@ func (s *Store) Find(id string) (ProviderRecord, bool) {
 }
 
 // Add adds a new provider record and persists the store.
-func (s *Store) Add(cfg providers.ProviderConfig) (ProviderRecord, error) {
+func (s *Store) Add(actor string, cfg providers.ProviderConfig, opts ...AuditOption) (ProviderRecord, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	record := ProviderRecord{ID: uuid.NewString(), Enabled: true, Config: cfg}
 	s.entries = append(s.entries, record)
+	action, details := applyAuditOptions("add", "", opts)
+	revert := s.recordAuditLocked(actor, action, record, details)
 	if err := s.save(); err != nil {
+		revert()
 		return ProviderRecord{}, err
 	}
 	return record, nil
 }
 
 // Update replaces the configuration for an existing record.
-func (s *Store) Update(id string, cfg providers.ProviderConfig) error {
+func (s *Store) Update(actor, id string, cfg providers.ProviderConfig, opts ...AuditOption) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	idx := s.index(id)
@@ -105,11 +179,18 @@ func (s *Store) Update(id string, cfg providers.ProviderConfig) error {
 		return fmt.Errorf("provider %s not found", id)
 	}
 	s.entries[idx].Config = cfg
-	return s.save()
+	action, details := applyAuditOptions("update", "", opts)
+	entry := s.entries[idx]
+	revert := s.recordAuditLocked(actor, action, entry, details)
+	if err := s.save(); err != nil {
+		revert()
+		return err
+	}
+	return nil
 }
 
 // SetEnabled toggles the enabled state of a record.
-func (s *Store) SetEnabled(id string, enabled bool) error {
+func (s *Store) SetEnabled(actor, id string, enabled bool, opts ...AuditOption) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	idx := s.index(id)
@@ -117,19 +198,39 @@ func (s *Store) SetEnabled(id string, enabled bool) error {
 		return fmt.Errorf("provider %s not found", id)
 	}
 	s.entries[idx].Enabled = enabled
-	return s.save()
+	defaultAction := "disable"
+	if enabled {
+		defaultAction = "enable"
+	}
+	action, details := applyAuditOptions(defaultAction, "", opts)
+	entry := s.entries[idx]
+	revert := s.recordAuditLocked(actor, action, entry, details)
+	if err := s.save(); err != nil {
+		revert()
+		return err
+	}
+	return nil
 }
 
 // Remove deletes a record from the store.
-func (s *Store) Remove(id string) error {
+func (s *Store) Remove(actor, id string, opts ...AuditOption) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	idx := s.index(id)
 	if idx < 0 {
 		return fmt.Errorf("provider %s not found", id)
 	}
+	entry := s.entries[idx]
 	s.entries = append(s.entries[:idx], s.entries[idx+1:]...)
-	return s.save()
+	action, details := applyAuditOptions("remove", "", opts)
+	revert := s.recordAuditLocked(actor, action, entry, details)
+	if err := s.save(); err != nil {
+		// restore removed entry on failure
+		s.entries = append(s.entries[:idx], append([]ProviderRecord{entry}, s.entries[idx:]...)...)
+		revert()
+		return err
+	}
+	return nil
 }
 
 func (s *Store) index(id string) int {
@@ -155,6 +256,7 @@ func (s *Store) load() error {
 		return fmt.Errorf("decode provider store: %w", err)
 	}
 	s.entries = raw.Entries
+	s.audit = append([]StoreAuditEntry(nil), raw.Audit...)
 	return nil
 }
 
@@ -162,7 +264,7 @@ func (s *Store) save() error {
 	if err := os.MkdirAll(filepath.Dir(s.path), 0o755); err != nil {
 		return err
 	}
-	out := persistentStore{Entries: s.entries}
+	out := persistentStore{Entries: s.entries, Audit: s.audit}
 	data, err := json.MarshalIndent(out, "", "  ")
 	if err != nil {
 		return fmt.Errorf("encode provider store: %w", err)
@@ -171,4 +273,31 @@ func (s *Store) save() error {
 		return fmt.Errorf("persist provider store: %w", err)
 	}
 	return nil
+}
+
+func (s *Store) recordAuditLocked(actor, action string, record ProviderRecord, details string) func() {
+	if actor == "" {
+		actor = "system"
+	}
+	entry := StoreAuditEntry{
+		Timestamp:    time.Now(),
+		Actor:        actor,
+		Action:       action,
+		ProviderType: record.Config.Type,
+		DisplayName:  providers.DisplayName(record.Config),
+		ID:           record.ID,
+		Details:      details,
+	}
+	s.audit = append([]StoreAuditEntry{entry}, s.audit...)
+	if len(s.audit) > maxAuditEntries {
+		s.audit = s.audit[:maxAuditEntries]
+	}
+	return func() {
+		if len(s.audit) == 0 {
+			return
+		}
+		if s.audit[0] == entry {
+			s.audit = s.audit[1:]
+		}
+	}
 }

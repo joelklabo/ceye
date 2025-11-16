@@ -28,19 +28,21 @@ const (
 	statusIconFailed  = "✗"
 	statusIconRunning = "▸"
 	statusIconQueued  = "…"
+	auditPanelLimit   = 5
 )
 
 // RunUpdatedMsg is emitted when the store receives new data.
 type RunUpdatedMsg struct {
-	Timestamp time.Time
-	Status    map[string]string
-	Times     map[string]time.Time
-	Message   string
-	Level     string
-	Health    map[string]core.ProviderHealth
-	Lag       map[string]time.Duration
-	History   map[string][]string
-	Store     []manager.ProviderRecord
+	Timestamp    time.Time
+	Status       map[string]string
+	Times        map[string]time.Time
+	Message      string
+	Level        string
+	Health       map[string]core.ProviderHealth
+	Lag          map[string]time.Duration
+	History      map[string][]string
+	Store        []manager.ProviderRecord
+	Audit        []manager.StoreAuditEntry
 	MissingRepos []string
 }
 
@@ -121,6 +123,7 @@ type Model struct {
 	openURL                   func(string)
 	copyText                  func(string)
 	providerStoreAction       func(manager.ProviderRecord, ProviderStoreActionType)
+	missingRepoAction         func()
 	helpModel                 help.Model
 	keys                      keyMap
 	searchActive              bool
@@ -138,6 +141,8 @@ type Model struct {
 	ProviderLag               map[string]time.Duration
 	ProviderHealth            map[string]core.ProviderHealth
 	ProviderHistory           map[string][]string
+	storeAudit                []manager.StoreAuditEntry
+	buildInfo                 string
 	detailVisible             bool
 	alertLog                  []string
 	visibleRuns               []core.Run
@@ -171,8 +176,13 @@ type Model struct {
 	providerStoreInstructions string
 }
 
-// NewModel constructs a UI model.
+// NewModel constructs a UI model using default build info (empty).
 func NewModel(store *core.Store, providers []string, refresh func(), openURL func(string), copyText func(string)) Model {
+	return NewModelWithBuildInfo(store, providers, refresh, openURL, copyText, "")
+}
+
+// NewModelWithBuildInfo constructs a UI model and displays the provided build info in the header.
+func NewModelWithBuildInfo(store *core.Store, providers []string, refresh func(), openURL func(string), copyText func(string), buildInfo string) Model {
 	columns := []table.Column{
 		{Title: "Provider", Width: 10},
 		{Title: "Repository", Width: 24},
@@ -231,6 +241,7 @@ func NewModel(store *core.Store, providers []string, refresh func(), openURL fun
 		ProviderLag:            make(map[string]time.Duration),
 		ProviderHealth:         make(map[string]core.ProviderHealth),
 		ProviderHistory:        make(map[string][]string),
+		storeAudit:             make([]manager.StoreAuditEntry, 0),
 		runTotals:              make(map[string]int),
 		logEntries:             make([]logEntry, 0),
 		focusMode:              false,
@@ -240,6 +251,7 @@ func NewModel(store *core.Store, providers []string, refresh func(), openURL fun
 		MissingRepos:           []string{},
 		missingIndex:           0,
 		providerStoreTextInput: ti,
+		buildInfo:              buildInfo,
 		headerStyle:            headerStyle,
 		footerStyle:            footerStyle,
 		bodyBoxStyle:           bodyBox,
@@ -278,6 +290,11 @@ func (m *Model) SetProviderList(names []string) {
 // SetProviderStoreAction wires the action invoked when the overlay manipulates entries.
 func (m *Model) SetProviderStoreAction(action func(manager.ProviderRecord, ProviderStoreActionType)) {
 	m.providerStoreAction = action
+}
+
+// SetMissingRepoAction sets the callback when a missing-repo config is created.
+func (m *Model) SetMissingRepoAction(action func()) {
+	m.missingRepoAction = action
 }
 
 // Init implements tea.Model.Init.
@@ -358,6 +375,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.providerStoreCursor < 0 {
 				m.providerStoreCursor = 0
 			}
+		}
+		if msg.Audit != nil {
+			m.storeAudit = msg.Audit
 		}
 		if msg.Message != "" {
 			entry := logEntry{text: msg.Message, timestamp: msg.Timestamp, level: msg.Level}
@@ -522,8 +542,12 @@ func (m Model) renderHeader() string {
 			return m.searchQuery
 		}(),
 	)
+	title := "CI Status Dashboard"
+	if m.buildInfo != "" {
+		title = fmt.Sprintf("%s (%s)", title, m.buildInfo)
+	}
 	lines := []string{
-		m.headerStyle.Render(fmt.Sprintf("CI Status Dashboard  •  Last update %s", last)),
+		m.headerStyle.Render(fmt.Sprintf("%s  •  Last update %s", title, last)),
 		m.footerStyle.Render(totals),
 		m.footerStyle.Render(filters),
 		m.renderProviderTabs(),
@@ -545,7 +569,16 @@ func (m Model) renderRunsTable() string {
 
 func (m Model) renderDashboardBody() string {
 	table := m.renderRunsTable()
-	sidebar := lipgloss.JoinVertical(lipgloss.Left, m.renderDetails(), m.renderDetailView(), m.renderLogs(), m.renderHistoryPanel(), m.renderAlertLog())
+	sidebarParts := []string{
+		m.renderDetails(),
+		m.renderDetailView(),
+		m.renderLogs(),
+	}
+	if audit := m.renderAuditPanel(); audit != "" {
+		sidebarParts = append(sidebarParts, audit)
+	}
+	sidebarParts = append(sidebarParts, m.renderHistoryPanel(), m.renderAlertLog())
+	sidebar := lipgloss.JoinVertical(lipgloss.Left, sidebarParts...)
 	if missing := m.renderMissingPanel(); missing != "" {
 		sidebar = lipgloss.JoinVertical(lipgloss.Left, sidebar, missing)
 	}
@@ -556,6 +589,9 @@ func (m Model) renderCompactBody() string {
 	history := m.renderHistoryPanel()
 	alertLog := m.renderAlertLog()
 	sidebar := []string{m.renderDetails(), m.renderDetailView(), m.renderLogs()}
+	if audit := m.renderAuditPanel(); audit != "" {
+		sidebar = append(sidebar, audit)
+	}
 	if history != "" {
 		sidebar = append(sidebar, history)
 	}
@@ -576,10 +612,19 @@ func (m Model) renderFocusBody() string {
 	banner := m.panelStyle.Render(bodyTextStyle.Render("Focus mode: table maximized (press 'v' to return to dashboard view)"))
 	lower := lipgloss.JoinHorizontal(lipgloss.Top, m.renderDetails(), m.renderLogs())
 	body := []string{banner, m.renderRunsTable()}
+	auditPanel := m.renderAuditPanel()
 	if m.compactLayout() {
-		body = append(body, m.renderDetails(), m.renderLogs(), m.renderStatuses())
+		body = append(body, m.renderDetails(), m.renderLogs())
+		if auditPanel != "" {
+			body = append(body, auditPanel)
+		}
+		body = append(body, m.renderStatuses())
 	} else {
-		body = append(body, lower, m.renderStatuses())
+		body = append(body, lower)
+		if auditPanel != "" {
+			body = append(body, auditPanel)
+		}
+		body = append(body, m.renderStatuses())
 	}
 	return lipgloss.JoinVertical(lipgloss.Left, body...)
 }
@@ -724,6 +769,39 @@ func (m Model) renderAlertLog() string {
 	lines := []string{sectionTitleStyle.Render("Alert log")}
 	for _, entry := range m.alertLog {
 		lines = append(lines, logErrorStyle.Render(entry))
+	}
+	return m.panelStyle.Render(lipgloss.JoinVertical(lipgloss.Left, lines...))
+}
+
+func (m Model) renderAuditPanel() string {
+	if len(m.storeAudit) == 0 {
+		return ""
+	}
+	lines := []string{sectionTitleStyle.Render("Store audit")}
+	for i, entry := range m.storeAudit {
+		if i >= auditPanelLimit {
+			break
+		}
+		label := entry.DisplayName
+		if label == "" {
+			label = entry.ProviderType
+		}
+		if label == "" {
+			label = shortID(entry.ID)
+		}
+		actor := entry.Actor
+		if actor == "" {
+			actor = "system"
+		}
+		action := titleCase(entry.Action)
+		if action == "" {
+			action = "action"
+		}
+		line := fmt.Sprintf("[%s] %s %s %s", entry.Timestamp.Format("15:04:05"), actor, action, label)
+		if entry.Details != "" {
+			line = fmt.Sprintf("%s • %s", line, entry.Details)
+		}
+		lines = append(lines, bodyTextStyle.Render(line))
 	}
 	return m.panelStyle.Render(lipgloss.JoinVertical(lipgloss.Left, lines...))
 }
@@ -1288,6 +1366,9 @@ func (m *Model) createMissingConfig() {
 	m.MissingRepos = append(m.MissingRepos[:index], m.MissingRepos[index+1:]...)
 	if m.missingIndex >= len(m.MissingRepos) {
 		m.missingIndex = 0
+	}
+	if m.missingRepoAction != nil {
+		m.missingRepoAction()
 	}
 }
 

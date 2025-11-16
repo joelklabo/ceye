@@ -49,3 +49,28 @@ func TestResolveConfigRoot(t *testing.T) {
 		t.Fatalf("expected fallback to workspace when no override")
 	}
 }
+
+func TestListMissingConfigs(t *testing.T) {
+	root := t.TempDir()
+	repo := filepath.Join(root, "repo")
+	if err := os.MkdirAll(filepath.Join(repo, ".git"), 0o755); err != nil {
+		t.Fatalf("mkdir git repo: %v", err)
+	}
+	missing, err := listMissingConfigs(root)
+	if err != nil {
+		t.Fatalf("list missing configs: %v", err)
+	}
+	if len(missing) != 1 {
+		t.Fatalf("expected 1 missing repo, got %d", len(missing))
+	}
+	if err := os.WriteFile(filepath.Join(repo, "ceye.yaml"), []byte("providers: []\n"), 0o644); err != nil {
+		t.Fatalf("create config: %v", err)
+	}
+	updated, err := listMissingConfigs(root)
+	if err != nil {
+		t.Fatalf("list missing configs after create: %v", err)
+	}
+	if len(updated) != 0 {
+		t.Fatalf("expected no missing configs after creation, got %v", updated)
+	}
+}

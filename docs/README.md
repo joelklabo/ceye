@@ -8,6 +8,7 @@ CI Status Dashboard is a terminal UI written in Go that aggregates workflow/buil
 - **Adaptive polling loops:** Providers adjust their polling interval based on active runs to balance responsiveness and rate limits.
 - **Bubble Tea UI:** Runs are displayed in a stylized table with provider tabs, real-time updates, and keybindings (`Tab` to cycle providers, `r` to force refresh, `q`/Ctrl+C to quit).
 - **Cobra/Viper-based config:** Configuration is loaded from `ceye.yaml` (or a path passed via `CEYE_CONFIG`) and supports environment overrides.
+- **Missing-config onboarding:** When running from your workspace root (or the directory named by `--config-dir`/`CEYE_CONFIG_ROOT`), `ci-dash` automatically scans all git repositories for missing `ceye.*` files, surfaces them in the “Missing configs” panel, and lets you press `n`/`a` to highlight each repo and scaffold a template config—after creation the list refreshes so the repo disappears immediately.
 
 ## Getting Started
 
@@ -52,6 +53,21 @@ providers:
 Set provider credentials via environment variables (`GITHUB_TOKEN`, `AZURE_DEVOPS_PAT`, etc.). The config loader searches `./ceye.yaml` then `~/.config/ceye/ceye.yaml` by default, and respects `CEYE_*` env overrides.
 The GitHub provider automatically reads `CEYE_GITHUB_TOKEN` (preferred) or `GITHUB_TOKEN` for authentication.
 
+### Automatic CLI discovery
+
+When no `ceye.*` file is found, `ci-dash` now tries to build a configuration by calling `gh repo list <org>` and `az pipelines list --org <org> --project <project>`. This happens transparently whenever `gh`/`az` are installed and credentialed for your GitHub and Azure DevOps orgs. The defaults (`joelklabo`, `joelklabo`, `Big Timer`) can be overridden with `--github-org`, `--azure-org`, `--azure-project` (or the `CEYE_GITHUB_ORG`, `CEYE_AZURE_ORG`, `CEYE_AZURE_PROJECT` environment variables). If discovery fails it still falls back to the demo provider so the UI can start.
+
+### Global configuration generator
+
+If you want one config that works regardless of which repo you run from, use the CLI-based generator in this repo:
+
+```bash
+cd ~/code/ceye
+python3 scripts/gen-global-ceye-config.py
+```
+
+`gh` must be logged into the `joelklabo` org, and `az` must have access to `https://dev.azure.com/joelklabo` with the `Big Timer` project; the script lists every GitHub repo in that org and every pipeline under the Azure project, then writes `~/.config/ceye/ceye.yaml`. Pass `--github-org`, `--azure-org`, `--azure-project`, or `--output` if your targets differ.
+
 ### Demo provider
 The optional `demo` provider emits synthetic runs so you can verify the UI without real credentials. Include it in your config (as shown above) and it will stream Build/Test/Deploy runs that cycle through queued/running/success/failure states.
 
@@ -72,6 +88,8 @@ Once running, the dashboard polls providers and refreshes the table automaticall
 - `q` or `Ctrl+C`: Quit
 
 A flash message appears beneath the header after copy operations or other actions so you know the key press succeeded.
+
+The header now displays the build version/commit, and you can run `ci-dash --version` to see the same information from the CLI (useful when teams compare binaries).
 
 ### Runtime provider store
 Dynamic providers added at runtime are kept in `~/.config/ceye/providers.json` by default (or override via `CEYE_PROVIDER_STORE`/`--provider-store`). Use the `ci-dash provider` subcommands to inspect or mutate the runtime list without editing the main config:
@@ -98,6 +116,7 @@ Stored providers are merged with your static `ceye.yaml` providers on startup, a
  - `ci-dash provider export --file providers.json`: dump stored entries so you can share them as JSON.
 - `ci-dash provider import --file providers.json`: append entries from JSON (use `--replace` to overwrite the current store).
 - When `ci-dash` detects repos without `ceye.*`, the UI shows a “Missing configs” panel; press `n` to highlight each repository and `a` to scaffold a default `ceye.yaml` inside it.
+  After scaffolding, `ci-dash` reruns the scan immediately so the repo vanishes from the list as soon as the new file exists.
 
 ### Demo/diagnostic flags
 - `--demo` / `--demo-runs`: start with synthetic runs only.

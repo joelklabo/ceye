@@ -79,10 +79,10 @@ func providerImportCmd() *cobra.Command {
 				return err
 			}
 			if replace {
-				return store.Replace(entries)
+				return store.Replace(cmd.CommandPath(), entries)
 			}
 			for _, entry := range entries {
-				if _, err := store.Add(entry.Config); err != nil {
+				if _, err := store.Add(cmd.CommandPath(), entry.Config); err != nil {
 					return err
 				}
 			}
@@ -133,7 +133,7 @@ func providerAddCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			record, err := store.Add(cfg)
+			record, err := store.Add(cmd.CommandPath(), cfg)
 			if err != nil {
 				return err
 			}
@@ -166,7 +166,7 @@ func providerUpdateCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if err := store.Update(id, cfg); err != nil {
+			if err := store.Update(cmd.CommandPath(), id, cfg); err != nil {
 				return err
 			}
 			fmt.Printf("updated provider %s (%s)\n", id, providers.DisplayName(cfg))
@@ -198,7 +198,7 @@ func providerEnableCmd(enable bool) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if err := store.SetEnabled(id, enable); err != nil {
+			if err := store.SetEnabled(cmd.CommandPath(), id, enable); err != nil {
 				return err
 			}
 			fmt.Printf("%sd provider %s\n", use, id)
@@ -223,7 +223,7 @@ func providerRemoveCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if err := store.Remove(id); err != nil {
+			if err := store.Remove(cmd.CommandPath(), id); err != nil {
 				return err
 			}
 			fmt.Printf("removed provider %s\n", id)

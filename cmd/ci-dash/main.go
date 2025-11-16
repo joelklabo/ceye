@@ -13,7 +13,10 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
+	"sort"
+	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -30,10 +33,29 @@ import (
 	"github.com/joelklabo/ceye/internal/ui"
 )
 
-const envConfigRoot = "CEYE_CONFIG_ROOT"
+const (
+	envConfigRoot   = "CEYE_CONFIG_ROOT"
+	envGithubOrg    = "CEYE_GITHUB_ORG"
+	envAzureOrg     = "CEYE_AZURE_ORG"
+	envAzureProject = "CEYE_AZURE_PROJECT"
 
-var providerStoreFlag string
-var configDirFlag string
+	defaultGithubOrg    = "joelklabo"
+	defaultAzureOrg     = "joelklabo"
+	defaultAzureProject = "Big Timer"
+)
+
+var (
+	Version   = "dev"
+	GitCommit = "unknown"
+)
+
+var (
+	providerStoreFlag string
+	configDirFlag     string
+	githubOrgFlag     string
+	azureOrgFlag      string
+	azureProjectFlag  string
+)
 
 func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -48,12 +70,14 @@ func main() {
 	var historyPath string
 	var webhookURL string
 	rootCmd := &cobra.Command{
-		Use:   "ci-dash",
-		Short: "CI Status Dashboard TUI",
+		Use:     "ci-dash",
+		Short:   "CI Status Dashboard TUI",
+		Version: fmt.Sprintf("%s (%s)", Version, GitCommit),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return run(ctx, cfgPath, configDirFlag, demo, demoRuns, demoDuration, eventLogPath, notify, historyPath, webhookURL, resolveProviderStorePath(providerStoreFlag))
+			return run(ctx, cfgPath, configDirFlag, demo, demoRuns, demoDuration, eventLogPath, notify, historyPath, webhookURL, resolveProviderStorePath(providerStoreFlag), githubOrgFlag, azureOrgFlag, azureProjectFlag)
 		},
 	}
+	rootCmd.SetVersionTemplate("ci-dash version {{.Version}}\n")
 	rootCmd.PersistentFlags().StringVar(&cfgPath, "config", "", "Path to config file (defaults to ceye.yaml search paths)")
 	rootCmd.PersistentFlags().BoolVar(&demo, "demo", false, "Run with the built-in demo provider (ignores config)")
 	rootCmd.PersistentFlags().IntVar(&demoRuns, "demo-runs", 4, "Number of demo runs when --demo is set")
@@ -64,6 +88,9 @@ func main() {
 	rootCmd.PersistentFlags().StringVar(&historyPath, "history-path", "", "Persist run history to this JSON file (defaults to ~/.config/ceye/run-history.json)")
 	rootCmd.PersistentFlags().StringVar(&providerStoreFlag, "provider-store", "", "Path to provider store (defaults to ~/.config/ceye/providers.json)")
 	rootCmd.PersistentFlags().StringVar(&configDirFlag, "config-dir", ".", "Root directory to scan for config files (defaults to current dir)")
+	rootCmd.PersistentFlags().StringVar(&githubOrgFlag, "github-org", "", "GitHub org used when auto-discovering repos via `gh repo list`")
+	rootCmd.PersistentFlags().StringVar(&azureOrgFlag, "azure-org", "", "Azure DevOps org (or URL) used when auto-discovering pipelines via `az pipelines list`")
+	rootCmd.PersistentFlags().StringVar(&azureProjectFlag, "azure-project", "", "Azure DevOps project scanned when auto-discovering pipelines")
 
 	rootCmd.AddCommand(providerCmd())
 
@@ -72,7 +99,7 @@ func main() {
 	}
 }
 
-func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRuns int, demoDuration time.Duration, eventLogPath string, notify bool, historyPath string, webhookURL string, providerStorePath string) error {
+func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRuns int, demoDuration time.Duration, eventLogPath string, notify bool, historyPath string, webhookURL string, providerStorePath string, githubOrg, azureOrg, azureProject string) error {
 	ctx, cancel := context.WithCancel(parentCtx)
 	defer cancel()
 
@@ -91,7 +118,10 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 	var cfg *config.Config
 	var missingConfigs []string
 	var err error
+	var configRoot string
+	var missingConfigMu sync.RWMutex
 	providerHistory := make(map[string][]string)
+
 	if demo {
 		if demoRuns <= 0 {
 			demoRuns = 4
@@ -104,7 +134,7 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 			cfgPath = os.Getenv("CEYE_CONFIG")
 		}
 
-		cfg, missingConfigs, err = loadDistributedConfigs(cfgPath, configDir)
+		cfg, configRoot, missingConfigs, err = loadDistributedConfigs(cfgPath, configDir, githubOrg, azureOrg, azureProject)
 		if err != nil {
 			return err
 		}
@@ -116,6 +146,15 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 	providerStore, err := manager.New(providerStorePath)
 	if err != nil {
 		return fmt.Errorf("provider store: %w", err)
+	}
+	if configRoot != "" {
+		if list, listErr := listMissingConfigs(configRoot); listErr != nil {
+			fmt.Fprintf(os.Stderr, "missing configs: %v\n", listErr)
+		} else {
+			missingConfigMu.Lock()
+			missingConfigs = list
+			missingConfigMu.Unlock()
+		}
 	}
 
 	var eventLog io.WriteCloser
@@ -132,8 +171,8 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 	}
 
 	deps := providers.Dependencies{
-		GitHubClient: githubprovider.NewHTTPClient(githubToken()),
-		AzureClient:  azureprovider.NewHTTPClient(azureToken()),
+		GitHubClient: newGitHubClient(),
+		AzureClient:  newAzureClient(),
 	}
 
 	var providerInstances []core.Provider
@@ -158,7 +197,6 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 		providerNames = append(providerNames, alias)
 		providerStatus[alias] = ""
 	}
-
 	store := core.NewStore()
 	eventCh := make(chan core.RunEvent)
 
@@ -176,13 +214,46 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 		}
 	}
 
-	model := ui.NewModel(store, providerNames, refresh, openURL, copyToClipboard)
+	buildInfo := fmt.Sprintf("%s (%s)", Version, GitCommit)
+	model := ui.NewModelWithBuildInfo(store, providerNames, refresh, openURL, copyToClipboard, buildInfo)
 	var program *tea.Program
+	snapshotMissing := func() []string {
+		missingConfigMu.RLock()
+		defer missingConfigMu.RUnlock()
+		return copyMissing(missingConfigs)
+	}
+
+	notifyMissing := func() {
+		if program == nil {
+			return
+		}
+		program.Send(ui.RunUpdatedMsg{
+			Timestamp:    time.Now(),
+			MissingRepos: snapshotMissing(),
+		})
+	}
+
+	model.SetMissingRepoAction(func() {
+		if configRoot == "" {
+			return
+		}
+		go func() {
+			list, listErr := listMissingConfigs(configRoot)
+			if listErr != nil {
+				fmt.Fprintf(os.Stderr, "missing configs: %v\n", listErr)
+				return
+			}
+			missingConfigMu.Lock()
+			missingConfigs = list
+			missingConfigMu.Unlock()
+			notifyMissing()
+		}()
+	})
 	model.SetProviderStoreAction(func(entry manager.ProviderRecord, action ui.ProviderStoreActionType) {
 		go func() {
 			switch action {
 			case ui.ProviderStoreActionToggle:
-				if err := providerStore.SetEnabled(entry.ID, entry.Enabled); err != nil {
+				if err := providerStore.SetEnabled("ui", entry.ID, entry.Enabled); err != nil {
 					fmt.Fprintf(os.Stderr, "provider store: %v\n", err)
 					if program != nil {
 						program.Send(ui.RunUpdatedMsg{
@@ -190,6 +261,7 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 							Message:   fmt.Sprintf("store update failed: %v", err),
 							Level:     "error",
 							Store:     copyProviderRecords(providerStore.List()),
+							Audit:     copyAudit(providerStore.Audit()),
 						})
 					}
 					return
@@ -201,10 +273,11 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 						Message:   msg,
 						Level:     "info",
 						Store:     copyProviderRecords(providerStore.List()),
+						Audit:     copyAudit(providerStore.Audit()),
 					})
 				}
 			case ui.ProviderStoreActionEdit:
-				if err := providerStore.Update(entry.ID, entry.Config); err != nil {
+				if err := providerStore.Update("ui", entry.ID, entry.Config); err != nil {
 					fmt.Fprintf(os.Stderr, "provider store: %v\n", err)
 					if program != nil {
 						program.Send(ui.RunUpdatedMsg{
@@ -212,6 +285,7 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 							Message:   fmt.Sprintf("store update failed: %v", err),
 							Level:     "error",
 							Store:     copyProviderRecords(providerStore.List()),
+							Audit:     copyAudit(providerStore.Audit()),
 						})
 					}
 					return
@@ -222,10 +296,11 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 						Message:   fmt.Sprintf("%s updated", providers.DisplayName(entry.Config)),
 						Level:     "info",
 						Store:     copyProviderRecords(providerStore.List()),
+						Audit:     copyAudit(providerStore.Audit()),
 					})
 				}
 			case ui.ProviderStoreActionRemove:
-				if err := providerStore.Remove(entry.ID); err != nil {
+				if err := providerStore.Remove("ui", entry.ID); err != nil {
 					fmt.Fprintf(os.Stderr, "provider store: %v\n", err)
 					if program != nil {
 						program.Send(ui.RunUpdatedMsg{
@@ -233,6 +308,7 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 							Message:   fmt.Sprintf("store removal failed: %v", err),
 							Level:     "error",
 							Store:     copyProviderRecords(providerStore.List()),
+							Audit:     copyAudit(providerStore.Audit()),
 						})
 					}
 					return
@@ -243,10 +319,14 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 						Message:   fmt.Sprintf("%s removed", providers.DisplayName(entry.Config)),
 						Level:     "info",
 						Store:     copyProviderRecords(providerStore.List()),
+						Audit:     copyAudit(providerStore.Audit()),
 					})
 				}
 			case ui.ProviderStoreActionDuplicate:
-				record, err := providerStore.Add(entry.Config)
+				record, err := providerStore.Add("ui", entry.Config,
+					manager.WithAuditAction("duplicate"),
+					manager.WithAuditDetails(fmt.Sprintf("from %s", shortID(entry.ID))),
+				)
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "provider store duplicate: %v\n", err)
 					if program != nil {
@@ -255,6 +335,7 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 							Message:   fmt.Sprintf("store duplication failed: %v", err),
 							Level:     "error",
 							Store:     copyProviderRecords(providerStore.List()),
+							Audit:     copyAudit(providerStore.Audit()),
 						})
 					}
 					return
@@ -265,6 +346,7 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 						Message:   fmt.Sprintf("%s duplicated (%s)", providers.DisplayName(entry.Config), shortID(record.ID)),
 						Level:     "info",
 						Store:     copyProviderRecords(providerStore.List()),
+						Audit:     copyAudit(providerStore.Audit()),
 					})
 				}
 			}
@@ -272,18 +354,13 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 	})
 	program = tea.NewProgram(model)
 
-	// if we discovered repos but no configs, alert the user immediately
-	if len(missingConfigs) > 0 {
-		if program != nil {
-			program.Send(ui.RunUpdatedMsg{
-				Timestamp:    time.Now(),
-				Message:      fmt.Sprintf("missing configs for: %s", strings.Join(missingConfigs, ", ")),
-				Level:        "warn",
-				Store:        copyProviderRecords(providerStore.List()),
-				MissingRepos: copyMissing(missingConfigs),
-			})
-		}
-	}
+	runErr := make(chan error, 1)
+	go func() {
+		_, err := program.Run()
+		runErr <- err
+	}()
+
+	notifyMissing()
 
 	go func() {
 		for {
@@ -385,14 +462,22 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 					Lag:          copyLag(providerLag),
 					History:      copyHistory(providerHistory),
 					Store:        copyProviderRecords(providerStore.List()),
-					MissingRepos: copyMissing(missingConfigs),
+					MissingRepos: snapshotMissing(),
 				})
 			}
 		}
 	}()
 
-	if _, err := program.Run(); err != nil {
-		return fmt.Errorf("run UI: %w", err)
+	select {
+	case err := <-runErr:
+		if err != nil {
+			return fmt.Errorf("run UI: %w", err)
+		}
+	case <-ctx.Done():
+		program.Quit()
+		if err := <-runErr; err != nil {
+			return fmt.Errorf("run UI: %w", err)
+		}
 	}
 	return nil
 }
@@ -465,6 +550,15 @@ func copyProviderRecords(in []manager.ProviderRecord) []manager.ProviderRecord {
 		return nil
 	}
 	out := make([]manager.ProviderRecord, len(in))
+	copy(out, in)
+	return out
+}
+
+func copyAudit(in []manager.StoreAuditEntry) []manager.StoreAuditEntry {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]manager.StoreAuditEntry, len(in))
 	copy(out, in)
 	return out
 }
@@ -554,40 +648,172 @@ func sendWebhook(ctx context.Context, url, provider, message string, timestamp t
 	return nil
 }
 
-func loadDistributedConfigs(cfgPath, configDir string) (*config.Config, []string, error) {
-	if cfgPath != "" {
-		cfg, err := config.Load(cfgPath)
-		return cfg, nil, err
-	}
+func loadDistributedConfigs(cfgPath, configDir, githubOrg, azureOrg, azureProject string) (*config.Config, string, []string, error) {
 	root, err := resolveConfigRoot(configDir)
 	if err != nil {
-		return nil, nil, err
+		return nil, "", nil, err
 	}
-	configDir = root
-	matches, err := config.DiscoverConfigs(configDir)
+	if cfgPath != "" {
+		cfg, err := config.Load(cfgPath)
+		return cfg, root, nil, err
+	}
+	if def := defaultUserConfigPath(); def != "" {
+		if _, err := os.Stat(def); err == nil {
+			cfg, err := config.Load(def)
+			return cfg, root, nil, err
+		}
+	}
+	matches, err := config.DiscoverConfigs(root)
 	if err != nil {
-		return nil, nil, fmt.Errorf("discover configs: %w", err)
+		return nil, root, nil, fmt.Errorf("discover configs: %w", err)
 	}
 	if len(matches) == 0 {
-		repos, repoErr := discoverGitRepos(configDir)
-		msg := fmt.Sprintf("no config files found under %s", configDir)
-		if repoErr == nil && len(repos) > 0 {
-			msg = fmt.Sprintf("%s (found git repos: %s)", msg, strings.Join(repos, ", "))
+		autoCfg, err := autoConfigFromCLIs(githubOrg, azureOrg, azureProject)
+		if err == nil {
+			githubCount, azureCount := countAutoProviders(autoCfg)
+			fmt.Fprintf(os.Stderr, "ci-dash: auto-discovered %d GitHub repos and %d Azure pipelines via gh/az CLI\n", githubCount, azureCount)
+			return autoCfg, root, nil, nil
 		}
+		fmt.Fprintf(os.Stderr, "ci-dash: CLI discovery failed: %v\n", err)
+		repos, _ := discoverGitRepos(root)
 		if len(repos) > 0 {
-			return &config.Config{}, repos, nil
+			return &config.Config{}, root, repos, nil
 		}
-		return nil, nil, fmt.Errorf("%s", msg)
+		fmt.Fprintf(os.Stderr, "ci-dash: no config files found under %s, falling back to demo provider\n", root)
+		return &config.Config{Providers: []providers.ProviderConfig{{Type: "demo", Runs: 4}}}, root, nil, nil
 	}
 	var merged config.Config
 	for _, match := range matches {
 		cfg, err := config.Load(match)
 		if err != nil {
-			return nil, nil, fmt.Errorf("load config %s: %w", match, err)
+			return nil, root, nil, fmt.Errorf("load config %s: %w", match, err)
 		}
 		merged.Providers = append(merged.Providers, cfg.Providers...)
 	}
-	return &merged, nil, nil
+	return &merged, root, nil, nil
+}
+
+func autoConfigFromCLIs(githubOrg, azureOrg, azureProject string) (*config.Config, error) {
+	githubOrg = resolveConfigValue(githubOrg, envGithubOrg, defaultGithubOrg)
+	azureOrg = resolveConfigValue(azureOrg, envAzureOrg, defaultAzureOrg)
+	azureProject = resolveConfigValue(azureProject, envAzureProject, defaultAzureProject)
+
+	repos, err := listGithubRepos(githubOrg)
+	if err != nil {
+		return nil, fmt.Errorf("github discovery: %w", err)
+	}
+	pipelines, err := listAzurePipelines(azureOrg, azureProject)
+	if err != nil {
+		return nil, fmt.Errorf("azure discovery: %w", err)
+	}
+
+	return &config.Config{
+		Providers: []providers.ProviderConfig{
+			{Type: "github", Repos: repos},
+			{Type: "azure", Org: azureOrg, Project: azureProject, Pipelines: pipelines},
+		},
+	}, nil
+}
+
+func resolveConfigValue(flagValue, envName, fallback string) string {
+	if flagValue != "" {
+		return flagValue
+	}
+	if env := os.Getenv(envName); env != "" {
+		return env
+	}
+	return fallback
+}
+
+func listGithubRepos(org string) ([]githubprovider.RepoConfig, error) {
+	cmd := exec.Command("gh", "repo", "list", org, "--limit", "1000", "--json", "nameWithOwner")
+	cmd.Env = os.Environ()
+	output, err := cmd.Output()
+	if err != nil {
+		return nil, err
+	}
+	var entries []struct {
+		NameWithOwner string `json:"nameWithOwner"`
+	}
+	if err := json.Unmarshal(output, &entries); err != nil {
+		return nil, fmt.Errorf("parse gh repo list: %w", err)
+	}
+	repos := make([]githubprovider.RepoConfig, 0, len(entries))
+	seen := make(map[string]struct{})
+	for _, entry := range entries {
+		parts := strings.Split(entry.NameWithOwner, "/")
+		if len(parts) != 2 {
+			continue
+		}
+		if parts[0] != org {
+			continue
+		}
+		repo := parts[1]
+		if repo == "" {
+			continue
+		}
+		if _, ok := seen[repo]; ok {
+			continue
+		}
+		seen[repo] = struct{}{}
+		repos = append(repos, githubprovider.RepoConfig{Owner: org, Repo: repo})
+	}
+	if len(repos) == 0 {
+		return nil, fmt.Errorf("no repositories discovered for %s", org)
+	}
+	sort.Slice(repos, func(i, j int) bool {
+		return repos[i].Repo < repos[j].Repo
+	})
+	return repos, nil
+}
+
+func listAzurePipelines(org, project string) ([]int, error) {
+	orgURL := normalizeAzureOrgURL(org)
+	cmd := exec.Command("az", "pipelines", "list", "--org", orgURL, "--project", project, "--query", "[].id", "-o", "tsv")
+	cmd.Env = os.Environ()
+	output, err := cmd.Output()
+	if err != nil {
+		return nil, err
+	}
+	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
+	ids := make([]int, 0, len(lines))
+	for _, line := range lines {
+		if line == "" {
+			continue
+		}
+		id, err := strconv.Atoi(line)
+		if err != nil {
+			return nil, fmt.Errorf("parse pipeline id %q: %w", line, err)
+		}
+		ids = append(ids, id)
+	}
+	if len(ids) == 0 {
+		return nil, fmt.Errorf("no pipelines discovered for %s/%s", orgURL, project)
+	}
+	sort.Ints(ids)
+	return ids, nil
+}
+
+func normalizeAzureOrgURL(org string) string {
+	org = strings.TrimSpace(org)
+	org = strings.TrimSuffix(org, "/")
+	if strings.HasPrefix(org, "http://") || strings.HasPrefix(org, "https://") {
+		return org
+	}
+	return fmt.Sprintf("https://dev.azure.com/%s", org)
+}
+
+func countAutoProviders(cfg *config.Config) (int, int) {
+	githubCount, azureCount := 0, 0
+	for _, p := range cfg.Providers {
+		switch p.Type {
+		case "github":
+			githubCount += len(p.Repos)
+		case "azure":
+			azureCount += len(p.Pipelines)
+		}
+	}
+	return githubCount, azureCount
 }
 
 func resolveConfigRoot(configDir string) (string, error) {
@@ -642,6 +868,29 @@ func discoverGitRepos(root string) ([]string, error) {
 		return nil
 	})
 	return repos, err
+}
+
+func listMissingConfigs(root string) ([]string, error) {
+	repos, err := discoverGitRepos(root)
+	if err != nil {
+		return nil, err
+	}
+	var missing []string
+	for _, repo := range repos {
+		if !repoHasConfig(repo) {
+			missing = append(missing, repo)
+		}
+	}
+	return missing, nil
+}
+
+func repoHasConfig(repo string) bool {
+	for _, name := range []string{"ceye.yaml", "ceye.yml", "ceye.json", "ceye.toml"} {
+		if _, err := os.Stat(filepath.Join(repo, name)); err == nil {
+			return true
+		}
+	}
+	return false
 }
 
 type providerEntry struct {
@@ -716,6 +965,43 @@ func resolveProviderStorePath(flag string) string {
 		return env
 	}
 	return defaultProviderStorePath()
+}
+
+func defaultUserConfigPath() string {
+	if home := os.Getenv("HOME"); home != "" {
+		return filepath.Join(home, ".config", "ceye", "ceye.yaml")
+	}
+	return ""
+}
+
+func newGitHubClient() githubprovider.GitHubClient {
+	token := githubToken()
+	if token != "" {
+		return githubprovider.NewHTTPClient(token)
+	}
+	path, err := exec.LookPath("gh")
+	fmt.Fprintf(os.Stderr, "ci-dash: GH lookup -> path=%q err=%v\n", path, err)
+	if err == nil {
+		fmt.Fprintf(os.Stderr, "ci-dash: using gh CLI-based GitHub client (%s)\n", path)
+		return githubprovider.NewCLIClient()
+	}
+	fmt.Fprintln(os.Stderr, "ci-dash: no GitHub token found, falling back to unauthenticated REST client (requests may be rate-limited)")
+	return githubprovider.NewHTTPClient("")
+}
+
+func newAzureClient() azureprovider.AzureClient {
+	pat := azureToken()
+	if pat != "" {
+		return azureprovider.NewHTTPClient(pat)
+	}
+	path, err := exec.LookPath("az")
+	fmt.Fprintf(os.Stderr, "ci-dash: AZ lookup -> path=%q err=%v\n", path, err)
+	if err == nil {
+		fmt.Fprintf(os.Stderr, "ci-dash: using az CLI-based Azure client (%s)\n", path)
+		return azureprovider.NewCLIClient()
+	}
+	fmt.Fprintln(os.Stderr, "ci-dash: no Azure PAT found, falling back to unauthenticated REST client (requests may fail)")
+	return azureprovider.NewHTTPClient("")
 }
 
 func defaultProviderStorePath() string {

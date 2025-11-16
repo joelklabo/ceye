@@ -59,6 +59,22 @@ func TestModelRunUpdatedMsgRespectsProviderFilter(t *testing.T) {
 	}
 }
 
+func TestModelRunUpdatedMsgUpdatesAudit(t *testing.T) {
+	store := core.NewStore()
+	m := NewModel(store, nil, nil, nil, nil)
+	audit := []manager.StoreAuditEntry{
+		{Actor: "ui", Action: "add", DisplayName: "demo"},
+	}
+	next, _ := m.Update(RunUpdatedMsg{Timestamp: time.Now(), Audit: audit})
+	actual := next.(Model)
+	if len(actual.storeAudit) != 1 {
+		t.Fatalf("expected 1 audit entry, got %d", len(actual.storeAudit))
+	}
+	if actual.storeAudit[0].DisplayName != "demo" {
+		t.Fatalf("unexpected audit entry display name: %s", actual.storeAudit[0].DisplayName)
+	}
+}
+
 func TestModelTableUpdatePassthrough(t *testing.T) {
 	m := NewModel(core.NewStore(), nil, nil, nil, nil)
 

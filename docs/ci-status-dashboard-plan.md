@@ -208,9 +208,9 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Add `ci-dash provider export --file` to dump the store to JSON so the configuration can be shared.
     - Add `ci-dash provider import` with optional `--replace` so backed-up entries can be reapplied.
     - Document the commands and write tests (unit or integration) that verify JSON import/export behavior.
-83. - [ ] **Step 83 – Store change auditing** (`commit: pending`, `push: pending`)
+83. - [x] **Step 83 – Store change auditing** (`commit: pending`, `push: pending`)
     - Track a history of provider store mutations (add/enable/disable/remove/edit) with timestamps and user actions.
-    - Display the audit trail in the UI (maybe within the overlay or a dedicated pane) and optionally persist it to disk for diagnostics.
+    - Display the audit trail in the UI (within a dedicated sidebar panel) and persist the log alongside the provider store so it survives restarts.
     - Add tests that assert the audit log records the correct events when store commands or overlay actions run.
 84. - [x] **Step 84 – Config discovery scan** (`commit: 6a5f46c`, `push: yes`)
     - Implement recursive discovery of `ceye.*` files under a root directory (default current working directory) and merge their provider lists automatically.
@@ -223,7 +223,7 @@ When a step finishes, update its checklist line to `[x]`, replace `commit: pendi
     - Introduce an override (`CEYE_CONFIG_ROOT`) so discovery scans the correct workspace root on machines with a different parent directory.
     - Keep `--config-dir` for ad-hoc overrides; env vars take precedence.
     - Document the override and add tests for the resolution logic.
-86. - [x] **Step 86 – Auto config onboarding** (`commit: 0b2d6b5`, `push: pending`)
-    - Detect git repositories without a `ceye.*` file when scanning the workspace and surface them in the UI’s missing-config list.
-    - Add a keystroke (e.g., `c`) or action that generates a suggested `ceye.yaml` for the selected repo (pre-filled repo/org/pipeline dependency) and writes it to the right folder.
-    - After creation, re-run discovery so the new config shows up immediately; document and test the onboarding experience.
+86. - [x] **Step 86 – Auto config onboarding** (`commit: pending`, `push: pending`)
+    - Re-scan the workspace root (or picked config directory) for git repositories missing any `ceye.*` file and show them in the “Missing configs” panel so operators have quick awareness.
+    - Wire the `n/a` cycle keys plus `a` action so the highlighted repo can drop a template `ceye.yaml` (owner/repo guessed from `git remote origin`) and immediately disappear from the list.
+    - Calling the action refreshes the missing-config scan (the model pushes the new list via `RunUpdatedMsg`) and tests cover `listMissingConfigs()` before/after writing a file.
