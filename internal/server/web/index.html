@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ceye</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔍 ceye</h1>
+            <div class="controls">
+                <button id="refreshBtn">↻ Refresh</button>
+                <select id="providerFilter">
+                    <option value="">All Providers</option>
+                </select>
+                <select id="statusFilter">
+                    <option value="">All Status</option>
+                    <option value="in_progress">Running</option>
+                    <option value="queued">Queued</option>
+                    <option value="completed">Completed</option>
+                    <option value="failed">Failed</option>
+                </select>
+                <input type="text" id="searchBox" placeholder="Search...">
+            </div>
+        </header>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-label">Running</div>
+                <div class="stat-value" id="runningCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Queued</div>
+                <div class="stat-value" id="queuedCount">0</div>
+            </div>
+            <div class="stat-card success">
+                <div class="stat-label">Success</div>
+                <div class="stat-value" id="successCount">0</div>
+            </div>
+            <div class="stat-card failed">
+                <div class="stat-label">Failed</div>
+                <div class="stat-value" id="failedCount">0</div>
+            </div>
+        </div>
+
+        <div class="panels">
+            <div class="panel">
+                <h2>Active Runs</h2>
+                <div id="runsTable" class="table-container"></div>
+            </div>
+
+            <div class="panel">
+                <h2>Provider Health</h2>
+                <div id="providerHealth" class="health-container"></div>
+            </div>
+        </div>
+
+        <footer>
+            <span id="connectionStatus">Connecting...</span>
+            <span id="lastUpdate"></span>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

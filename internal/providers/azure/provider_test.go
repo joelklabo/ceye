@@ -30,7 +30,13 @@ func (s *stubAzureClient) ListBuilds(org, project string, pipelines []int) ([]co
 func TestProviderStartEmitsEventsAndStopsOnContextCancel(t *testing.T) {
 	runs := []core.Run{{ID: "42", Provider: "azure", WorkflowName: "Build", Status: core.RunStatusInProgress}}
 	client := newStubAzureClient(runs)
-	provider := NewProvider(client, Config{Org: "org", Project: "proj", Pipelines: []int{1}})
+	cfg := Config{
+		Org: "org",
+		Projects: []ProjectConfig{
+			{Name: "proj", Pipelines: []int{1}},
+		},
+	}
+	provider := NewProvider(client, cfg)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -47,8 +53,8 @@ func TestProviderStartEmitsEventsAndStopsOnContextCancel(t *testing.T) {
 
 	select {
 	case evt := <-events:
-		if evt.Provider != "azure" {
-			t.Fatalf("expected provider azure, got %s", evt.Provider)
+		if evt.Provider != "azure-org" {
+			t.Fatalf("expected provider azure-org, got %s", evt.Provider)
 		}
 		if len(evt.Runs) != 1 {
 			t.Fatalf("expected 1 run in event, got %d", len(evt.Runs))
@@ -70,9 +76,15 @@ func TestAzureProviderRefresh(t *testing.T) {
 	first := []core.Run{{ID: "1", Provider: "azure", WorkflowName: "Build", Status: core.RunStatusCompleted}}
 	second := []core.Run{{ID: "2", Provider: "azure", WorkflowName: "Deploy", Status: core.RunStatusCompleted}}
 	client := newStubAzureClient(first, second)
-	provider := NewProvider(client, Config{Org: "org", Project: "proj", Pipelines: []int{1}})
-	provider.fastInterval = time.Hour
-	provider.slowInterval = time.Hour
+	cfg := Config{
+		Org: "org",
+		Projects: []ProjectConfig{
+			{Name: "proj", Pipelines: []int{1}},
+		},
+		FastInterval: time.Hour,
+		SlowInterval: time.Hour,
+	}
+	provider := NewProvider(client, cfg)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

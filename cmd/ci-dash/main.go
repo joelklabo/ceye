@@ -30,6 +30,7 @@ import (
 	azureprovider "github.com/joelklabo/ceye/internal/providers/azure"
 	githubprovider "github.com/joelklabo/ceye/internal/providers/github"
 	"github.com/joelklabo/ceye/internal/providers/manager"
+	"github.com/joelklabo/ceye/internal/server"
 	"github.com/joelklabo/ceye/internal/ui"
 )
 
@@ -69,12 +70,14 @@ func main() {
 	var notify bool
 	var historyPath string
 	var webhookURL string
+	var web bool
+	var webPort int
 	rootCmd := &cobra.Command{
 		Use:     "ci-dash",
 		Short:   "CI Status Dashboard TUI",
 		Version: fmt.Sprintf("%s (%s)", Version, GitCommit),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return run(ctx, cfgPath, configDirFlag, demo, demoRuns, demoDuration, eventLogPath, notify, historyPath, webhookURL, resolveProviderStorePath(providerStoreFlag), githubOrgFlag, azureOrgFlag, azureProjectFlag)
+			return run(ctx, cfgPath, configDirFlag, demo, demoRuns, demoDuration, eventLogPath, notify, historyPath, webhookURL, resolveProviderStorePath(providerStoreFlag), githubOrgFlag, azureOrgFlag, azureProjectFlag, web, webPort)
 		},
 	}
 	rootCmd.SetVersionTemplate("ci-dash version {{.Version}}\n")
@@ -91,6 +94,8 @@ func main() {
 	rootCmd.PersistentFlags().StringVar(&githubOrgFlag, "github-org", "", "GitHub org used when auto-discovering repos via `gh repo list`")
 	rootCmd.PersistentFlags().StringVar(&azureOrgFlag, "azure-org", "", "Azure DevOps org (or URL) used when auto-discovering pipelines via `az pipelines list`")
 	rootCmd.PersistentFlags().StringVar(&azureProjectFlag, "azure-project", "", "Azure DevOps project scanned when auto-discovering pipelines")
+	rootCmd.PersistentFlags().BoolVar(&web, "web", false, "Start web server instead of TUI")
+	rootCmd.PersistentFlags().IntVar(&webPort, "port", 8080, "Port for web server (requires --web)")
 
 	rootCmd.AddCommand(providerCmd())
 
@@ -99,7 +104,7 @@ func main() {
 	}
 }
 
-func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRuns int, demoDuration time.Duration, eventLogPath string, notify bool, historyPath string, webhookURL string, providerStorePath string, githubOrg, azureOrg, azureProject string) error {
+func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRuns int, demoDuration time.Duration, eventLogPath string, notify bool, historyPath string, webhookURL string, providerStorePath string, githubOrg, azureOrg, azureProject string, web bool, webPort int) error {
 	ctx, cancel := context.WithCancel(parentCtx)
 	defer cancel()
 
@@ -189,11 +194,15 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 		if err != nil {
 			return fmt.Errorf("create provider: %w", err)
 		}
+		
+		// Wrap with SafeProvider for panic recovery and validation
+		safeProvider := providers.NewSafeProvider(provider)
+		
 		alias := candidate.Alias
 		if refresher, ok := provider.(interface{ TriggerRefresh() }); ok {
 			refreshers = append(refreshers, refresher.TriggerRefresh)
 		}
-		providerInstances = append(providerInstances, wrapProvider(provider, alias))
+		providerInstances = append(providerInstances, wrapProvider(safeProvider, alias))
 		providerNames = append(providerNames, alias)
 		providerStatus[alias] = ""
 	}
@@ -212,6 +221,11 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 		for _, fn := range refreshers {
 			fn()
 		}
+	}
+
+	// If web mode, start HTTP server instead of TUI
+	if web {
+		return runWebServer(ctx, store, providerNames, providerStatus, providerHealth, eventCh, webPort, notify, webhookURL)
 	}
 
 	buildInfo := fmt.Sprintf("%s (%s)", Version, GitCommit)
@@ -991,17 +1005,9 @@ func newGitHubClient() githubprovider.GitHubClient {
 
 func newAzureClient() azureprovider.AzureClient {
 	pat := azureToken()
-	if pat != "" {
-		return azureprovider.NewHTTPClient(pat)
-	}
-	path, err := exec.LookPath("az")
-	fmt.Fprintf(os.Stderr, "ci-dash: AZ lookup -> path=%q err=%v\n", path, err)
-	if err == nil {
-		fmt.Fprintf(os.Stderr, "ci-dash: using az CLI-based Azure client (%s)\n", path)
-		return azureprovider.NewCLIClient()
-	}
-	fmt.Fprintln(os.Stderr, "ci-dash: no Azure PAT found, falling back to unauthenticated REST client (requests may fail)")
-	return azureprovider.NewHTTPClient("")
+	// NewClient requires org, but we'll get that from config later
+	// For now, just return a client with PAT for the factory to use
+	return azureprovider.NewClient("", pat)
 }
 
 func defaultProviderStorePath() string {
@@ -1058,4 +1064,63 @@ func writeEventLog(w io.Writer, event core.RunEvent) error {
 		return err
 	}
 	return nil
+}
+
+func runWebServer(ctx context.Context, store *core.Store, providerNames []string, providerStatus map[string]string, providerHealth map[string]core.ProviderHealth, eventCh chan core.RunEvent, port int, notify bool, webhookURL string) error {
+	srv := server.New(store, providerNames, port)
+	
+	// Start web server in background
+	serverErr := make(chan error, 1)
+	go func() {
+		serverErr <- srv.Start(ctx)
+	}()
+	
+	// Open browser
+	time.Sleep(500 * time.Millisecond)
+	openURL(fmt.Sprintf("http://localhost:%d", port))
+	
+	// Process events and broadcast to connected clients
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case event := <-eventCh:
+				store.Merge(event)
+				
+				if event.Provider != "" {
+					if event.Err != nil {
+						providerStatus[event.Provider] = event.Err.Error()
+						health := providerHealth[event.Provider]
+						health.ErrorCount++
+						health.LastError = event.Timestamp
+						providerHealth[event.Provider] = health
+						
+						if notify {
+							sendNotification(event.Provider, event.Err.Error())
+						}
+						if webhookURL != "" {
+							sendWebhook(ctx, webhookURL, event.Provider, event.Err.Error(), event.Timestamp)
+						}
+					} else {
+						providerStatus[event.Provider] = ""
+						health := providerHealth[event.Provider]
+						health.LastSuccess = event.Timestamp
+						health.ErrorCount = 0
+						providerHealth[event.Provider] = health
+					}
+				}
+				
+				srv.UpdateStatus(providerStatus, providerHealth)
+				srv.BroadcastUpdate()
+			}
+		}
+	}()
+	
+	select {
+	case err := <-serverErr:
+		return err
+	case <-ctx.Done():
+		return nil
+	}
 }

@@ -11,9 +11,28 @@ providers:
   #       workflows:
   #         - CI
   #         - Deploy
+  # Azure DevOps (single project - legacy format)
   # - type: azure
   #   org: myorg
   #   project: MyProject
   #   pipelines:
   #     - 42
   #     - 43
+  
+  # Azure DevOps (multi-project - recommended)
+  # - type: azure
+  #   display_name: "Azure Production"
+  #   org: myorganization
+  #   projects:
+  #     - name: "WebApp"
+  #       pipelines: [123, 456]  # Specific pipeline IDs
+  #     - name: "API"
+  #       pipelines: []          # Empty array = all pipelines
+  #     - name: "Infrastructure"
+  #       pipelines: [789]
+  #   fast_interval: "15s"       # Optional: poll interval when builds active
+  #   slow_interval: "60s"       # Optional: poll interval when builds idle
+  
+  # Note: Set AZURE_PAT or AZURE_DEVOPS_PAT environment variable with your Personal Access Token
+  # Create PAT at: https://dev.azure.com/{org}/_usersSettings/tokens
+  # Required scopes: Build (Read), Code (Read)
