@@ -219,7 +219,7 @@ When a step finishes, update its checklist line to `[x]`, replace `commit: pendi
     - Introduce an override (`CEYE_CONFIG_ROOT`) so discovery scans the correct workspace root on machines with a different parent directory.
     - Keep `--config-dir` for ad-hoc overrides; env vars take precedence.
     - Document the override and add tests for the resolution logic.
-86. - [x] **Step 86 – Auto config onboarding** (`commit: d188f74`, `push: pending`)
+86. - [x] **Step 86 – Auto config onboarding** (`commit: 0b2d6b5`, `push: pending`)
     - Detect git repositories without a `ceye.*` file when scanning the workspace and surface them in the UI’s missing-config list.
     - Add a keystroke (e.g., `c`) or action that generates a suggested `ceye.yaml` for the selected repo (pre-filled repo/org/pipeline dependency) and writes it to the right folder.
     - After creation, re-run discovery so the new config shows up immediately; document and test the onboarding experience.
