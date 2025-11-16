@@ -72,6 +72,7 @@ type keyMap struct {
 	CopyInfo      key.Binding
 	Contrast      key.Binding
 	Detail        key.Binding
+	Trends        key.Binding
 	Help          key.Binding
 	Quit          key.Binding
 }
@@ -91,6 +92,7 @@ func newKeyMap() keyMap {
 		CopyInfo:      key.NewBinding(key.WithKeys("c"), key.WithHelp("c", "copy summary")),
 		Contrast:      key.NewBinding(key.WithKeys("H"), key.WithHelp("H", "toggle high contrast")),
 		Detail:        key.NewBinding(key.WithKeys("D"), key.WithHelp("D", "toggle detail view")),
+		Trends:        key.NewBinding(key.WithKeys("T"), key.WithHelp("T", "toggle trends")),
 		Help:          key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "toggle help")),
 		Quit:          key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "quit")),
 	}
@@ -105,6 +107,7 @@ func (k keyMap) FullHelp() [][]key.Binding {
 		{k.Provider, k.Status, k.Sort, k.Search},
 		{k.Palette, k.ProviderStore, k.Focus, k.Refresh},
 		{k.Open, k.CopyURL, k.CopyInfo, k.Contrast},
+		{k.Detail, k.Trends},
 		{k.Help},
 		{k.Quit},
 	}
@@ -473,6 +476,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			case "D":
 				m.detailVisible = !m.detailVisible
+				return m, nil
+			case "T":
+				if m.trendAnalyzer != nil {
+					m.showTrends = !m.showTrends
+				}
 				return m, nil
 			case "1", "2", "3", "4", "5", "6", "7", "8", "9":
 				if idx, err := strconv.Atoi(r); err == nil && idx < len(m.Providers) {
