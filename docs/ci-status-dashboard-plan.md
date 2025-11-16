@@ -215,7 +215,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
 
 ## Tracking Updates
 When a step finishes, update its checklist line to `[x]`, replace `commit: pending` with the actual hash (e.g., `commit: abc1234`), and mark `push: yes` (or justify `push: no` if absolutely necessary). Add brief notes inline or append short bullet points under the step if context is useful for future reference.
-85. - [x] **Step 85 – Config root override** (`commit: 6a5f46c`, `push: pending`)
+85. - [x] **Step 85 – Config root override** (`commit: e2ed856`, `push: yes`)
     - Introduce an override (`CEYE_CONFIG_ROOT`) so discovery scans the correct workspace root on machines with a different parent directory.
     - Keep `--config-dir` for ad-hoc overrides; env vars take precedence.
     - Document the override and add tests for the resolution logic.
