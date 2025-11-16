@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"embed"
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"log"
@@ -18,11 +19,12 @@ import (
 var webAssets embed.FS
 
 type Server struct {
-	store     *core.Store
-	port      int
-	clients   map[*websocket.Conn]bool
-	clientsMu sync.RWMutex
-	upgrader  websocket.Upgrader
+	store          *core.Store
+	port           int
+	clients        map[*websocket.Conn]bool
+	clientsMu      sync.RWMutex
+	upgrader       websocket.Upgrader
+	trendAnalyzer  interface{} // *storage.TrendAnalyzer (optional)
 	
 	providerStatus map[string]string
 	providerHealth map[string]core.ProviderHealth
@@ -48,12 +50,18 @@ func New(store *core.Store, providerNames []string, port int) *Server {
 		providerNames:  providerNames,
 		providerStatus: make(map[string]string),
 		providerHealth: make(map[string]core.ProviderHealth),
+		trendAnalyzer:  nil,
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				return true
 			},
 		},
 	}
+}
+
+// SetTrendAnalyzer sets the optional trend analyzer for analytics
+func (s *Server) SetTrendAnalyzer(analyzer interface{}) {
+	s.trendAnalyzer = analyzer
 }
 
 func (s *Server) getWebFS() (fs.FS, error) {
@@ -65,6 +73,9 @@ func (s *Server) Start(ctx context.Context) error {
 	
 	// WebSocket endpoint
 	mux.HandleFunc("/ws", s.handleWebSocket)
+	
+	// Analytics API endpoint
+	mux.HandleFunc("/api/analytics/trends", s.handleAnalyticsTrends)
 	
 	// Static files
 	webFS, err := s.getWebFS()
@@ -184,5 +195,59 @@ func (s *Server) BroadcastUpdate() {
 	
 	for _, conn := range clients {
 		s.sendSnapshot(conn)
+	}
+}
+
+// handleAnalyticsTrends serves trend data as JSON for the analytics dashboard
+func (s *Server) handleAnalyticsTrends(w http.ResponseWriter, r *http.Request) {
+	if s.trendAnalyzer == nil {
+		http.Error(w, `{"error":"Analytics not available - storage not enabled"}`, http.StatusServiceUnavailable)
+		return
+	}
+
+	// Get query parameters
+	provider := r.URL.Query().Get("provider")
+	if provider == "" {
+		provider = "all"
+		// Use first available provider if "all" is requested
+		if len(s.providerNames) > 0 {
+			provider = s.providerNames[0]
+		}
+	}
+
+	// Import storage to use TrendAnalyzer
+	// This uses dynamic type assertion since we stored as interface{}
+	type TrendGetter interface {
+		GetAllTrends(ctx context.Context, provider string, period time.Duration) (map[string]interface{}, error)
+	}
+
+	analyzer, ok := s.trendAnalyzer.(TrendGetter)
+	if !ok {
+		http.Error(w, `{"error":"Invalid trend analyzer"}`, http.StatusInternalServerError)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	// Get trends for last 7 days
+	trends, err := analyzer.GetAllTrends(ctx, provider, 7*24*time.Hour)
+	if err != nil {
+		http.Error(w, fmt.Sprintf(`{"error":"Failed to get trends: %s"}`, err.Error()), http.StatusInternalServerError)
+		return
+	}
+
+	// Convert to JSON-friendly format
+	response := map[string]interface{}{
+		"provider": provider,
+		"period":   "7d",
+		"trends":   trends,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	if err := enc.Encode(response); err != nil {
+		log.Printf("Failed to write analytics response: %v", err)
 	}
 }

@@ -249,7 +249,7 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 
 	// If web mode, start HTTP server instead of TUI
 	if web {
-		return runWebServer(ctx, store, providerNames, providerStatus, providerHealth, eventCh, webPort, notify, webhookURL)
+		return runWebServer(ctx, store, storageBackend, providerNames, providerStatus, providerHealth, eventCh, webPort, notify, webhookURL)
 	}
 
 	buildInfo := fmt.Sprintf("%s (%s)", Version, GitCommit)
@@ -1116,8 +1116,14 @@ func writeEventLog(w io.Writer, event core.RunEvent) error {
 	return nil
 }
 
-func runWebServer(ctx context.Context, store *core.Store, providerNames []string, providerStatus map[string]string, providerHealth map[string]core.ProviderHealth, eventCh chan core.RunEvent, port int, notify bool, webhookURL string) error {
+func runWebServer(ctx context.Context, store *core.Store, storageBackend *storage.Storage, providerNames []string, providerStatus map[string]string, providerHealth map[string]core.ProviderHealth, eventCh chan core.RunEvent, port int, notify bool, webhookURL string) error {
 	srv := server.New(store, providerNames, port)
+	
+	// Add trend analyzer if storage backend is available
+	if storageBackend != nil {
+		trendAnalyzer := storage.NewTrendAnalyzer(storageBackend)
+		srv.SetTrendAnalyzer(trendAnalyzer)
+	}
 	
 	// Start web server in background
 	serverErr := make(chan error, 1)
