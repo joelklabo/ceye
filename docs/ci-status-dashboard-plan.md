@@ -9,7 +9,7 @@ This document is my working plan for building the CI Status Dashboard TUI in Go.
 
 ## Current Status
 - Workspace scanning (auto `code` ancestor or `CEYE_CONFIG_ROOT`/`--config-dir`) loads all `ceye.*` files; missing ones are reported with repo listing and the UI offers `n`/`a` to highlight and scaffold configs. When no configs exist, the command produces a warning plus the derived repo list.
-- Step 86 (auto config onboarding) is complete, Step 83 (change auditing) remains open, and plans now call out the requirement to rebuild/redploy + verify from the workspace root before closing a step.
+- Step 86 (auto config onboarding) and Step 83 (change auditing) are complete, and plans now call out the requirement to rebuild/redploy + verify from the workspace root before closing a step.
 
 ## Architecture Notes
 - **Tech Stack:** Go 1.21+, Cobra + Viper for CLI/config, Bubble Tea + Bubbles (table) + Lip Gloss for the UI layer, net/http clients for provider APIs.
