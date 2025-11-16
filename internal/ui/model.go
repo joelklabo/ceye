@@ -584,6 +584,11 @@ func (m Model) renderDashboardBody() string {
 		sidebarParts = append(sidebarParts, providerHealth)
 	}
 	
+	// Add failure rate panel
+	if failureRate := m.renderFailureRatePanel(); failureRate != "" {
+		sidebarParts = append(sidebarParts, failureRate)
+	}
+	
 	sidebarParts = append(sidebarParts, m.renderLogs())
 	
 	if audit := m.renderAuditPanel(); audit != "" {
@@ -784,6 +789,94 @@ func (m Model) renderProviderHealthPanel() string {
 			detailLine := "  " + strings.Join(details, "  ")
 			lines = append(lines, bodyTextStyle.Render(truncate(detailLine, 30)))
 		}
+	}
+	
+	return m.panelStyle.Render(lipgloss.JoinVertical(lipgloss.Left, lines...))
+}
+
+func (m Model) renderFailureRatePanel() string {
+	// Aggregate runs by repo
+	type repoStats struct {
+		repo         string
+		successCount int
+		failureCount int
+		totalCount   int
+	}
+	
+	statsMap := make(map[string]*repoStats)
+	
+	// Count last 20 runs per repo (or all visible runs if less)
+	repoRunCounts := make(map[string]int)
+	for _, run := range m.visibleRuns {
+		// Only count completed runs
+		if run.Status == core.RunStatusCompleted {
+			repoRunCounts[run.Repo]++
+			if repoRunCounts[run.Repo] > 20 {
+				continue // Only consider last 20 runs per repo
+			}
+			
+			stats, exists := statsMap[run.Repo]
+			if !exists {
+				stats = &repoStats{repo: run.Repo}
+				statsMap[run.Repo] = stats
+			}
+			
+			stats.totalCount++
+			// Check if success
+			if strings.EqualFold(run.Conclusion, "success") || strings.EqualFold(run.Conclusion, "succeeded") || run.Conclusion == "" {
+				stats.successCount++
+			} else {
+				stats.failureCount++
+			}
+		}
+	}
+	
+	if len(statsMap) == 0 {
+		return ""
+	}
+	
+	// Convert to slice and sort by failure rate (worst first)
+	statsList := make([]repoStats, 0, len(statsMap))
+	for _, stats := range statsMap {
+		statsList = append(statsList, *stats)
+	}
+	sort.Slice(statsList, func(i, j int) bool {
+		rateI := float64(statsList[i].successCount) / float64(statsList[i].totalCount)
+		rateJ := float64(statsList[j].successCount) / float64(statsList[j].totalCount)
+		return rateI < rateJ // Lower success rate (higher failure rate) first
+	})
+	
+	// Limit to top 5 repos
+	if len(statsList) > 5 {
+		statsList = statsList[:5]
+	}
+	
+	lines := []string{
+		sectionTitleStyle.Render("Success Rates"),
+	}
+	
+	for _, stats := range statsList {
+		successRate := float64(stats.successCount) / float64(stats.totalCount) * 100
+		icon := statusIconSuccess
+		statusColor := m.successStyle
+		
+		if successRate < 50 {
+			icon = statusIconFailed
+			statusColor = m.errorStyle
+		} else if successRate < 80 {
+			icon = "⚠"
+			statusColor = m.tagWarningStyle
+		}
+		
+		repoShort := truncate(stats.repo, 12)
+		line := fmt.Sprintf("%s: %3.0f%% %s (%d/%d)",
+			repoShort,
+			successRate,
+			icon,
+			stats.successCount,
+			stats.totalCount,
+		)
+		lines = append(lines, statusColor.Render(line))
 	}
 	
 	return m.panelStyle.Render(lipgloss.JoinVertical(lipgloss.Left, lines...))
