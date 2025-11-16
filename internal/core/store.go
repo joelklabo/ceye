@@ -1,22 +1,40 @@
 package core
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"strings"
 	"sync"
+	"time"
 )
+
+// StorageBackend defines the interface for persistent storage
+type StorageBackend interface {
+	Store(ctx context.Context, run Run) error
+	StoreBatch(ctx context.Context, runs []Run) error
+}
 
 // Store aggregates Run updates from providers in a thread-safe map.
 type Store struct {
-	mu   sync.RWMutex
-	runs map[string]Run
+	mu      sync.RWMutex
+	runs    map[string]Run
+	storage StorageBackend // Optional persistent storage
 }
 
 // NewStore constructs an empty Store.
 func NewStore() *Store {
 	return &Store{
-		runs: make(map[string]Run),
+		runs:    make(map[string]Run),
+		storage: nil,
+	}
+}
+
+// NewStoreWithStorage creates a store with persistent storage backend
+func NewStoreWithStorage(storage StorageBackend) *Store {
+	return &Store{
+		runs:    make(map[string]Run),
+		storage: storage,
 	}
 }
 
@@ -28,6 +46,8 @@ func (s *Store) Merge(event RunEvent) {
 	if event.Err != nil {
 		return
 	}
+
+	var completedRuns []Run
 
 	for _, run := range event.Runs {
 		if run.Provider == "" {
@@ -42,7 +62,31 @@ func (s *Store) Merge(event RunEvent) {
 			continue
 		}
 		key := storeKey(run.Provider, run.ID)
+		
+		// Track completed runs for storage
+		if s.storage != nil && run.Status == RunStatusCompleted {
+			oldRun, existed := s.runs[key]
+			// Only persist if newly completed (not already completed)
+			if !existed || oldRun.Status != RunStatusCompleted {
+				completedRuns = append(completedRuns, run)
+			}
+		}
+		
 		s.runs[key] = run
+	}
+
+	// Persist completed runs asynchronously (don't block on storage)
+	if len(completedRuns) > 0 && s.storage != nil {
+		go func(runs []Run) {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+
+			if err := s.storage.StoreBatch(ctx, runs); err != nil {
+				// Log error but don't fail the merge
+				// In a production system, you'd want to emit a metric here
+				_ = err
+			}
+		}(completedRuns)
 	}
 }
 

@@ -1,6 +1,8 @@
 package core
 
 import (
+	"context"
+	"sync"
 	"testing"
 	"time"
 )
@@ -130,5 +132,184 @@ func TestStoreListRunsFiltersAndSorts(t *testing.T) {
 	}
 	if allRuns[0].ID != "g2" || allRuns[1].ID != "a1" || allRuns[2].ID != "g1" {
 		t.Fatalf("unexpected order for all runs: %s %s %s", allRuns[0].ID, allRuns[1].ID, allRuns[2].ID)
+	}
+}
+
+// Mock storage backend for testing
+type mockStorage struct {
+	mu    sync.Mutex
+	calls [][]Run // Each call to StoreBatch appends a slice
+}
+
+func (m *mockStorage) Store(ctx context.Context, run Run) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.calls = append(m.calls, []Run{run})
+	return nil
+}
+
+func (m *mockStorage) StoreBatch(ctx context.Context, runs []Run) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.calls = append(m.calls, runs)
+	return nil
+}
+
+func (m *mockStorage) getCalls() [][]Run {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.calls
+}
+
+func TestStoreWithStoragePersistsCompletedRuns(t *testing.T) {
+	mock := &mockStorage{}
+	store := NewStoreWithStorage(mock)
+	now := time.Now()
+
+	// Merge an in-progress run (should not be stored)
+	inProgressRun := Run{
+		ID:           "test-1",
+		Provider:     "github",
+		Repo:         "owner/repo",
+		WorkflowName: "CI",
+		Status:       RunStatusInProgress,
+		StartedAt:    now.Add(-2 * time.Minute),
+		UpdatedAt:    now,
+	}
+
+	store.Merge(RunEvent{
+		Provider:  "github",
+		Runs:      []Run{inProgressRun},
+		Timestamp: now,
+	})
+
+	time.Sleep(50 * time.Millisecond) // Give goroutine time to run
+
+	calls := mock.getCalls()
+	if len(calls) != 0 {
+		t.Errorf("expected 0 storage calls for in-progress run, got %d", len(calls))
+	}
+
+	// Now complete the run (should be stored)
+	completedRun := inProgressRun
+	completedRun.Status = RunStatusCompleted
+	completedRun.Conclusion = "success"
+	completedRun.Duration = 2 * time.Minute
+	completedRun.UpdatedAt = now.Add(10 * time.Second)
+
+	store.Merge(RunEvent{
+		Provider:  "github",
+		Runs:      []Run{completedRun},
+		Timestamp: completedRun.UpdatedAt,
+	})
+
+	time.Sleep(50 * time.Millisecond) // Give goroutine time to run
+
+	calls = mock.getCalls()
+	if len(calls) != 1 {
+		t.Fatalf("expected 1 storage call for completed run, got %d", len(calls))
+	}
+
+	stored := calls[0]
+	if len(stored) != 1 {
+		t.Fatalf("expected 1 run in storage call, got %d", len(stored))
+	}
+
+	if stored[0].ID != "test-1" {
+		t.Errorf("expected stored run ID test-1, got %s", stored[0].ID)
+	}
+	if stored[0].Status != RunStatusCompleted {
+		t.Errorf("expected stored run status completed, got %s", stored[0].Status)
+	}
+}
+
+func TestStoreWithStorageDoesNotDuplicateCompletedRuns(t *testing.T) {
+	mock := &mockStorage{}
+	store := NewStoreWithStorage(mock)
+	now := time.Now()
+
+	completedRun := Run{
+		ID:           "test-2",
+		Provider:     "github",
+		Repo:         "owner/repo",
+		WorkflowName: "CI",
+		Status:       RunStatusCompleted,
+		Conclusion:   "success",
+		StartedAt:    now.Add(-5 * time.Minute),
+		UpdatedAt:    now,
+		Duration:     5 * time.Minute,
+	}
+
+	// Merge the completed run twice
+	store.Merge(RunEvent{
+		Provider:  "github",
+		Runs:      []Run{completedRun},
+		Timestamp: now,
+	})
+
+	time.Sleep(50 * time.Millisecond)
+
+	calls := mock.getCalls()
+	if len(calls) != 1 {
+		t.Fatalf("expected 1 storage call for first completion, got %d", len(calls))
+	}
+
+	// Merge again (should not store again)
+	store.Merge(RunEvent{
+		Provider:  "github",
+		Runs:      []Run{completedRun},
+		Timestamp: now.Add(1 * time.Second),
+	})
+
+	time.Sleep(50 * time.Millisecond)
+
+	calls = mock.getCalls()
+	if len(calls) != 1 {
+		t.Errorf("expected still 1 storage call (no duplicate), got %d", len(calls))
+	}
+}
+
+func TestStoreWithStorageBatchesSameEvent(t *testing.T) {
+	mock := &mockStorage{}
+	store := NewStoreWithStorage(mock)
+	now := time.Now()
+
+	runs := []Run{
+		{
+			ID:           "batch-1",
+			Provider:     "github",
+			Repo:         "owner/repo",
+			WorkflowName: "CI",
+			Status:       RunStatusCompleted,
+			StartedAt:    now.Add(-5 * time.Minute),
+			UpdatedAt:    now,
+		},
+		{
+			ID:           "batch-2",
+			Provider:     "github",
+			Repo:         "owner/repo",
+			WorkflowName: "Deploy",
+			Status:       RunStatusCompleted,
+			StartedAt:    now.Add(-3 * time.Minute),
+			UpdatedAt:    now,
+		},
+	}
+
+	store.Merge(RunEvent{
+		Provider:  "github",
+		Runs:      runs,
+		Timestamp: now,
+	})
+
+	time.Sleep(50 * time.Millisecond)
+
+	calls := mock.getCalls()
+	if len(calls) != 1 {
+		t.Fatalf("expected 1 storage call (batched), got %d", len(calls))
+	}
+
+	stored := calls[0]
+	if len(stored) != 2 {
+		t.Errorf("expected 2 runs in batch, got %d", len(stored))
 	}
 }
