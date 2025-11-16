@@ -175,6 +175,14 @@ type Model struct {
 	providerStoreEditField    string
 	durationHistory           map[string][]time.Duration // key: "repo/workflow"
 	providerStoreInstructions string
+	commitCache               map[string]commitInfo // key: SHA
+}
+
+type commitInfo struct {
+	SHA       string
+	Message   string
+	Author    string
+	Timestamp time.Time
 }
 
 // NewModel constructs a UI model using default build info (empty).
@@ -254,6 +262,7 @@ func NewModelWithBuildInfo(store *core.Store, providers []string, refresh func()
 		providerStoreTextInput: ti,
 		buildInfo:              buildInfo,
 		durationHistory:        make(map[string][]time.Duration),
+		commitCache:            make(map[string]commitInfo),
 		headerStyle:            headerStyle,
 		footerStyle:            footerStyle,
 		bodyBoxStyle:           bodyBox,
@@ -576,6 +585,11 @@ func (m Model) renderDashboardBody() string {
 		m.renderDetailView(),
 	}
 	
+	// Add commit details panel (for selected run)
+	if commitDetails := m.renderCommitDetailsPanel(); commitDetails != "" {
+		sidebarParts = append(sidebarParts, commitDetails)
+	}
+	
 	// Add active runs panel
 	if activeRuns := m.renderActiveRunsPanel(); activeRuns != "" {
 		sidebarParts = append(sidebarParts, activeRuns)
@@ -737,6 +751,51 @@ func (m Model) renderActiveRunsPanel() string {
 			formatDuration(elapsed, run.StartedAt, time.Now()),
 		)
 		lines = append(lines, bodyTextStyle.Render(line))
+	}
+	
+	return m.panelStyle.Render(lipgloss.JoinVertical(lipgloss.Left, lines...))
+}
+
+func (m Model) renderCommitDetailsPanel() string {
+	idx := m.Table.Cursor()
+	if idx < 0 || idx >= len(m.visibleRuns) {
+		return ""
+	}
+	
+	run := m.visibleRuns[idx]
+	if run.CommitSHA == "" {
+		return ""
+	}
+	
+	lines := []string{
+		sectionTitleStyle.Render("Commit Details"),
+	}
+	
+	// Check cache for commit info
+	commit, hasCached := m.commitCache[run.CommitSHA]
+	
+	if hasCached {
+		// Show cached commit details
+		shaShort := shortSHA(commit.SHA)
+		author := truncate(commit.Author, 15)
+		timeAgo := formatRelativeTime(commit.Timestamp)
+		
+		lines = append(lines,
+			bodyTextStyle.Render(fmt.Sprintf("%s - %s (%s)", shaShort, author, timeAgo)),
+		)
+		
+		// Truncate commit message to fit
+		message := truncate(commit.Message, 28)
+		lines = append(lines, bodyTextStyle.Render(fmt.Sprintf("\"%s\"", message)))
+	} else {
+		// Show basic info from run
+		shaShort := shortSHA(run.CommitSHA)
+		timeAgo := formatRelativeTime(run.UpdatedAt)
+		
+		lines = append(lines,
+			bodyTextStyle.Render(fmt.Sprintf("%s (%s)", shaShort, timeAgo)),
+		)
+		lines = append(lines, bodyTextStyle.Render("(commit details not fetched)"))
 	}
 	
 	return m.panelStyle.Render(lipgloss.JoinVertical(lipgloss.Left, lines...))
