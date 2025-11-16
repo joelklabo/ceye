@@ -31,6 +31,7 @@ import (
 	githubprovider "github.com/joelklabo/ceye/internal/providers/github"
 	"github.com/joelklabo/ceye/internal/providers/manager"
 	"github.com/joelklabo/ceye/internal/server"
+	"github.com/joelklabo/ceye/internal/storage"
 	"github.com/joelklabo/ceye/internal/ui"
 )
 
@@ -206,7 +207,30 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 		providerNames = append(providerNames, alias)
 		providerStatus[alias] = ""
 	}
-	store := core.NewStore()
+	
+	// Initialize storage for historical data
+	var store *core.Store
+	var storageBackend *storage.Storage
+	storagePath := getStoragePath()
+	if storagePath != "" {
+		storageConfig := storage.Config{
+			Path:            storagePath,
+			RetentionDays:   90, // Keep 90 days of history
+			CleanupInterval: 24 * time.Hour,
+		}
+		var err error
+		storageBackend, err = storage.New(storageConfig)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "warning: failed to initialize storage: %v\n", err)
+			store = core.NewStore()
+		} else {
+			store = core.NewStoreWithStorage(storageBackend)
+			defer storageBackend.Close()
+		}
+	} else {
+		store = core.NewStore()
+	}
+	
 	eventCh := make(chan core.RunEvent)
 
 	for _, provider := range providerInstances {
@@ -230,6 +254,13 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 
 	buildInfo := fmt.Sprintf("%s (%s)", Version, GitCommit)
 	model := ui.NewModelWithBuildInfo(store, providerNames, refresh, openURL, copyToClipboard, buildInfo)
+	
+	// Add trend analyzer if storage is available
+	if storageBackend != nil {
+		trendAnalyzer := storage.NewTrendAnalyzer(storageBackend)
+		model.SetTrendAnalyzer(trendAnalyzer)
+	}
+	
 	var program *tea.Program
 	snapshotMissing := func() []string {
 		missingConfigMu.RLock()
@@ -1015,6 +1046,25 @@ func defaultProviderStorePath() string {
 		return filepath.Join(home, ".config", "ceye", "providers.json")
 	}
 	return "providers.json"
+}
+
+func getStoragePath() string {
+	// Check environment variable first
+	if path := os.Getenv("CEYE_STORAGE_PATH"); path != "" {
+		return path
+	}
+	
+	// Use default path in user config directory
+	if home := os.Getenv("HOME"); home != "" {
+		configDir := filepath.Join(home, ".config", "ceye")
+		// Ensure directory exists
+		if err := os.MkdirAll(configDir, 0755); err == nil {
+			return filepath.Join(configDir, "runs.db")
+		}
+	}
+	
+	// Fallback to current directory
+	return "runs.db"
 }
 func openURL(link string) {
 	var cmd *exec.Cmd

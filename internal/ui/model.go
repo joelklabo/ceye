@@ -176,6 +176,8 @@ type Model struct {
 	durationHistory           map[string][]time.Duration // key: "repo/workflow"
 	providerStoreInstructions string
 	commitCache               map[string]commitInfo // key: SHA
+	trendAnalyzer             interface{}           // *storage.TrendAnalyzer (optional, interface to avoid import)
+	showTrends                bool                  // Whether to show trends panel
 }
 
 type commitInfo struct {
@@ -275,10 +277,18 @@ func NewModelWithBuildInfo(store *core.Store, providers []string, refresh func()
 		failStyle:              lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Bold(true),
 		runningStyle:           lipgloss.NewStyle().Foreground(lipgloss.Color("226")),
 		detailVisible:          false,
+		trendAnalyzer:          nil,
+		showTrends:             false,
 	}
 	m.refreshStyles()
 	m.SetProviderList(providers)
 	return m
+}
+
+// SetTrendAnalyzer sets the trend analyzer (optional, avoids direct storage import)
+func (m *Model) SetTrendAnalyzer(analyzer interface{}) {
+	m.trendAnalyzer = analyzer
+	m.showTrends = analyzer != nil
 }
 
 // SetProviderList updates the provider filter list and refreshes the table.
