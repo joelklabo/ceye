@@ -208,7 +208,7 @@ Each item is actionable, test-first when applicable, and records the eventual co
     - Track a history of provider store mutations (add/enable/disable/remove/edit) with timestamps and user actions.
     - Display the audit trail in the UI (maybe within the overlay or a dedicated pane) and optionally persist it to disk for diagnostics.
     - Add tests that assert the audit log records the correct events when store commands or overlay actions run.
-84. - [ ] **Step 84 – Config discovery scan** (`commit: pending`, `push: pending`)
+84. - [x] **Step 84 – Config discovery scan** (`commit: 6a5f46c`, `push: yes`)
     - Implement recursive discovery of `ceye.*` files under a root directory (default current working directory) and merge their provider lists automatically.
     - Add CLI options (e.g., `--config-dir`) so running from `~/code` or another workspace pulls every config file without specifying each path.
     - Document the new behavior and add unit tests for discovery + merge helpers to catch regressions.
