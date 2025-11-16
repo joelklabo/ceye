@@ -89,7 +89,9 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 	}
 
 	var cfg *config.Config
+	var missingConfigs []string
 	var err error
+	providerHistory := make(map[string][]string)
 	if demo {
 		if demoRuns <= 0 {
 			demoRuns = 4
@@ -102,13 +104,12 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 			cfgPath = os.Getenv("CEYE_CONFIG")
 		}
 
-		var missing []string
-		cfg, missing, err = loadDistributedConfigs(cfgPath, configDir)
+		cfg, missingConfigs, err = loadDistributedConfigs(cfgPath, configDir)
 		if err != nil {
 			return err
 		}
-		if len(missing) > 0 {
-			providerHistory["missing"] = missing
+		if len(missingConfigs) > 0 {
+			providerHistory["missing"] = missingConfigs
 		}
 	}
 
@@ -143,8 +144,7 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 	providerHealth := make(map[string]core.ProviderHealth)
 	providerLastPoll := make(map[string]time.Time)
 	providerLag := make(map[string]time.Duration)
-	providerHistory := make(map[string][]string)
-	missingConfigs := missing
+
 	for _, candidate := range buildProviderEntries(cfg, providerStore) {
 		provider, err := providers.CreateProvider(candidate.Config, deps)
 		if err != nil {
@@ -272,6 +272,19 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 	})
 	program = tea.NewProgram(model)
 
+	// if we discovered repos but no configs, alert the user immediately
+	if len(missingConfigs) > 0 {
+		if program != nil {
+			program.Send(ui.RunUpdatedMsg{
+				Timestamp:    time.Now(),
+				Message:      fmt.Sprintf("missing configs for: %s", strings.Join(missingConfigs, ", ")),
+				Level:        "warn",
+				Store:        copyProviderRecords(providerStore.List()),
+				MissingRepos: copyMissing(missingConfigs),
+			})
+		}
+	}
+
 	go func() {
 		for {
 			select {
@@ -363,15 +376,15 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 					}
 				}
 				program.Send(ui.RunUpdatedMsg{
-					Timestamp: ts,
-					Status:    copyStatus(providerStatus),
-					Times:     copyTimes(providerTimes),
-					Message:   message,
-					Level:     level,
-					Health:    copyHealth(providerHealth),
-					Lag:       copyLag(providerLag),
-					History:   copyHistory(providerHistory),
-					Store:     copyProviderRecords(providerStore.List()),
+					Timestamp:    ts,
+					Status:       copyStatus(providerStatus),
+					Times:        copyTimes(providerTimes),
+					Message:      message,
+					Level:        level,
+					Health:       copyHealth(providerHealth),
+					Lag:          copyLag(providerLag),
+					History:      copyHistory(providerHistory),
+					Store:        copyProviderRecords(providerStore.List()),
 					MissingRepos: copyMissing(missingConfigs),
 				})
 			}
@@ -570,7 +583,7 @@ func loadDistributedConfigs(cfgPath, configDir string) (*config.Config, []string
 	for _, match := range matches {
 		cfg, err := config.Load(match)
 		if err != nil {
-			return nil, fmt.Errorf("load config %s: %w", match, err)
+			return nil, nil, fmt.Errorf("load config %s: %w", match, err)
 		}
 		merged.Providers = append(merged.Providers, cfg.Providers...)
 	}
