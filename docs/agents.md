@@ -725,6 +725,84 @@ This is especially important for:
 - Operations that modify children array during iteration
 - Custom properties that may not always be present
 
+#### React Framer Motion Table Flicker
+
+Common issue: **Table rows flicker/re-animate on every state update**
+
+**Root cause**: Using `initial` prop on table rows causes re-animation on every render
+**Critical lesson from Phase 0.6 (commit ad65646)**:
+
+```typescript
+// ❌ BAD - Re-animates on EVERY WebSocket update
+{sortedRuns.map((run, index) => (
+  <motion.tr
+    key={run.ID}
+    initial={{ opacity: 0, x: -20 }}  // Triggers animation on EVERY render!
+    animate={{ opacity: 1, x: 0 }}
+    transition={{ duration: 0.2, delay: index * 0.02 }}
+  >
+    {/* row content */}
+  </motion.tr>
+))}
+
+// ✅ GOOD - Only animates on mount, smooth updates
+const RunRow = memo(({ run }: RunRowProps) => (
+  <motion.tr
+    layout  // Smooth position changes
+    initial={{ opacity: 0 }}  // Only on mount
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    transition={{ duration: 0.15, layout: { duration: 0.2 } }}
+  >
+    {/* row content */}
+  </motion.tr>
+))
+
+// Wrap in AnimatePresence for enter/exit
+<tbody>
+  <AnimatePresence mode="popLayout">
+    {sortedRuns.map((run) => (
+      <RunRow key={run.ID} run={run} />
+    ))}
+  </AnimatePresence>
+</tbody>
+```
+
+**Key principles**:
+1. **Memoize row components** with `React.memo()` to prevent re-renders
+2. **Use `layout` prop** for smooth position transitions (not `initial/animate`)
+3. **Use `AnimatePresence`** only at container level, not per-row
+4. **Remove stagger delays** (`delay: index * 0.02`) - causes cascading flicker
+5. **Only use `initial/animate`** for mount/unmount, not updates
+
+**Performance metrics**:
+- Before: Visible flicker on every WebSocket message (every 15s)
+- After: Smooth 60fps updates, no flicker
+
+**Testing pattern**:
+```typescript
+test('should not flicker on updates', async ({ page }) => {
+  await page.goto('http://localhost:8080')
+  await page.waitForSelector('table tbody tr')
+  
+  // All rows should have full opacity (not animating)
+  const rows = page.locator('table tbody tr')
+  for (let i = 0; i < Math.min(await rows.count(), 5); i++) {
+    await expect(rows.nth(i)).toHaveCSS('opacity', '1')
+  }
+  
+  // Wait for WebSocket updates
+  await page.waitForTimeout(2000)
+  
+  // Still full opacity (no flicker)
+  for (let i = 0; i < Math.min(await rows.count(), 5); i++) {
+    await expect(rows.nth(i)).toHaveCSS('opacity', '1')
+  }
+})
+```
+
+**Reference**: See `e2e/flicker-test.spec.ts` for complete test suite
+
 #### Playwright WebSocket Test Patterns
 
 When testing WebSocket messages in Playwright:

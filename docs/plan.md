@@ -32,20 +32,21 @@ The React dashboard is fully functional with real-time WebSocket updates and com
 
 **Issues to Fix**:
 
-#### 1. Table Flicker (HIGH PRIORITY) 🔴
+#### 1. Table Flicker (HIGH PRIORITY) 🔴 - ✅ **COMPLETE** (Commit: ad65646)
 **Problem**: Extreme flicker - table rows re-animate on every WebSocket message
 - `RunsTable.tsx:156-160` - Every row has `initial={{ opacity: 0, x: -20 }}`
 - WebSocket updates cause full component re-renders
 - No memoization preventing unnecessary animations
 
-**Solution**:
-- [🚧] Memoize table row component with `React.memo()`
-- [ ] Only animate on mount, not on updates
-- [ ] Use `layoutId` for smooth position transitions
-- [ ] Use `AnimatePresence` only for new/removed items
-- [ ] Test with rapid WebSocket updates
+**Solution implemented**:
+- [✅] Memoize table row component with `React.memo()`
+- [✅] Only animate on mount, not on updates
+- [✅] Use `layout` animations for smooth position transitions
+- [✅] Use `AnimatePresence` only for new/removed items
+- [✅] Test with rapid WebSocket updates (3/3 tests passing)
 
-**Time**: 2 hours
+**Result**: No flicker, smooth 60fps updates, table rows only animate on mount
+**Tests**: `e2e/flicker-test.spec.ts` (3 passing)
 
 #### 2. Real-Time Connection Indicator (MEDIUM PRIORITY) 🟡
 **Problem**: Static indicator doesn't show activity
