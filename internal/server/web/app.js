@@ -51,6 +51,82 @@ function saveFilters() {
     localStorage.setItem('ceye-filters', JSON.stringify(filters));
 }
 
+// Workspaces (named filter presets)
+function loadWorkspaces() {
+    const saved = localStorage.getItem('ceye-workspaces');
+    return saved ? JSON.parse(saved) : [];
+}
+
+function saveWorkspaces(workspaces) {
+    localStorage.setItem('ceye-workspaces', JSON.stringify(workspaces));
+}
+
+function saveCurrentAsWorkspace() {
+    const name = prompt('Enter workspace name:');
+    if (!name) return;
+    
+    const workspaces = loadWorkspaces();
+    const workspace = {
+        name: name,
+        filters: { ...filters },
+        createdAt: new Date().toISOString()
+    };
+    
+    // Replace if exists
+    const index = workspaces.findIndex(w => w.name === name);
+    if (index >= 0) {
+        if (!confirm(`Workspace "${name}" already exists. Overwrite?`)) return;
+        workspaces[index] = workspace;
+    } else {
+        workspaces.push(workspace);
+    }
+    
+    saveWorkspaces(workspaces);
+    updateWorkspaceSelector();
+    alert(`Workspace "${name}" saved!`);
+}
+
+function loadWorkspace(name) {
+    const workspaces = loadWorkspaces();
+    const workspace = workspaces.find(w => w.name === name);
+    
+    if (workspace) {
+        filters.providers = workspace.filters.providers || [];
+        filters.statuses = workspace.filters.statuses || [];
+        filters.search = workspace.filters.search || '';
+        
+        document.getElementById('searchBox').value = filters.search;
+        saveFilters();
+        
+        if (currentData) render(currentData);
+    }
+}
+
+function deleteWorkspace(name) {
+    if (!confirm(`Delete workspace "${name}"?`)) return;
+    
+    const workspaces = loadWorkspaces();
+    const filtered = workspaces.filter(w => w.name !== name);
+    saveWorkspaces(filtered);
+    updateWorkspaceSelector();
+    alert(`Workspace "${name}" deleted!`);
+}
+
+function updateWorkspaceSelector() {
+    const selector = document.getElementById('workspaceSelector');
+    if (!selector) return;
+    
+    const workspaces = loadWorkspaces();
+    selector.innerHTML = '<option value="">Select Workspace...</option>';
+    
+    workspaces.forEach(ws => {
+        const option = document.createElement('option');
+        option.value = ws.name;
+        option.textContent = ws.name;
+        selector.appendChild(option);
+    });
+}
+
 function connect() {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws`;
@@ -415,6 +491,9 @@ initTheme();
 
 // Load saved filters
 loadSavedFilters();
+
+// Initialize workspace selector
+updateWorkspaceSelector();
 
 // Initialize
 connect();

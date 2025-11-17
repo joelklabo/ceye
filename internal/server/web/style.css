@@ -897,3 +897,65 @@ footer {
 .density-spacious {
     --spacing: 1.5;
 }
+
+/* Workspace controls */
+.workspace-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-left: auto;
+}
+
+.workspace-selector {
+    min-width: 200px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    color: var(--text-primary);
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-workspace {
+    background: var(--accent-primary);
+    color: var(--bg-primary);
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-workspace:hover {
+    opacity: 0.9;
+}
+
+/* Workspaces list in settings */
+.workspaces-list {
+    margin-top: 12px;
+}
+
+.workspace-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    margin-bottom: 8px;
+}
+
+.btn-delete {
+    background: var(--accent-red);
+    color: #fff;
+    border: none;
+    padding: 4px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.btn-delete:hover {
+    opacity: 0.8;
+}

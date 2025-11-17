@@ -30,10 +30,16 @@
         <!-- Filter Pills -->
         <div id="filterPills" class="filter-pills-container"></div>
 
-        <!-- Quick Filters -->
+        <!-- Quick Filters & Workspaces -->
         <div class="quick-filters">
             <button onclick="addProviderFilter()" class="btn-filter">+ Provider</button>
             <button onclick="addStatusFilter()" class="btn-filter">+ Status</button>
+            <span class="workspace-controls">
+                <select id="workspaceSelector" onchange="if(this.value) loadWorkspace(this.value); this.value='';" class="workspace-selector">
+                    <option value="">Select Workspace...</option>
+                </select>
+                <button onclick="saveCurrentAsWorkspace()" class="btn-workspace" title="Save current filters as workspace">💾 Save</button>
+            </span>
         </div>
 
         <div class="stats">

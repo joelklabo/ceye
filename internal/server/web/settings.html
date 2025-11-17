@@ -72,7 +72,7 @@
 
             <!-- Filters Section -->
             <div class="settings-section">
-                <h2>🔍 Filters</h2>
+                <h2>🔍 Filters & Workspaces</h2>
                 <div class="setting-item">
                     <label for="settingsSaveFilters">Remember Filters</label>
                     <input type="checkbox" id="settingsSaveFilters" checked onchange="updateSetting('saveFilters', this.checked)">
@@ -82,6 +82,9 @@
                     <div id="savedFiltersInfo" class="info-text">No filters saved</div>
                 </div>
                 <button onclick="clearSavedFilters()" class="btn-secondary">Clear Saved Filters</button>
+                
+                <h3 style="margin-top: 20px; margin-bottom: 10px;">Saved Workspaces</h3>
+                <div id="workspacesList" class="workspaces-list"></div>
             </div>
 
             <!-- Keyboard Section -->

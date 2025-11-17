@@ -191,5 +191,44 @@ function updateStorageInfo() {
     info.textContent = `${kb} KB`;
 }
 
+function updateWorkspacesList() {
+    const container = document.getElementById('workspacesList');
+    if (!container) return;
+    
+    const workspaces = JSON.parse(localStorage.getItem('ceye-workspaces') || '[]');
+    
+    if (workspaces.length === 0) {
+        container.innerHTML = '<div class="info-text">No workspaces saved</div>';
+        return;
+    }
+    
+    container.innerHTML = workspaces.map(ws => `
+        <div class="workspace-item">
+            <div>
+                <strong>${escapeHtml(ws.name)}</strong>
+                <span class="info-text"> - ${new Date(ws.createdAt).toLocaleDateString()}</span>
+            </div>
+            <button onclick="deleteWorkspaceFromSettings('${escapeHtml(ws.name)}')" class="btn-delete">Delete</button>
+        </div>
+    `).join('');
+}
+
+function deleteWorkspaceFromSettings(name) {
+    if (!confirm(`Delete workspace "${name}"?`)) return;
+    
+    const workspaces = JSON.parse(localStorage.getItem('ceye-workspaces') || '[]');
+    const filtered = workspaces.filter(w => w.name !== name);
+    localStorage.setItem('ceye-workspaces', JSON.stringify(filtered));
+    updateWorkspacesList();
+    alert(`Workspace "${name}" deleted!`);
+}
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
 // Load settings on page load
 loadSettings();
+updateWorkspacesList();
