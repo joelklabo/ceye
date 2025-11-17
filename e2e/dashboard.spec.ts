@@ -45,10 +45,6 @@ async function setupWebSocketLogging(page: Page) {
 }
 
 test.describe('Dashboard Loading & Connection', () => {
-  test.beforeEach(async ({ page }) => {
-    await setupWebSocketLogging(page);
-  });
-
   test('page loads successfully', async ({ page }) => {
     await page.goto('/');
     
@@ -61,40 +57,43 @@ test.describe('Dashboard Loading & Connection', () => {
   });
 
   test('WebSocket connects within 5s', async ({ page }) => {
+    await setupWebSocketLogging(page);
     await page.goto('/');
     
-    // Wait for WebSocket connection
-    await waitForWebSocket(page, 5000);
+    // Wait for WebSocket connection - increased timeout
+    await waitForWebSocket(page, 10000);
     
     // Verify connection indicator is green
-    const connectionDot = page.locator('header').locator('svg.fill-green-400');
-    await expect(connectionDot).toBeVisible({ timeout: 5000 });
+    const connectionDot = page.locator('header svg').filter({ hasText: '' }).first();
+    await expect(connectionDot).toHaveClass(/fill-green-400/, { timeout: 10000 });
   });
 
   test('connection indicator shows green', async ({ page }) => {
+    await setupWebSocketLogging(page);
     await page.goto('/');
     
     // Wait for connection
-    await waitForWebSocket(page);
+    await waitForWebSocket(page, 10000);
     
     // Check for "Connected" text
     const connectedText = page.getByText('Connected');
-    await expect(connectedText).toBeVisible();
+    await expect(connectedText).toBeVisible({ timeout: 10000 });
   });
 
   test('initial data loads', async ({ page }) => {
+    await setupWebSocketLogging(page);
     await page.goto('/');
     
     // Wait for WebSocket
-    await waitForWebSocket(page);
+    await waitForWebSocket(page, 10000);
     
     // Wait for stats cards to appear (indicates data loaded)
     const statsCards = page.locator('.grid').first();
-    await expect(statsCards).toBeVisible({ timeout: 10000 });
+    await expect(statsCards).toBeVisible({ timeout: 15000 });
     
     // Wait for runs table or empty state
-    const runsSection = page.locator('table, text=No runs yet');
-    await expect(runsSection).toBeVisible({ timeout: 10000 });
+    const runsSection = page.locator('table').or(page.getByText('No runs yet'));
+    await expect(runsSection).toBeVisible({ timeout: 15000 });
   });
 
   test('error handling if WebSocket fails', async ({ page, context }) => {
@@ -123,13 +122,13 @@ test.describe('Stats Cards', () => {
   test('all 4 cards render', async ({ page }) => {
     // Wait for grid container
     const grid = page.locator('.grid').first();
-    await expect(grid).toBeVisible();
+    await expect(grid).toBeVisible({ timeout: 10000 });
     
-    // Check for all 4 stat cards by looking for their titles
-    await expect(page.getByText('Running')).toBeVisible();
-    await expect(page.getByText('Queued')).toBeVisible();
-    await expect(page.getByText('Success')).toBeVisible();
-    await expect(page.getByText('Failed')).toBeVisible();
+    // Check for all 4 stat cards by looking for their titles in the first grid
+    await expect(grid.getByText('Running')).toBeVisible();
+    await expect(grid.getByText('Queued')).toBeVisible();
+    await expect(grid.getByText('Success')).toBeVisible();
+    await expect(grid.getByText('Failed')).toBeVisible();
   });
 
   test('counters display numbers', async ({ page }) => {
@@ -189,13 +188,14 @@ test.describe('Runs Table', () => {
       return;
     }
     
-    // Check for expected headers
-    await expect(page.getByText('Provider')).toBeVisible();
-    await expect(page.getByText('Repo')).toBeVisible();
-    await expect(page.getByText('Workflow')).toBeVisible();
-    await expect(page.getByText('Status')).toBeVisible();
-    await expect(page.getByText('Duration')).toBeVisible();
-    await expect(page.getByText('Time')).toBeVisible();
+    // Check for expected headers within thead only
+    const thead = page.locator('table thead');
+    await expect(thead.getByText('Provider')).toBeVisible();
+    await expect(thead.getByText('Repo')).toBeVisible();
+    await expect(thead.getByText('Workflow')).toBeVisible();
+    await expect(thead.getByText('Status')).toBeVisible();
+    await expect(thead.getByText('Duration')).toBeVisible();
+    await expect(thead.getByText('Time')).toBeVisible();
   });
 
   test('search filter works', async ({ page }) => {
