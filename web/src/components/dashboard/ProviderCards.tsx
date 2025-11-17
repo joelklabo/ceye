@@ -71,6 +71,7 @@ export function ProviderCards({ providers, meta, onRefresh }: ProviderCardsProps
           <button
             onClick={onRefresh}
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            data-testid="provider-refresh-button"
           >
             <RefreshCw className="h-4 w-4" />
           </button>
