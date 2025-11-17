@@ -205,7 +205,12 @@ func (c *Client) doRequest(apiURL string, result interface{}) error {
 		}
 
 		if err := json.Unmarshal(data, result); err != nil {
-			return fmt.Errorf("parse response: %w", err)
+			// Log first 200 chars of response for debugging
+			preview := string(data)
+			if len(preview) > 200 {
+				preview = preview[:200] + "..."
+			}
+			return fmt.Errorf("parse response: %w (response preview: %s)", err, preview)
 		}
 
 		return nil

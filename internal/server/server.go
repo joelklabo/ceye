@@ -286,28 +286,50 @@ limit = 200 // max
 // Get alerts from store
 alerts := s.store.GetRecentAlerts(limit)
 
-// Convert to JSON-friendly format
-response := make([]map[string]interface{}, len(alerts))
-for i, alert := range alerts {
-response[i] = map[string]interface{}{
-"rule_name":    alert.RuleName,
-"condition":    alert.Condition,
-"message":      alert.Message,
-"severity":     alert.Severity,
-"triggered_at": alert.TriggeredAt.Format(time.RFC3339),
-"run": map[string]interface{}{
-"id":            alert.Run.ID,
-"provider":      alert.Run.Provider,
-"repo":          alert.Run.Repo,
-"workflow_name": alert.Run.WorkflowName,
-"status":        alert.Run.Status,
-"conclusion":    alert.Run.Conclusion,
-"branch":        alert.Run.Branch,
-"url":           alert.Run.URL,
-},
+// Optional filters
+severity := query.Get("severity")
+rule := query.Get("rule")
+
+// Filter alerts
+filtered := alerts
+if severity != "" || rule != "" {
+	filtered = []core.AlertRecord{}
+	for _, alert := range alerts {
+		if severity != "" && alert.Severity != severity {
+			continue
+		}
+		if rule != "" && alert.RuleName != rule {
+			continue
+		}
+		filtered = append(filtered, alert)
+	}
 }
+
+// Convert to JSON-friendly format
+response := make([]map[string]interface{}, len(filtered))
+for i, alert := range filtered {
+	response[i] = map[string]interface{}{
+		"rule_name":    alert.RuleName,
+		"condition":    alert.Condition,
+		"message":      alert.Message,
+		"severity":     alert.Severity,
+		"triggered_at": alert.TriggeredAt.Format(time.RFC3339),
+		"run": map[string]interface{}{
+			"id":            alert.Run.ID,
+			"provider":      alert.Run.Provider,
+			"repo":          alert.Run.Repo,
+			"workflow_name": alert.Run.WorkflowName,
+			"status":        alert.Run.Status,
+			"conclusion":    alert.Run.Conclusion,
+			"branch":        alert.Run.Branch,
+			"url":           alert.Run.URL,
+		},
+	}
 }
 
 w.Header().Set("Content-Type", "application/json")
-json.NewEncoder(w).Encode(response)
+json.NewEncoder(w).Encode(map[string]interface{}{
+	"alerts": response,
+	"count":  len(response),
+})
 }

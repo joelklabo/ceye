@@ -48,6 +48,7 @@ function render(data) {
     updateProviderFilter(data.providers || []);
     updateRunsTable(data.runs || []);
     updateProviderHealth(data.status || {}, data.health || {});
+    updateAlertBadge(data.alert_count || 0);
     updateLastUpdate(data.timestamp);
 }
 
@@ -205,6 +206,16 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+function updateAlertBadge(count) {
+    const badge = document.getElementById('alertBadge');
+    if (count > 0) {
+        badge.textContent = count;
+        badge.style.display = 'inline-block';
+    } else {
+        badge.style.display = 'none';
+    }
 }
 
 // Event listeners

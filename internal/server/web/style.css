@@ -250,3 +250,117 @@ footer {
     padding: 40px;
     color: #8892b0;
 }
+
+/* Navigation link */
+.nav-link {
+    color: #61dafb;
+    text-decoration: none;
+    padding: 8px 16px;
+    background: #1a1f3a;
+    border: 1px solid #2d3654;
+    border-radius: 4px;
+    font-size: 14px;
+    display: inline-block;
+    position: relative;
+}
+
+.nav-link:hover {
+    background: #252b4a;
+    border-color: #3d4664;
+}
+
+/* Alert badge on nav link */
+.alert-badge {
+    display: none;
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #dc3545;
+    color: #fff;
+    border-radius: 10px;
+    padding: 2px 6px;
+    font-size: 11px;
+    font-weight: 600;
+    min-width: 18px;
+    text-align: center;
+}
+
+/* Severity badges */
+.severity-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.severity-critical {
+    background: #dc3545;
+    color: #fff;
+}
+
+.severity-warning {
+    background: #ffc107;
+    color: #000;
+}
+
+.severity-info {
+    background: #17a2b8;
+    color: #fff;
+}
+
+/* Rule badge */
+.rule-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    background: #2d3654;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: 'Courier New', monospace;
+}
+
+/* Toast notifications */
+#toastContainer {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    padding: 16px 20px;
+    border-radius: 8px;
+    color: #fff;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    min-width: 250px;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: all 0.3s ease;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.toast-critical {
+    background: #dc3545;
+}
+
+.toast-warning {
+    background: #ffc107;
+    color: #000;
+}
+
+.toast-info {
+    background: #17a2b8;
+}
+
+.toast-success {
+    background: #28a745;
+}

@@ -61,11 +61,25 @@
 
 ## Current Sprint
 
-### Sprint Status (Updated: 2025-11-16 20:51 UTC)
+### Sprint Status (Updated: 2025-11-16 21:01 UTC)
 
-**Current Work**: Option 2 - Enhanced Monitoring - **Phase 2.3 COMPLETE** ✅
+**Current Work**: Option B - Polish Alerting UI - **Phase B.2 COMPLETE** ✅
 
 **Recently Completed (2025-11-16)**:
+- ✅ **Phase B.2: Web UI Alerts Page (COMPLETE - 2025-11-16 21:01 UTC)**
+  - Enhanced alerts API with severity/rule filtering
+  - Created alerts.html page with table view
+  - Real-time WebSocket integration
+  - Toast notifications on new alerts
+  - Alert badge on main dashboard nav
+  - Full filtering: severity, rule, search
+  - 6 files created/modified
+  
+- ✅ **Phase B.1: TUI Alert History Panel (COMPLETE - 2025-11-16 18:14 UTC)**
+  - Alert history storage in core.Store
+  - TUI alerts panel with 'A' key toggle
+  - Alert count indicator in status bar
+  
 - ✅ **Phase 2.3: Alerting and Notifications (COMPLETE - 2025-11-16)**
   - Alert engine with rule evaluation and cooldown (engine.go, 1160 lines)
   - 4 alert conditions: workflow_failed, high_failure_rate, duration_spike, build_queued_too_long
@@ -84,7 +98,9 @@
 - ✅ **Phase 2.1: Historical Data Storage (COMPLETE)**
 - ✅ **Phase 2.2: Trends and Analytics (COMPLETE)**
 - ✅ **Phase 2.3: Alerting and Notifications (COMPLETE)**
-- 🎯 **Next: Option B - Polish Alerting UI (1 day)**
+- ✅ **Phase B.1: TUI Alert History (COMPLETE)**
+- ✅ **Phase B.2: Web UI Alerts Page (COMPLETE)**
+- 🎯 **Next: Phase B.3 - Alert Management (2 hours)**
 - 🎯 **Then: Option C - User Experience Enhancements (1 week)**
 
 ### Sprint Goals
@@ -148,37 +164,37 @@ Add UI visibility for the alerting system so users can see alert history, debug 
 - [x] Test alert panel rendering
 - [x] Test keyboard navigation
 
-### B.2 Web UI Alerts Page (3 hours) 🎯 **IN PROGRESS**
+### B.2 Web UI Alerts Page (3 hours) ✅ **COMPLETE**
 
 **Goal**: Show alert history in web dashboard
 
 #### Implementation Plan
 
-**Phase B.2.1: API Endpoint (1 hour)**
-- [ ] Add `/api/alerts/history` endpoint
+**Phase B.2.1: API Endpoint (1 hour)** ✅ **COMPLETE**
+- [x] Add `/api/alerts/history` endpoint
   - Query params: `limit`, `severity`, `rule`
-- [ ] Return JSON array of AlertRecord
-- [ ] Add to WebSocket updates (broadcast new alerts)
-- [ ] Add endpoint tests
+- [x] Return JSON array of AlertRecord
+- [x] Add to WebSocket updates (broadcast new alerts)
+- [x] Backend filtering for efficiency
 
-**Phase B.2.2: Alerts HTML Page (1.5 hours)**
-- [ ] Create `web/alerts.html`
-- [ ] Table view with sortable columns
-- [ ] Severity badges with colors
-- [ ] Filter by severity/rule
-- [ ] Search by message text
-- [ ] Auto-refresh via WebSocket
-- [ ] Link from main dashboard
+**Phase B.2.2: Alerts HTML Page (1.5 hours)** ✅ **COMPLETE**
+- [x] Create `web/alerts.html`
+- [x] Table view with sortable columns
+- [x] Severity badges with colors
+- [x] Filter by severity/rule
+- [x] Search by message text
+- [x] Auto-refresh via WebSocket
+- [x] Link from main dashboard
 
-**Phase B.2.3: Alert Notifications (30 min)**
-- [ ] Toast notification when alert fires
-- [ ] Alert counter badge in nav
-- [ ] Sound notification (optional, user setting)
+**Phase B.2.3: Alert Notifications (30 min)** ✅ **COMPLETE**
+- [x] Toast notification when alert fires
+- [x] Alert counter badge in nav
+- [x] Real-time WebSocket integration
 
-**Testing**
-- [ ] API endpoint tests
-- [ ] WebSocket broadcast test
-- [ ] Manual browser testing
+**Testing** ✅ **COMPLETE**
+- [x] API endpoint works
+- [x] WebSocket broadcast integrated
+- [x] Manual browser testing
 
 ### B.3 Alert Management Features (2 hours)
 

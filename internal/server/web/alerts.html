@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ceye - Alerts</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔍 ceye - Alerts</h1>
+            <div class="controls">
+                <a href="/" class="nav-link">← Dashboard</a>
+                <button id="refreshBtn">↻ Refresh</button>
+                <select id="severityFilter">
+                    <option value="">All Severities</option>
+                    <option value="critical">Critical</option>
+                    <option value="warning">Warning</option>
+                    <option value="info">Info</option>
+                </select>
+                <select id="ruleFilter">
+                    <option value="">All Rules</option>
+                </select>
+                <input type="text" id="searchBox" placeholder="Search alerts...">
+            </div>
+        </header>
+
+        <div class="stats">
+            <div class="stat-card failed">
+                <div class="stat-label">Total Alerts</div>
+                <div class="stat-value" id="totalCount">0</div>
+            </div>
+            <div class="stat-card failed">
+                <div class="stat-label">Critical</div>
+                <div class="stat-value" id="criticalCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Warning</div>
+                <div class="stat-value" id="warningCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Last 5 min</div>
+                <div class="stat-value" id="recentCount">0</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>Alert History</h2>
+            <div id="alertsTable" class="table-container"></div>
+        </div>
+
+        <footer>
+            <span id="connectionStatus">Connecting...</span>
+            <span id="lastUpdate"></span>
+        </footer>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer"></div>
+
+    <script src="alerts.js"></script>
+</body>
+</html>
