@@ -1,6 +1,6 @@
 # ceye Development Plan
 
-**Last Updated**: 2025-11-17 21:19 UTC  
+**Last Updated**: 2025-11-17 21:39 UTC  
 **Status**: Phase 0.7 Critical Issues - 🟢 **12 of 20 COMPLETE**
 
 ## Current Status
@@ -198,6 +198,8 @@ Tests are looking for wrong elements or have flaky selectors:
 
 **Time Estimate**: 6-8 hours total (updated after detailed analysis)
 
+**Progress**: Phase 2 ✅ COMPLETE (5 tests fixed, 10→5 failures)
+
 **Files to Modify**:
 ```
 DELETE:
@@ -219,6 +221,180 @@ VERIFY (should pass now):
 
 **Quick Win Check** (10 minutes):
 Run `npx playwright test e2e/websocket-critical.spec.ts` to verify tests 9-10 now pass with data-testid changes. If they pass, we're down to 8 failing tests immediately.
+
+#### 0.0.2. Modern Web Testing & Development Tooling (HIGH 🟡) - ⏸️ **NOT STARTED** - 2-3 days
+
+**Problem**: Current web development workflow has pain points
+- Only E2E tests (Playwright) - slow feedback loop
+- No component isolation for visual testing
+- Build errors are hard to debug
+- No visual regression testing
+- Components not testable in isolation
+- Manual verification in browser for every change
+
+**Research Findings** (2024 Best Practices):
+
+**Tool Ecosystem Overview**:
+1. **Vitest** - Modern test runner for Vite projects
+   - Fast unit/component tests (runs in milliseconds)
+   - Jest-compatible API, but optimized for Vite
+   - Browser Mode for real browser testing when needed
+   - **When to use**: Unit tests, component logic, fast feedback
+   
+2. **Playwright** - E2E and integration tests
+   - Real browser automation
+   - Cross-browser testing (Chrome, Firefox, Safari)
+   - **When to use**: Full user flows, integration tests, critical paths
+   
+3. **Storybook** - Component development in isolation
+   - Visual catalog of all components
+   - Test different states without running app
+   - Living documentation for team
+   - Chromatic integration for visual regression
+   - **When to use**: Component development, design system, visual QA
+
+**Recommended Hybrid Approach**:
+```
+Fast ←→ Comprehensive
+Vitest (100s) → Playwright (10-20s) → Manual (minutes)
+    ↓
+Storybook (instant visual feedback)
+```
+
+**Proposed Solution**:
+
+**Phase 1: Add Vitest for Fast Component Tests** (1 day)
+- Install Vitest + React Testing Library
+- Configure vitest.config.ts
+- Write unit tests for StatsCards, ActivityFeed, ProviderCards
+- **Benefit**: Instant feedback (< 1s vs 30s+ for Playwright)
+- **Result**: 80% of tests run fast, catch bugs early
+
+**Phase 2: Add Storybook for Component Development** (1 day)
+- Install Storybook 8
+- Create stories for existing components
+- Add a11y addon, viewport addon
+- Optional: Chromatic for visual regression
+- **Benefit**: Develop/test components without running full app
+- **Result**: Faster iteration, visual documentation
+
+**Phase 3: Optimize Test Suite** (0.5 day)
+- Move simple component tests from Playwright → Vitest
+- Keep E2E/integration tests in Playwright
+- Add visual regression baseline (Chromatic or Percy)
+- **Result**: Test suite runs 5-10x faster overall
+
+**Implementation Details**:
+
+**Vitest Setup**:
+```bash
+npm install --save-dev vitest @testing-library/react @testing-library/jest-dom jsdom
+```
+
+```typescript
+// vitest.config.ts
+import { defineConfig } from 'vitest/config'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './vitest.setup.ts',
+  },
+})
+```
+
+**Example Vitest Test** (fast, focused):
+```typescript
+// web/src/components/dashboard/StatsCards.test.tsx
+import { describe, it, expect } from 'vitest'
+import { render, screen } from '@testing-library/react'
+import { StatsCards } from './StatsCards'
+
+describe('StatsCards', () => {
+  it('displays all stat values', () => {
+    const stats = { running: 3, queued: 2, success: 10, failed: 1 }
+    render(<StatsCards stats={stats} />)
+    
+    expect(screen.getByText('3')).toBeInTheDocument()
+    expect(screen.getByText('2')).toBeInTheDocument()
+    expect(screen.getByText('10')).toBeInTheDocument()
+    expect(screen.getByText('1')).toBeInTheDocument()
+  })
+  
+  it('calculates total runs correctly', () => {
+    const stats = { running: 3, queued: 2, success: 10, failed: 1 }
+    render(<StatsCards stats={stats} />)
+    
+    const total = screen.getByTestId('stat-total-runs')
+    expect(total).toHaveTextContent('16')
+  })
+})
+```
+
+**Storybook Setup**:
+```bash
+npx storybook@latest init
+```
+
+**Example Story**:
+```typescript
+// web/src/components/dashboard/StatsCards.stories.tsx
+import type { Meta, StoryObj } from '@storybook/react'
+import { StatsCards } from './StatsCards'
+
+const meta: Meta<typeof StatsCards> = {
+  component: StatsCards,
+  title: 'Dashboard/StatsCards',
+}
+
+export default meta
+
+export const Default: StoryObj<typeof StatsCards> = {
+  args: {
+    stats: { running: 3, queued: 2, success: 10, failed: 1 }
+  }
+}
+
+export const AllZero: StoryObj<typeof StatsCards> = {
+  args: {
+    stats: { running: 0, queued: 0, success: 0, failed: 0 }
+  }
+}
+
+export const ManyFailed: StoryObj<typeof StatsCards> = {
+  args: {
+    stats: { running: 2, queued: 1, success: 5, failed: 25 }
+  }
+}
+```
+
+**Success Criteria**:
+- [ ] Vitest running unit tests in < 5s
+- [ ] Storybook installed with 5+ component stories
+- [ ] Test suite runs 5x faster (Vitest + Playwright hybrid)
+- [ ] Components visually testable without running app
+- [ ] Visual regression testing baseline established
+- [ ] Documentation updated with testing guidelines
+
+**ROI Analysis**:
+- **Time investment**: 2-3 days setup
+- **Ongoing benefit**: 
+  - 80% faster test feedback (ms vs seconds)
+  - Component development 3x faster (no app boot)
+  - Visual bugs caught in development
+  - Team can browse component catalog
+  - Onboarding time reduced
+
+**Resources**:
+- Vitest docs: https://vitest.dev
+- Storybook docs: https://storybook.js.org
+- React Testing Library: https://testing-library.com/react
+- Chromatic (visual): https://www.chromatic.com
+
+**Time Estimate**: 2-3 days total
 
 #### 0.7. Provider Health UI Redesign - Full Width & Details (HIGH 🟡) - 🔄 **IN PROGRESS** - 2-3 hours remaining
 
