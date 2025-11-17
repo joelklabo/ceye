@@ -34,6 +34,7 @@ type Provider struct {
 	slowInterval time.Duration
 	refreshCh    chan struct{}
 	lastError    error
+	webhookMode  bool // If true, do one initial poll then wait for webhooks
 }
 
 // NewProvider constructs a GitHub provider with the supplied client and repo list.
@@ -44,7 +45,14 @@ func NewProvider(client GitHubClient, repos []RepoConfig) *Provider {
 		fastInterval: defaultFastInterval,
 		slowInterval: defaultSlowInterval,
 		refreshCh:    make(chan struct{}, 1),
+		webhookMode:  false,
 	}
+}
+
+// SetWebhookMode enables webhook-only mode where the provider does one initial
+// poll to load data, then waits for webhook updates instead of continuous polling.
+func (p *Provider) SetWebhookMode(enabled bool) {
+	p.webhookMode = enabled
 }
 
 // Name implements core.Provider.
@@ -61,6 +69,11 @@ func (p *Provider) Start(ctx context.Context, out chan<- core.RunEvent) error {
 
 	interval := p.fastInterval
 	pollCount := 0
+	
+	// In webhook mode: do one initial poll, then wait for context cancellation
+	if p.webhookMode {
+		log.Printf("github: webhook mode enabled - doing initial poll only")
+	}
 
 	for {
 		select {
@@ -70,6 +83,14 @@ func (p *Provider) Start(ctx context.Context, out chan<- core.RunEvent) error {
 		}
 
 		pollCount++
+		
+		// In webhook mode, only do the first poll
+		if p.webhookMode && pollCount > 1 {
+			log.Printf("github: webhook mode - initial poll complete, waiting for webhooks")
+			<-ctx.Done()
+			return ctx.Err()
+		}
+		
 		log.Printf("github: poll cycle #%d starting (%d repos, interval %v)", pollCount, len(p.repos), interval)
 
 		var combined []core.Run

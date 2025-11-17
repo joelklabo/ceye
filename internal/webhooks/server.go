@@ -152,7 +152,7 @@ run.Repo, run.WorkflowName, run.Status, run.Conclusion)
 
 // Emit RunEvent
 event := core.RunEvent{
-Provider:  "github-webhook",
+Provider:  "github", // Use same provider name as GitHub provider
 Runs:      []core.Run{run},
 Timestamp: time.Now(),
 }

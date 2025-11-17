@@ -256,6 +256,14 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 			return fmt.Errorf("create provider: %w", err)
 		}
 		
+		// Enable webhook mode for GitHub providers if webhooks are enabled
+		if enableWebhooks {
+			if ghProvider, ok := provider.(interface{ SetWebhookMode(bool) }); ok {
+				ghProvider.SetWebhookMode(true)
+				log.Printf("Enabled webhook mode for provider: %s", candidate.Alias)
+			}
+		}
+		
 		// Wrap with SafeProvider for panic recovery and validation
 		safeProvider := providers.NewSafeProvider(provider)
 		
@@ -378,23 +386,11 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 		storeEventCh = eventCh
 	}
 
-	log.Printf("About to start %d providers (webhooks=%v)", len(providerInstances), enableWebhooks)
+	log.Printf("Starting %d provider(s)", len(providerInstances))
 	for _, provider := range providerInstances {
 		go func(p core.Provider) {
-			providerName := p.Name()
-			log.Printf("Starting provider: %s (webhooks=%v)", providerName, enableWebhooks)
-			
-			// Skip GitHub polling if webhooks are enabled (webhooks will provide updates)
-			// Provider name might be "github" or "github-1", "github-2", etc.
-			if enableWebhooks && strings.HasPrefix(providerName, "github") {
-				log.Printf("%s: skipping polling - webhooks enabled", providerName)
-				// Keep provider alive but don't poll
-				<-ctx.Done()
-				return
-			}
-			
 			if err := p.Start(ctx, eventCh); err != nil && ctx.Err() == nil {
-				fmt.Fprintf(os.Stderr, "provider %s exited with error: %v\n", providerName, err)
+				fmt.Fprintf(os.Stderr, "provider %s exited with error: %v\n", p.Name(), err)
 			}
 		}(provider)
 	}
