@@ -7,6 +7,7 @@ interface DashboardContextValue {
   stats: StatsData
   providers: Record<string, ProviderHealth>
   isConnected: boolean
+  isLoading: boolean
   error: string | null
   lastUpdate: Date | null
 }
@@ -64,11 +65,15 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
   const providers = lastMessage?.health || {}
   const lastUpdate = lastMessage ? new Date(lastMessage.timestamp) : null
 
+  // Loading state: we're loading if connected but no data yet
+  const isLoading = isConnected && !lastMessage
+
   const value: DashboardContextValue = {
     runs,
     stats,
     providers,
     isConnected,
+    isLoading,
     error,
     lastUpdate,
   }

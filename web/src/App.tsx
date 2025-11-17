@@ -3,11 +3,12 @@ import { RunsTable } from '@/components/dashboard/RunsTable'
 import { ProviderCards } from '@/components/dashboard/ProviderCards'
 import { ActivityFeed } from '@/components/dashboard/ActivityFeed'
 import { useDashboard } from '@/contexts/DashboardContext'
+import { SkeletonCard, SkeletonTable } from '@/components/ui/Skeleton'
 import { Circle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 function App() {
-  const { runs, stats, providers, isConnected, lastUpdate } = useDashboard()
+  const { runs, stats, providers, isConnected, isLoading, lastUpdate } = useDashboard()
 
   // For activity feed, we'll generate from runs for now
   // In the future, this could be its own WebSocket stream
@@ -53,17 +54,40 @@ function App() {
         </div>
       </header>
       <main className="container mx-auto p-8 space-y-8">
-        <StatsCards stats={stats} />
-        
-        <div className="grid gap-8 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <RunsTable runs={runs} />
-          </div>
-          <div className="space-y-8">
-            <ProviderCards providers={providers} />
-            <ActivityFeed items={activityItems} />
-          </div>
-        </div>
+        {isLoading ? (
+          <>
+            {/* Loading skeletons */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+            </div>
+            <div className="grid gap-8 lg:grid-cols-3">
+              <div className="lg:col-span-2">
+                <SkeletonTable rows={8} />
+              </div>
+              <div className="space-y-8">
+                <SkeletonCard />
+                <SkeletonCard />
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <StatsCards stats={stats} />
+            
+            <div className="grid gap-8 lg:grid-cols-3">
+              <div className="lg:col-span-2">
+                <RunsTable runs={runs} />
+              </div>
+              <div className="space-y-8">
+                <ProviderCards providers={providers} />
+                <ActivityFeed items={activityItems} />
+              </div>
+            </div>
+          </>
+        )}
       </main>
     </div>
   )
