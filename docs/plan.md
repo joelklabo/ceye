@@ -104,13 +104,14 @@ Since there's no longer a terminal UI, we shouldn't call it "Web UI" anymore. It
 - 49699b6 - Activity log null check fix
 - ae88331 - WebSocket timing fix
 - 45d3c91 - Timer update fix
+- 71bb51a - Provider cards CSS fix
 
 **Tasks**:
 - [✅] Fix activity log JavaScript error (add null checks)
 - [✅] Fix WebSocket initial broadcast (send snapshot on connect)
 - [✅] Fix timer update mechanism (call on every message)
-- [🚧] Fix provider cards rendering (verify HTML/CSS/JS alignment)
-- [ ] Run E2E tests: `npx playwright test`
+- [✅] Fix provider cards rendering (verify HTML/CSS/JS alignment)
+- [🚧] Run E2E tests: `npx playwright test`
 - [ ] Verify: All 10 tests pass
 
 **Success Criteria**:
