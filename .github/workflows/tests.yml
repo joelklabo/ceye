@@ -1,4 +1,4 @@
-name: Comprehensive Tests
+name: 🧪 Tests - Full Matrix Suite
 
 on:
   push:
@@ -15,18 +15,24 @@ concurrency:
 
 jobs:
   unit-tests:
-    name: Unit Tests
+    name: 🧪 Unit Tests (Go ${{ matrix.go-version }})
     runs-on: self-hosted
     strategy:
       matrix:
         go-version: ['1.21', '1.22', '1.23']
     steps:
-      - uses: actions/checkout@v4
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
       
-      - name: Set up Go ${{ matrix.go-version }}
+      - name: 🔧 Set up Go ${{ matrix.go-version }}
         uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
+      
+      - name: 📊 Go version
+        run: |
+          echo "## 🔧 Go ${{ matrix.go-version }}" >> $GITHUB_STEP_SUMMARY
+          go version >> $GITHUB_STEP_SUMMARY
       
       - name: Cache Go modules
         uses: actions/cache@v4

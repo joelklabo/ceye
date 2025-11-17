@@ -1,12 +1,10 @@
-name: CI
+name: ⚡️ CI - Build & Test
 
-on:
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
-
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -14,17 +12,23 @@ concurrency:
 
 jobs:
   test:
-    name: Test
+    name: 🧪 Test Suite
     runs-on: self-hosted
     steps:
-      - uses: actions/checkout@v4
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
       
-      - name: Set up Go
+      - name: 🔧 Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.21'
+        
+      - name: 📊 Go version
+        run: |
+          echo "## 🔧 Go Environment" >> $GITHUB_STEP_SUMMARY
+          go version >> $GITHUB_STEP_SUMMARY
       
-      - name: Cache Go modules
+      - name: 💾 Cache Go modules
         uses: actions/cache@v4
         with:
           path: ~/go/pkg/mod
@@ -32,37 +36,50 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
       
-      - name: Download dependencies
-        run: go mod download
+      - name: 📦 Download dependencies
+        run: |
+          echo "📦 Downloading Go modules..." >> $GITHUB_STEP_SUMMARY
+          go mod download
+          echo "✅ Dependencies ready" >> $GITHUB_STEP_SUMMARY
       
-      - name: Run tests
-        run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+      - name: 🧪 Run tests with race detection
+        run: |
+          echo "## 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
+          go test -v -race -coverprofile=coverage.txt -covermode=atomic ./... 2>&1 | tee test-output.txt
+          TEST_COUNT=$(grep -c "^=== RUN" test-output.txt || echo "0")
+          PASS_COUNT=$(grep -c "^--- PASS" test-output.txt || echo "0")
+          echo "✅ Tests passed: $PASS_COUNT/$TEST_COUNT" >> $GITHUB_STEP_SUMMARY
       
-      - name: Upload coverage to Codecov
+      - name: 📊 Upload coverage
         uses: codecov/codecov-action@v4
         with:
           file: ./coverage.txt
           fail_ci_if_error: false
   
   lint:
-    name: Lint
+    name: 🔍 Code Linting
     runs-on: self-hosted
     steps:
-      - uses: actions/checkout@v4
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
       
-      - name: Set up Go
+      - name: 🔧 Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.21'
       
-      - name: golangci-lint
+      - name: 🔍 Run golangci-lint
         uses: golangci/golangci-lint-action@v4
         with:
           version: latest
           args: --timeout=5m
+        
+      - name: 📊 Lint summary
+        if: success()
+        run: echo "✅ All linters passed" >> $GITHUB_STEP_SUMMARY
   
   build:
-    name: Build
+    name: 🔨 Build (${{ matrix.target.os }}/${{ matrix.target.arch }})
     runs-on: self-hosted
     strategy:
       matrix:
@@ -74,18 +91,23 @@ jobs:
           - { os: windows, arch: amd64 }
           - { os: windows, arch: arm64 }
     steps:
-      - uses: actions/checkout@v4
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
       
-      - name: Set up Go
+      - name: 🔧 Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.21'
       
-      - name: Build binary
+      - name: 🔨 Build binary for ${{ matrix.target.os }}/${{ matrix.target.arch }}
         run: |
+          echo "## 🔨 Building ceye" >> $GITHUB_STEP_SUMMARY
+          echo "Platform: ${{ matrix.target.os }}/${{ matrix.target.arch }}" >> $GITHUB_STEP_SUMMARY
           GOOS=${{ matrix.target.os }} GOARCH=${{ matrix.target.arch }} go build -v -o bin/ceye-${{ matrix.target.os }}-${{ matrix.target.arch }}${{ matrix.target.os == 'windows' && '.exe' || '' }} ./cmd/ceye
+          ls -lh bin/
+          echo "✅ Build complete" >> $GITHUB_STEP_SUMMARY
       
-      - name: Upload artifacts
+      - name: 📦 Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ceye-${{ matrix.target.os }}-${{ matrix.target.arch }}
