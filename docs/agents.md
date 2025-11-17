@@ -600,6 +600,32 @@ go test -v -count=1 ./...
 - Verify WebSocket endpoint exists
 - Check browser console for errors
 
+### JavaScript Errors in Browser
+
+Common error: `Cannot read properties of undefined (reading 'X')`
+
+**Root cause**: Accessing properties without null checks
+**Solution**: Always add null checks before accessing nested properties
+
+Example from activity log fix (commit 49699b6):
+```javascript
+// Bad - crashes if firstChild is null
+if (log.firstChild.classList.contains('muted')) { ... }
+
+// Good - safe with null checks
+if (log.firstChild && log.firstChild.classList && log.firstChild.classList.contains('muted')) { ... }
+```
+
+**Pattern**: When accessing DOM elements or their properties, always check:
+1. Element exists (`element !== null`)
+2. Property exists (`element.property !== undefined`)
+3. Then access nested properties
+
+This is especially important for:
+- `classList` operations
+- `firstChild`, `lastChild`, `parentNode` access
+- Custom properties that may not always be present
+
 ## Quick Reference
 
 ### Most Important Files

@@ -100,8 +100,10 @@ Since there's no longer a terminal UI, we shouldn't call it "Web UI" anymore. It
    - Cause: Wrong CSS selectors or missing HTML elements
    - Fix: Verify HTML structure matches JavaScript expectations
 
+**Commit**: 49699b6
+
 **Tasks**:
-- [🚧] Fix activity log JavaScript error (add null checks)
+- [✅] Fix activity log JavaScript error (add null checks)
 - [ ] Fix WebSocket initial broadcast (send snapshot on connect)
 - [ ] Fix timer update mechanism (call on every message)
 - [ ] Fix provider cards rendering (verify HTML/CSS/JS alignment)
@@ -621,13 +623,134 @@ All 5 phases complete:
 | 8. Webhook Integration | P1 🔥 | 2h | ⏳ Ready |
 | 9. E2E Tests | P4 | 3h | ⏳ Blocked by all |
 | 10. Documentation | P4 | 1h | ⏳ Blocked by all |
-| **Total** | | **24h** | |
+| **11. UI Modernization** | **P2** | **22h** | **⏳ Ready** |
+| **Total** | | **46h** | |
 
 **Next Steps**:
-1. Start with Phase 1 (Remove TUI) - 2 hours
-2. Then Phase 2 (Fix Bugs) - 1 hour
-3. Then Phase 8 (Webhooks) - 2 hours
-4. Build momentum with quick wins!
+1. ✅ Phase 1 (Remove TUI) - DONE
+2. ✅ Phase 1.5 (Remove "Web UI" terminology) - DONE
+3. 🚧 Phase 2 (Fix Bugs) - IN PROGRESS (1/4 tasks done)
+4. Phase 11 (UI Modernization) - READY TO START
+5. Build momentum with quick wins!
+
+---
+
+### Phase 11: UI Modernization (22 hours) - **PRIORITY 2**
+
+**Goal**: Transform the dashboard with modern design, smooth animations, and a real-time feel
+
+Based on research of 2024-2025 best practices, we have three proposals plus a consolidated recommendation.
+
+**Full Research Document**: `tmp/ui-modernization-proposals.md`
+
+#### Three Design Proposals
+
+**1. "Command Center" - Stark & Minimal** (8-12 hours)
+- Military/mission control aesthetic
+- Pure black background, monochrome + status colors
+- ASCII-art borders, terminal typography
+- Minimal animations (blink, slide)
+- Tech: Tailwind + GSAP + Chart.js
+- Best for: Information density, no-nonsense monitoring
+
+**2. "Neon Dreams" - Over-the-Top & Fun** (24-32 hours)
+- Cyberpunk/arcade aesthetic
+- Neon glows, animated gradients, particles
+- Glass morphism, 3D effects, confetti
+- Playful micro-interactions everywhere
+- Tech: Tailwind + DaisyUI + Framer Motion + Anime.js + Three.js + ApexCharts + MagicUI
+- Best for: Making CI/CD monitoring *fun* and memorable
+
+**3. "Nordic Minimalism" - Stark but Different** (16-20 hours)
+- Scandinavian/Apple aesthetic
+- Generous whitespace, soft shadows
+- Muted sophisticated palette
+- Gentle, purposeful animations
+- Tech: Tailwind + Chakra UI + Framer Motion + Chart.js
+- Best for: Elegance, professionalism, easy on the eyes
+
+#### Recommended: Consolidated Hybrid Approach (22 hours)
+
+**Philosophy**: Nordic base + Command Center clarity + Neon Dreams delight (dialed back)
+
+**Tech Stack**:
+```
+- CSS: Tailwind CSS 3.x
+- Components: DaisyUI + MagicUI
+- Animation: Framer Motion (primary) + GSAP (complex)
+- Charts: ApexCharts (real-time) with Chart.js fallback
+- Icons: Lucide Icons
+```
+
+**Design System**:
+```
+Dark Mode (default):
+- Background: #0f0f23 (deep blue-black)
+- Surface: #1a1a3e
+- Text: #e5e7eb
+- Accent: #60a5fa (vibrant blue)
+- Success: #34d399 | Error: #f87171 | Warning: #fbbf24
+
+Typography:
+- Display/Body: Inter (400, 500, 600, 700)
+- Mono: JetBrains Mono (timestamps, IDs)
+
+Animations:
+- Fast: 150ms | Normal: 250ms | Slow: 350ms
+- Spring physics via Framer Motion
+- Only animate meaningful state changes
+```
+
+**Key Features**:
+1. Real-time pulse effects on active runs
+2. Smooth state transitions for runs
+3. Animated data updates in charts
+4. Micro-interactions (scale 102% on hover)
+5. Skeleton loading states
+6. Subtle background breathing animation
+
+**Implementation Phases**:
+
+**Phase 11.1: Foundation** (4 hours)
+- [ ] Install Tailwind CSS + DaisyUI
+- [ ] Configure design tokens (colors, spacing, typography)
+- [ ] Set up Framer Motion
+- [ ] Create base layout with new styling
+
+**Phase 11.2: Components** (8 hours)
+- [ ] Build animated card components
+- [ ] Status indicator system with pulse effects
+- [ ] Chart components with ApexCharts
+- [ ] Activity feed with entrance animations
+- [ ] Rebuild stats tiles with smooth updates
+
+**Phase 11.3: Real-time Feel** (6 hours)
+- [ ] Pulse effects for active items
+- [ ] Smooth state transitions (run status changes)
+- [ ] Entrance/exit animations for new runs
+- [ ] Loading skeletons for better perceived performance
+- [ ] Animated counters for stats
+
+**Phase 11.4: Polish** (4 hours)
+- [ ] Micro-interactions (hover, press, ripple)
+- [ ] Performance optimization (GPU acceleration)
+- [ ] Accessibility testing
+- [ ] Dark/light mode refinement
+- [ ] Mobile responsiveness check
+
+**Success Metrics**:
+- Time to First Paint < 1s
+- 60fps animations
+- Zero layout shifts
+- Feels alive even when idle
+- Modern, professional appearance
+
+**Inspiration References**:
+- Vercel Dashboard (clean, modern)
+- Linear (animations)
+- Railway (dark mode excellence)
+- Stripe Dashboard (data density)
+- Grafana (monitoring UX)
 
 ---
 
