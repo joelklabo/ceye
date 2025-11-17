@@ -100,11 +100,13 @@ Since there's no longer a terminal UI, we shouldn't call it "Web UI" anymore. It
    - Cause: Wrong CSS selectors or missing HTML elements
    - Fix: Verify HTML structure matches JavaScript expectations
 
-**Commit**: 49699b6
+**Commits**: 
+- 49699b6 - Activity log null check fix
+- ae88331 - WebSocket timing fix
 
 **Tasks**:
 - [✅] Fix activity log JavaScript error (add null checks)
-- [🚧] Fix WebSocket initial broadcast (send snapshot on connect)
+- [✅] Fix WebSocket initial broadcast (send snapshot on connect)
 - [ ] Fix timer update mechanism (call on every message)
 - [ ] Fix provider cards rendering (verify HTML/CSS/JS alignment)
 - [ ] Run E2E tests: `npx playwright test`
