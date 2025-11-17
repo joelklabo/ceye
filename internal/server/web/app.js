@@ -3,10 +3,14 @@ let reconnectTimeout = null;
 let currentData = null;
 
 const filters = {
-    provider: '',
-    status: '',
+    providers: [],    // Multi-select
+    statuses: [],     // Multi-select
     search: ''
 };
+
+// Available filter options (populated from data)
+let availableProviders = [];
+let availableStatuses = ['in_progress', 'queued', 'completed', 'failed'];
 
 // Theme management
 function initTheme() {
@@ -25,6 +29,26 @@ function initTheme() {
 function setTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('ceye-theme', theme);
+}
+
+// Load saved filters
+function loadSavedFilters() {
+    const saved = localStorage.getItem('ceye-filters');
+    if (saved) {
+        try {
+            const parsed = JSON.parse(saved);
+            filters.providers = parsed.providers || [];
+            filters.statuses = parsed.statuses || [];
+            filters.search = parsed.search || '';
+        } catch (e) {
+            console.error('Failed to load saved filters:', e);
+        }
+    }
+}
+
+// Save filters
+function saveFilters() {
+    localStorage.setItem('ceye-filters', JSON.stringify(filters));
 }
 
 function connect() {
@@ -79,34 +103,87 @@ function updateStats(totals) {
 }
 
 function updateProviderFilter(providers) {
-    const select = document.getElementById('providerFilter');
-    const currentValue = select.value;
+    availableProviders = providers;
+    renderFilterPills();
+}
+
+function renderFilterPills() {
+    const container = document.getElementById('filterPills');
+    if (!container) return;
     
-    select.innerHTML = '<option value="">All Providers</option>';
-    providers.forEach(provider => {
-        const option = document.createElement('option');
-        option.value = provider;
-        option.textContent = provider;
-        select.appendChild(option);
+    const pills = [];
+    
+    // Provider pills
+    filters.providers.forEach(provider => {
+        pills.push(`
+            <span class="filter-pill">
+                ${escapeHtml(provider)}
+                <button onclick="removeProviderFilter('${escapeHtml(provider)}')" class="pill-remove">&times;</button>
+            </span>
+        `);
     });
     
-    if (currentValue) {
-        select.value = currentValue;
+    // Status pills
+    filters.statuses.forEach(status => {
+        pills.push(`
+            <span class="filter-pill status-${status}">
+                ${escapeHtml(status)}
+                <button onclick="removeStatusFilter('${escapeHtml(status)}')" class="pill-remove">&times;</button>
+            </span>
+        `);
+    });
+    
+    // Clear all button
+    if (pills.length > 0 || filters.search) {
+        pills.push(`<button onclick="clearAllFilters()" class="btn-clear-filters">Clear All</button>`);
     }
+    
+    container.innerHTML = pills.join('');
+}
+
+function removeProviderFilter(provider) {
+    filters.providers = filters.providers.filter(p => p !== provider);
+    saveFilters();
+    if (currentData) render(currentData);
+}
+
+function removeStatusFilter(status) {
+    filters.statuses = filters.statuses.filter(s => s !== status);
+    saveFilters();
+    if (currentData) render(currentData);
+}
+
+function clearAllFilters() {
+    filters.providers = [];
+    filters.statuses = [];
+    filters.search = '';
+    document.getElementById('searchBox').value = '';
+    saveFilters();
+    if (currentData) render(currentData);
 }
 
 function updateRunsTable(runs) {
     const container = document.getElementById('runsTable');
     
     const filtered = runs.filter(run => {
-        if (filters.provider && run.Provider !== filters.provider) return false;
-        if (filters.status && run.Status !== filters.status) return false;
+        // Provider filter
+        if (filters.providers.length > 0 && !filters.providers.includes(run.Provider)) {
+            return false;
+        }
+        
+        // Status filter
+        if (filters.statuses.length > 0 && !filters.statuses.includes(run.Status)) {
+            return false;
+        }
+        
+        // Search filter
         if (filters.search) {
             const search = filters.search.toLowerCase();
             return run.WorkflowName.toLowerCase().includes(search) ||
                    run.Repo.toLowerCase().includes(search) ||
                    run.Branch.toLowerCase().includes(search);
         }
+        
         return true;
     });
     
@@ -264,14 +341,8 @@ function clearSearch() {
     const searchBox = document.getElementById('searchBox');
     if (document.activeElement === searchBox) {
         searchBox.blur();
-    } else if (filters.search || filters.provider || filters.status) {
-        filters.search = '';
-        filters.provider = '';
-        filters.status = '';
-        document.getElementById('searchBox').value = '';
-        document.getElementById('providerFilter').value = '';
-        document.getElementById('statusFilter').value = '';
-        if (currentData) render(currentData);
+    } else if (filters.search || filters.providers.length > 0 || filters.statuses.length > 0) {
+        clearAllFilters();
     }
 }
 
@@ -290,6 +361,25 @@ function closeHelpModal() {
     const modal = document.getElementById('helpModal');
     if (modal) {
         modal.classList.remove('show');
+    }
+}
+
+// Filter management
+function addProviderFilter() {
+    const provider = prompt('Enter provider name (e.g., github, azure):');
+    if (provider && !filters.providers.includes(provider)) {
+        filters.providers.push(provider);
+        saveFilters();
+        if (currentData) render(currentData);
+    }
+}
+
+function addStatusFilter() {
+    const status = prompt('Enter status (in_progress, queued, completed, failed):');
+    if (status && availableStatuses.includes(status) && !filters.statuses.includes(status)) {
+        filters.statuses.push(status);
+        saveFilters();
+        if (currentData) render(currentData);
     }
 }
 
@@ -314,23 +404,17 @@ document.getElementById('refreshBtn').addEventListener('click', () => {
     }
 });
 
-document.getElementById('providerFilter').addEventListener('change', (e) => {
-    filters.provider = e.target.value;
-    if (currentData) render(currentData);
-});
-
-document.getElementById('statusFilter').addEventListener('change', (e) => {
-    filters.status = e.target.value;
-    if (currentData) render(currentData);
-});
-
 document.getElementById('searchBox').addEventListener('input', (e) => {
     filters.search = e.target.value;
+    saveFilters();
     if (currentData) render(currentData);
 });
 
 // Initialize theme
 initTheme();
+
+// Load saved filters
+loadSavedFilters();
 
 // Initialize
 connect();

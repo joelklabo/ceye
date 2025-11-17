@@ -21,20 +21,19 @@
                     <option value="dracula">🧛 Dracula</option>
                 </select>
                 <button id="refreshBtn">↻ Refresh</button>
-                <select id="providerFilter">
-                    <option value="">All Providers</option>
-                </select>
-                <select id="statusFilter">
-                    <option value="">All Status</option>
-                    <option value="in_progress">Running</option>
-                    <option value="queued">Queued</option>
-                    <option value="completed">Completed</option>
-                    <option value="failed">Failed</option>
-                </select>
-                <input type="text" id="searchBox" placeholder="Search...">
+                <input type="text" id="searchBox" placeholder="Search runs...">
                 <button onclick="showKeyboardHelp()" class="btn-help" title="Keyboard shortcuts (?)">⌨️</button>
             </div>
         </header>
+
+        <!-- Filter Pills -->
+        <div id="filterPills" class="filter-pills-container"></div>
+
+        <!-- Quick Filters -->
+        <div class="quick-filters">
+            <button onclick="addProviderFilter()" class="btn-filter">+ Provider</button>
+            <button onclick="addStatusFilter()" class="btn-filter">+ Status</button>
+        </div>
 
         <div class="stats">
             <div class="stat-card">
