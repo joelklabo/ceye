@@ -1,7 +1,7 @@
 # ceye Development Plan
 
-**Last Updated**: 2025-11-17 18:56 UTC  
-**Status**: Phase 0.7 Critical Issues - 🟢 **10 of 20 COMPLETE**
+**Last Updated**: 2025-11-17 19:01 UTC  
+**Status**: Phase 0.7 Critical Issues - 🟢 **11 of 20 COMPLETE**
 
 ## Current Status
 
@@ -77,7 +77,7 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 
 **Time**: 3-4 hours
 
-#### 4. Add Workflow Source Links (HIGH 🟡) - 🔄 **IN PROGRESS** - 1-2 hours
+#### 4. Add Workflow Source Links (HIGH 🟡) - ✅ **COMPLETE** (Commit: fa33c2e) - 1 hour
 **Problem**: No way to open workflow run at source (GitHub/Azure DevOps)
 - Users can't navigate to original CI system
 - Missing Run.URL field usage in UI
@@ -317,6 +317,7 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 - ✅ **3. Startup Performance - Add Timing Metrics** (Commit: ab83713)
 - ✅ **5. Enhanced Activity Feed with Message Details** (Commit: 932bb48)
 - ✅ **7. GitHub Logo Investigation** (Commit: 07adf02)
+- ✅ **4. Add Workflow Source Links** (Commit: fa33c2e)
 - ✅ **8. Developer Debugging Dashboard** (Commit: 7f5986f)
 - ✅ **9. Fix Activity Feed Duration Display** (Commit: 2cd74e7)
 - ✅ **Phase 0.6: UI Polish & Bug Fixes** (All sub-tasks completed)
