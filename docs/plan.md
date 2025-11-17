@@ -471,7 +471,7 @@ export const ManyFailed: StoryObj<typeof StatsCards> = {
 
 **Agent**: Phoenix | **Time**: 30 minutes (estimated 1-2 hours)
 
-##### 0.7.2 Add Webhook Flash Animation (MEDIUM 🟡) - 1 hour
+##### 0.7.2 Add Webhook Flash Animation (MEDIUM 🟡) - 🔄 **IN PROGRESS (Phoenix)** - 1 hour
 **Goal**: Visual feedback when webhook arrives (border flash/pulse)
 
 **Implementation**:
