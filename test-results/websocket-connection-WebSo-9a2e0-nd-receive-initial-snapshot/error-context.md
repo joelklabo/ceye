@@ -1,0 +1,202 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - heading "🔍 ceye" [level=1] [ref=e7]
+        - paragraph [ref=e8]: CI/CD Monitoring Dashboard
+      - generic [ref=e9]:
+        - generic [ref=e10]:
+          - generic [ref=e11]:
+            - img [ref=e13]
+            - generic [ref=e15]: just now
+          - generic [ref=e16]:
+            - img [ref=e17]
+            - generic [ref=e21]: LIVE
+        - button "Switch to dark theme" [ref=e22] [cursor=pointer]:
+          - img [ref=e23]
+  - main [ref=e25]:
+    - generic [ref=e26]:
+      - generic [ref=e28]:
+        - generic [ref=e29]:
+          - paragraph [ref=e30]: Running
+          - paragraph [ref=e31]: "1"
+        - img [ref=e33]
+      - generic [ref=e37]:
+        - generic [ref=e38]:
+          - paragraph [ref=e39]: Queued
+          - paragraph [ref=e40]: "1"
+        - img [ref=e42]
+      - generic [ref=e47]:
+        - generic [ref=e48]:
+          - paragraph [ref=e49]: Success
+          - paragraph [ref=e50]: "1"
+        - img [ref=e52]
+      - generic [ref=e57]:
+        - generic [ref=e58]:
+          - paragraph [ref=e59]: Failed
+          - paragraph [ref=e60]: "1"
+        - img [ref=e62]
+    - generic [ref=e67]:
+      - generic [ref=e69]:
+        - generic [ref=e70]:
+          - img [ref=e71]
+          - textbox "Search runs..." [ref=e74]
+        - table [ref=e77]:
+          - rowgroup [ref=e78]:
+            - row "Provider Repo Workflow Status Duration Time Link" [ref=e79]:
+              - cell "Provider" [ref=e80]:
+                - button "Provider" [ref=e81] [cursor=pointer]:
+                  - text: Provider
+                  - img [ref=e82]
+              - cell "Repo" [ref=e85]:
+                - button "Repo" [ref=e86] [cursor=pointer]:
+                  - text: Repo
+                  - img [ref=e87]
+              - cell "Workflow" [ref=e90]
+              - cell "Status" [ref=e91]:
+                - button "Status" [ref=e92] [cursor=pointer]:
+                  - text: Status
+                  - img [ref=e93]
+              - cell "Duration" [ref=e96]
+              - cell "Time" [ref=e97]:
+                - button "Time" [ref=e98] [cursor=pointer]:
+                  - text: Time
+                  - img [ref=e99]
+              - cell "Link" [ref=e102]
+          - rowgroup [ref=e103]:
+            - row "demo example/service-2 Test success 5m 0s just now" [ref=e104]:
+              - cell "demo" [ref=e105]
+              - cell "example/service-2" [ref=e106]:
+                - link "example/service-2" [ref=e107] [cursor=pointer]:
+                  - /url: https://example.com/demo/2
+              - cell "Test" [ref=e108]
+              - cell "success" [ref=e109]:
+                - generic [ref=e110]: success
+              - cell "5m 0s" [ref=e111]
+              - cell "just now" [ref=e112]
+              - cell [ref=e113]:
+                - link "View on GitHub" [ref=e114] [cursor=pointer]:
+                  - /url: https://example.com/demo/2
+                  - img [ref=e115]
+            - row "demo example/service-3 Deploy failed 4m 0s just now" [ref=e119]:
+              - cell "demo" [ref=e120]
+              - cell "example/service-3" [ref=e121]:
+                - link "example/service-3" [ref=e122] [cursor=pointer]:
+                  - /url: https://example.com/demo/3
+              - cell "Deploy" [ref=e123]
+              - cell "failed" [ref=e124]:
+                - generic [ref=e125]: failed
+              - cell "4m 0s" [ref=e126]
+              - cell "just now" [ref=e127]
+              - cell [ref=e128]:
+                - link "View on GitHub" [ref=e129] [cursor=pointer]:
+                  - /url: https://example.com/demo/3
+                  - img [ref=e130]
+            - row "demo example/service-1 Build queued - just now" [ref=e134]:
+              - cell "demo" [ref=e135]
+              - cell "example/service-1" [ref=e136]:
+                - link "example/service-1" [ref=e137] [cursor=pointer]:
+                  - /url: https://example.com/demo/4
+              - cell "Build" [ref=e138]
+              - cell "queued" [ref=e139]:
+                - generic [ref=e140]: queued
+              - cell "-" [ref=e141]
+              - cell "just now" [ref=e142]
+              - cell [ref=e143]:
+                - link "View on GitHub" [ref=e144] [cursor=pointer]:
+                  - /url: https://example.com/demo/4
+                  - img [ref=e145]
+            - row "demo example/service-1 Build in_progress - just now" [ref=e149]:
+              - cell "demo" [ref=e150]
+              - cell "example/service-1" [ref=e151]:
+                - link "example/service-1" [ref=e152] [cursor=pointer]:
+                  - /url: https://example.com/demo/1
+              - cell "Build" [ref=e153]
+              - cell "in_progress" [ref=e154]:
+                - generic [ref=e155]: in_progress
+              - cell "-" [ref=e156]
+              - cell "just now" [ref=e157]
+              - cell [ref=e158]:
+                - link "View on GitHub" [ref=e159] [cursor=pointer]:
+                  - /url: https://example.com/demo/1
+                  - img [ref=e160]
+      - generic [ref=e164]:
+        - generic [ref=e165]:
+          - generic [ref=e167]:
+            - heading "Provider Health" [level=3] [ref=e168]
+            - button [ref=e169] [cursor=pointer]:
+              - img [ref=e171]
+          - generic [ref=e178]:
+            - generic [ref=e179]:
+              - generic [ref=e180]:
+                - generic [ref=e181]: D
+                - generic [ref=e182]:
+                  - heading "demo" [level=3] [ref=e183]
+                  - paragraph [ref=e184]: "Last update: just now"
+              - img [ref=e186]
+            - generic [ref=e188]: ✓ Healthy
+        - generic [ref=e189]:
+          - generic [ref=e190]:
+            - heading "Activity" [level=2] [ref=e191]
+            - button "Collapse" [ref=e192] [cursor=pointer]
+          - generic [ref=e195]:
+            - generic [ref=e197] [cursor=pointer]:
+              - img [ref=e199]
+              - generic [ref=e201]:
+                - generic [ref=e202]:
+                  - paragraph [ref=e203]: Build • example/service-1/main
+                  - generic [ref=e204]:
+                    - link "View on GitHub" [ref=e205]:
+                      - /url: https://example.com/demo/1
+                      - img [ref=e206]
+                    - img [ref=e210]
+                - generic [ref=e213]: d34db33
+                - paragraph [ref=e214]: 12:13:21 PM
+            - generic [ref=e216] [cursor=pointer]:
+              - img [ref=e218]
+              - generic [ref=e221]:
+                - generic [ref=e222]:
+                  - paragraph [ref=e223]: Build • example/service-1/main
+                  - generic [ref=e224]:
+                    - link "View on GitHub" [ref=e225]:
+                      - /url: https://example.com/demo/4
+                      - img [ref=e226]
+                    - img [ref=e230]
+                - generic [ref=e233]: d34db33
+                - paragraph [ref=e234]: 12:13:21 PM
+            - generic [ref=e236] [cursor=pointer]:
+              - img [ref=e238]
+              - generic [ref=e242]:
+                - generic [ref=e243]:
+                  - paragraph [ref=e244]: Deploy • example/service-3/release
+                  - generic [ref=e245]:
+                    - link "View on GitHub" [ref=e246]:
+                      - /url: https://example.com/demo/3
+                      - img [ref=e247]
+                    - img [ref=e251]
+                - generic [ref=e253]:
+                  - generic [ref=e254]: "Duration: 4m 0s"
+                  - generic [ref=e255]: •
+                  - generic [ref=e256]: d34db33
+                - paragraph [ref=e257]: 12:13:21 PM
+            - generic [ref=e259] [cursor=pointer]:
+              - img [ref=e261]
+              - generic [ref=e264]:
+                - generic [ref=e265]:
+                  - paragraph [ref=e266]: Test • example/service-2/develop
+                  - generic [ref=e267]:
+                    - link "View on GitHub" [ref=e268]:
+                      - /url: https://example.com/demo/2
+                      - img [ref=e269]
+                    - img [ref=e273]
+                - generic [ref=e275]:
+                  - generic [ref=e276]: "Duration: 5m 0s"
+                  - generic [ref=e277]: •
+                  - generic [ref=e278]: d34db33
+                - paragraph [ref=e279]: 12:13:21 PM
+  - button "Debug Panel" [ref=e280] [cursor=pointer]:
+    - img [ref=e281]
+```

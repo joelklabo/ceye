@@ -4,8 +4,6 @@ import { Circle, RefreshCw, ChevronDown, ChevronRight, Zap } from 'lucide-react'
 import type { ProviderHealth, ProviderMeta } from '@/types'
 import { cn } from '@/lib/utils'
 import { ProviderIcon } from '@/components/icons/ProviderIcon'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/Button'
 
 interface ProviderCardsProps {
   providers: Record<string, ProviderHealth>
@@ -34,30 +32,31 @@ export function ProviderCards({ providers, meta, onRefresh }: ProviderCardsProps
 
   if (providerEntries.length === 0) {
     return (
-      <Card> {/* Changed to Card */}
-        <CardHeader> {/* Changed to CardHeader */}
-          <CardTitle>Provider Health</CardTitle> {/* Changed to CardTitle */}
-        </CardHeader> {/* Changed to CardHeader */}
-        <CardContent> {/* Changed to CardContent */}
+      <div className="rounded-lg border border-border bg-card">
+        <div className="flex items-center justify-between border-b border-border p-4">
+          <h2 className="text-lg font-semibold">Provider Health</h2>
+        </div>
+        <div className="p-4">
           <p className="text-muted-foreground text-sm">No providers configured</p>
-        </CardContent> {/* Changed to CardContent */}
-      </Card> // Changed to Card
+        </div>
+      </div>
     )
   }
 
   return (
-    <Card> {/* Changed to Card */}
-      <CardHeader> {/* Changed to CardHeader */}
-        <div className="flex items-center justify-between">
-          <CardTitle>Provider Health</CardTitle> {/* Changed to CardTitle */}
-          {onRefresh && ( // Conditionally render refresh button
-            <Button variant="ghost" size="sm" onClick={onRefresh}>
-              <RefreshCw className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-      </CardHeader> {/* Changed to CardHeader */}
-      <CardContent> {/* Changed to CardContent */}
+    <div className="rounded-lg border border-border bg-card">
+      <div className="flex items-center justify-between border-b border-border p-4">
+        <h2 className="text-lg font-semibold">Provider Health</h2>
+        {onRefresh && (
+          <button
+            onClick={onRefresh}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+      <div className="p-4 pt-0 mt-4">
         <div className="space-y-3"> {/* Removed grid layout */}
           {providerEntries.map(([name, health], index) => {
             const isHealthy = health.ErrorCount === 0
@@ -188,7 +187,7 @@ export function ProviderCards({ providers, meta, onRefresh }: ProviderCardsProps
             )
           })}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

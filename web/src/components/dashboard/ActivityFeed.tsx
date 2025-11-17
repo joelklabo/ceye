@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle2, XCircle, Clock, Activity as ActivityIcon, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react'
-import { useState } from 'react'
+import React, { useState } from 'react'
 
 interface ActivityItem {
   id: string
@@ -22,15 +22,14 @@ interface ActivityItemRowProps {
   index: number
 }
 
-function ActivityItemRow({ item, index }: ActivityItemRowProps) {
+const ActivityItemRow = React.memo(function ActivityItemRow({ item, index }: ActivityItemRowProps) {
   const [isExpanded, setIsExpanded] = useState(false)
 
   return (
     <motion.div
       key={item.id}
       data-testid="activity-item"
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
+      layout
       transition={{ duration: 0.2, delay: index * 0.03 }}
       className="border-b border-border last:border-0"
     >
@@ -197,7 +196,7 @@ export function ActivityFeed({ items, maxItems = 10 }: ActivityFeedProps) {
   const displayItems = items.slice(0, maxItems)
 
   return (
-    <div className="rounded-lg border border-border bg-card">
+    <div className="rounded-lg border border-border bg-card" data-testid="activity-feed">
       <div className="flex items-center justify-between border-b border-border p-4">
         <h2 className="text-lg font-semibold">Activity</h2>
         <button
