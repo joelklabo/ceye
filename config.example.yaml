@@ -36,3 +36,51 @@ providers:
   # Note: Set AZURE_PAT or AZURE_DEVOPS_PAT environment variable with your Personal Access Token
   # Create PAT at: https://dev.azure.com/{org}/_usersSettings/tokens
   # Required scopes: Build (Read), Code (Read)
+
+# Alerting configuration (optional)
+alerting:
+  enabled: false  # Set to true to enable alerts
+  
+  # Alert rules define when to send notifications
+  rules:
+    - name: "production-failures"
+      enabled: true
+      condition:
+        type: "workflow_failed"
+        workflow: "deploy-prod"  # Optional: specific workflow
+      channels: ["slack-ops"]
+      providers: ["github"]  # Optional: filter by provider
+      cooldown: "30m"  # Prevent alert spam
+    
+    - name: "high-failure-rate"
+      enabled: true
+      condition:
+        type: "high_failure_rate"
+        threshold: 0.2  # Alert if >20% failure rate
+        period: "1h"    # Over last hour
+      channels: ["slack-ops"]
+      cooldown: "1h"
+    
+    - name: "duration-spike"
+      enabled: true
+      condition:
+        type: "duration_spike"
+        threshold: 2.0  # Alert if 2x average duration
+      channels: ["slack-ops"]
+      cooldown: "1h"
+  
+  # Notification channels
+  channels:
+    slack-ops:
+      type: "slack"
+      webhook_url: "${SLACK_WEBHOOK_URL}"  # Use env var
+    
+    webhook-custom:
+      type: "webhook"
+      webhook_url: "https://example.com/webhooks/ci-alerts"
+    
+    log-channel:
+      type: "log"  # Logs to stdout (good for testing)
+
+# Note: Email and PagerDuty channels are planned but not yet implemented
+# For now, use Slack webhooks or generic webhooks
