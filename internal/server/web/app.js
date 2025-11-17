@@ -148,8 +148,8 @@ function connect() {
         const activeCount = data.totals ? (data.totals.running + data.totals.queued) : 0;
         addActivityItem('success', `Received update: ${runCount} runs (${activeCount} active)`);
         
-        // Update last update timestamp
-        updateLastUpdate();
+        // Update last update timestamp with server timestamp
+        updateLastUpdate(data.timestamp);
         
         render(data);
     };
@@ -175,15 +175,6 @@ function updateConnectionStatus(connected) {
     } else {
         status.textContent = '○ Disconnected';
         status.className = 'connection-indicator disconnected';
-    }
-}
-
-function updateLastUpdate() {
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString();
-    const lastUpdate = document.getElementById('lastUpdate');
-    if (lastUpdate) {
-        lastUpdate.textContent = `Last update: ${timeStr}`;
     }
 }
 
