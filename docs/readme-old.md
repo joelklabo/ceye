@@ -46,71 +46,55 @@
 
 ## 📸 Screenshots
 
-### Full Dashboard
+## 📸 Screenshots
 
-![ceye Dashboard](screenshots/hero-dashboard.png)
+### Dashboard
 
-Modern React dashboard with real-time WebSocket updates, showing all your CI/CD runs in one place.
+Modern, responsive web interface accessible from any browser:
 
-### Key Components
-
-<table>
-<tr>
-<td width="50%">
-
-**Stats Cards**
-
-![Stats Cards](screenshots/stats-cards.png)
-
-Real-time counters with smooth animations
-
-</td>
-<td width="50%">
-
-**Activity Feed**
-
-![Activity Feed](screenshots/activity-feed.png)
-
-Timeline of recent build events
-
-</td>
-</tr>
-<tr>
-<td width="50%">
-
-**Runs Table**
-
-![Runs Table](screenshots/runs-table.png)
-
-Sortable, searchable build history
-
-</td>
-<td width="50%">
-
-**Provider Health**
-
-![Provider Cards](screenshots/provider-cards.png)
-
-Monitor provider status at a glance
-
-</td>
-</tr>
-</table>
-
-### Mobile Responsive
-
-<img src="screenshots/mobile-view.png" alt="Mobile View" width="300">
-
-Works beautifully on all screen sizes - from mobile phones to 4K displays.
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│  ceye - CI/CD Monitoring                    [Dark ▾] [@] [⚙] [?]       │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  Filters: [github ×] [azure ×] [✓ success ×]  🔍 Search...   [Clear]   │
+│                                                                         │
+│  Workspace: [All Providers ▾]  [💾 Save]  [📥 Load]                     │
+│                                                                         │
+├─────────────────────────────────────────────────────────────────────────┤
+│  Status    Repository          Workflow            Branch    Updated   │
+│  ──────────────────────────────────────────────────────────────────    │
+│  🟢 Success  myorg/api          Build & Test        main      2m ago   │
+│  🔵 Running  myorg/api          Deploy Production   main      1m ago   │
+│  🟢 Success  myorg/web          Frontend Build      main      5m ago   │
+│  🔴 Failed   MyProject          Integration Test    develop   3m ago   │
+│  🟡 Queued   example/service    Build               main      now      │
+├─────────────────────────────────────────────────────────────────────────┤
+│  📊 Dashboard Stats                                                     │
+│  ┌────────────┬────────────┬────────────┬────────────┐                 │
+│  │  Total: 45 │ Success: 38│ Running: 2 │ Failed: 5  │                 │
+│  │  Success Rate: 84%       │ Avg Duration: 3m 24s   │                 │
+│  └────────────┴────────────┴────────────┴────────────┘                 │
+│                                                                         │
+│  📈 Trends (Last 7 Days)                                                │
+│  [Chart showing success rate, build frequency, and duration trends]    │
+│                                                                         │
+│  🔔 Recent Alerts (2)                                                   │
+│  • Production Deploy Failed (2m ago)                                    │
+│  • High Failure Rate on myorg/api (5m ago)                              │
+└─────────────────────────────────────────────────────────────────────────┘
+```
 
 **Dashboard Features:**
-- ⚡ **Real-time WebSocket Updates** - Instant status changes
-- 🎨 **Modern React UI** - Built with Vite, TypeScript, Tailwind CSS
-- 🔍 **Smart Filtering** - Search and filter by provider, repo, status
+- 🎨 **4 Beautiful Themes** (Dark, Light, Solarized, Dracula)
+- 🔌 **Real-time WebSocket Updates** - No page refresh needed
+- 🏷️ **Multi-select Filtering** - Filter by provider, status, repo
+- 💾 **Workspaces** - Save and switch between filter presets
+- ⌨️ **Keyboard Shortcuts** - `r` refresh, `/` search, `Esc` clear
+- ⚙️ **Settings Page** - Centralized configuration
 - 📱 **Responsive Design** - Works on mobile, tablet, desktop
-- 🌙 **Dark Mode** - Professional dark theme
-- ♿ **Accessible** - Keyboard navigation, ARIA labels
-- 🎭 **Smooth Animations** - Framer Motion transitions
+- 📊 **Interactive Charts** - Trends with Chart.js
+- 🔔 **Alert Notifications** - Desktop and in-app alerts
 
 ## 🚀 Quick Start
 

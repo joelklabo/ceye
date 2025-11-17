@@ -26,7 +26,7 @@ The React dashboard is fully functional with real-time WebSocket updates and com
 - Tests: Dashboard loading, Stats Cards, Runs Table, Provider Cards, Activity Feed, Real-time updates
 - File: `e2e/dashboard.spec.ts`
 
-#### Phase -1.2: Marketing Screenshots - **NEXT TASK** 🚧
+#### Phase -1.2: Marketing Screenshots - **IN PROGRESS** 🚧
 **Goal**: Generate professional screenshots for README
 
 **Screenshots Needed**:
