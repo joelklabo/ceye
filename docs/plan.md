@@ -79,46 +79,37 @@ Since there's no longer a terminal UI, we shouldn't call it "Web UI" anymore. It
 
 **Goal**: Fix bugs found by E2E tests
 
-**Issues**:
-1. **JavaScript error**: `Cannot read properties of undefined (reading 'contains')`
-   - Location: Activity log code in `app.js`
-   - Cause: DOM element doesn't exist or wrong property access
-   - Fix: Add null checks and use correct DOM API
+**Root Cause Analysis**:
+The E2E test failures were caused by TWO bugs:
 
-2. **No WebSocket messages**: Server not broadcasting initial snapshot
-   - Location: `internal/server/server.go` WebSocket handler
-   - Cause: Initial data not sent when client connects
-   - Fix: Broadcast current store state on new WebSocket connection
+1. **Activity log DOM manipulation race condition** (`app.js`)
+   - Symptom: JavaScript error `Cannot read properties of undefined (reading 'contains')`
+   - Cause: Checking/removing "waiting" message AFTER appending new items
+   - This caused DOM to be in inconsistent state during checks
+   - Side effect: Error prevented WebSocket onmessage handler from completing
+   - Fix: Restructure logic to check/clear BEFORE appending, store firstChild in variable
 
-3. **Timer not updating**: Shows "No updates yet"
-   - Location: `updateLastUpdate()` in `app.js`
-   - Cause: Related to issue #2, no messages received
-   - Fix: Ensure timer updates on every WebSocket message
+2. **WebSocket test interception timing** (`web-ui.test.js`)
+   - Symptom: Test reports 0 messages received
+   - Cause: Interceptor injected AFTER page load, missing initial snapshot
+   - The server was working correctly all along!
+   - Fix: Use `page.addInitScript()` to inject BEFORE navigation
 
-4. **Provider cards missing**: HTML structure issue
-   - Location: `index.html` or rendering code in `app.js`
-   - Cause: Wrong CSS selectors or missing HTML elements
-   - Fix: Verify HTML structure matches JavaScript expectations
-
-**Commits**: 
-- 49699b6 - Activity log null check fix
-- ae88331 - WebSocket timing fix
-- 45d3c91 - Timer update fix
-- 71bb51a - Provider cards CSS fix
+**Commit**: 6e5f61b - All bugs fixed, E2E tests passing
 
 **Tasks**:
-- [✅] Fix activity log JavaScript error (add null checks)
-- [✅] Fix WebSocket initial broadcast (send snapshot on connect)
-- [✅] Fix timer update mechanism (call on every message)
-- [✅] Fix provider cards rendering (verify HTML/CSS/JS alignment)
-- [🚧] Run E2E tests: `npx playwright test`
-- [ ] Verify: All 10 tests pass
+- [✅] Fix activity log JavaScript error (DOM manipulation race condition)
+- [✅] Fix WebSocket test (inject interceptor before page load)
+- [✅] Fix timer update mechanism (working correctly all along)
+- [✅] Fix provider cards rendering (working correctly all along)
+- [✅] Run E2E tests: `npx playwright test`
+- [✅] Verify: All 10 tests pass
 
-**Success Criteria**:
-- E2E tests pass: 10/10 ✅
-- No console errors
-- UI renders correctly
-- Data flows properly
+**Success Criteria**: ✅ COMPLETE
+- ✅ E2E tests pass: 10/10
+- ✅ No console errors
+- ✅ UI renders correctly
+- ✅ Data flows properly
 
 ---
 
@@ -173,7 +164,7 @@ Animation Timing:
 **Goal**: Install and configure the modern tech stack
 
 **Tasks**:
-- [ ] Install Tailwind CSS via npm
+- [🚧] Install Tailwind CSS via npm
   - `npm install -D tailwindcss postcss autoprefixer`
   - `npx tailwindcss init -p`
 - [ ] Install DaisyUI plugin

@@ -602,29 +602,71 @@ go test -v -count=1 ./...
 
 ### JavaScript Errors in Browser
 
+#### DOM Manipulation Race Conditions
+
 Common error: `Cannot read properties of undefined (reading 'X')`
 
-**Root cause**: Accessing properties without null checks
-**Solution**: Always add null checks before accessing nested properties
+**Root cause**: Accessing DOM elements during or after modification
+**Critical lesson from Phase 2 (commit 6e5f61b)**:
 
-Example from activity log fix (commit 49699b6):
+When manipulating DOM with checks/removes/appends, ORDER MATTERS:
+
 ```javascript
-// Bad - crashes if firstChild is null
-if (log.firstChild.classList.contains('muted')) { ... }
+// ❌ BAD - Race condition
+if (log.children.length >= maxItems) {
+    log.removeChild(log.firstChild);  // Modifies DOM
+}
+if (log.children.length === 1 && log.firstChild.classList.contains('muted')) {
+    log.innerHTML = '';  // firstChild changed after removal!
+}
+log.appendChild(newItem);
 
-// Good - safe with null checks
-if (log.firstChild && log.firstChild.classList && log.firstChild.classList.contains('muted')) { ... }
+// ✅ GOOD - Check/clear BEFORE modifying
+if (log.children.length === 1) {
+    const firstChild = log.firstChild;  // Store reference
+    if (firstChild && firstChild.classList && firstChild.classList.contains('muted')) {
+        log.innerHTML = '';  // Clear before append
+    }
+}
+log.appendChild(newItem);  // Append
+if (log.children.length > maxItems) {  // Check AFTER append
+    log.removeChild(log.firstChild);
+}
 ```
 
-**Pattern**: When accessing DOM elements or their properties, always check:
-1. Element exists (`element !== null`)
-2. Property exists (`element.property !== undefined`)
-3. Then access nested properties
+**Key principles**:
+1. Store DOM references in variables before checks (they may change)
+2. Do checks/clears BEFORE adding new elements
+3. Do limit checks AFTER adding new elements
+4. Always null-check before accessing properties
 
 This is especially important for:
 - `classList` operations
 - `firstChild`, `lastChild`, `parentNode` access
+- Operations that modify children array during iteration
 - Custom properties that may not always be present
+
+#### Playwright WebSocket Test Patterns
+
+When testing WebSocket messages in Playwright:
+
+```javascript
+// ❌ BAD - Misses initial messages
+await page.goto(URL);
+await page.evaluate(() => {
+    // Inject interceptor AFTER page loads - too late!
+    window.WebSocket = function() { ... };
+});
+
+// ✅ GOOD - Captures all messages
+await page.addInitScript(() => {
+    // Inject interceptor BEFORE page loads
+    window.WebSocket = function() { ... };
+});
+await page.goto(URL);
+```
+
+**Why**: WebSocket connections establish during page load. If you inject the interceptor after `goto()`, you miss the initial snapshot.
 
 ## Quick Reference
 
