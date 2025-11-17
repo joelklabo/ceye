@@ -77,7 +77,7 @@ test.describe('Dashboard - React App', () => {
 
     // Find the refresh button which is next to the title inside the CardHeader.
     // Try a more generic locator for the refresh button
-    const refreshButton = page.locator('[data-testid="refresh-button-debug"]').first();
+    const refreshButton = page.locator('button:has(svg[data-lucide="refresh-cw"])').first();
     await expect(refreshButton).toBeVisible();
   })
 })

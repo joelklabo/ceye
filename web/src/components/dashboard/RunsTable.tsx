@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, memo } from 'react'
-import { Search, ArrowUpDown } from 'lucide-react'
+import { Search, ArrowUpDown, ExternalLink } from 'lucide-react'
 import type { Run } from '@/types'
 import { cn } from '@/lib/utils'
 
@@ -57,6 +57,18 @@ const RunRow = memo(({ run }: RunRowProps) => {
       </td>
       <td className="px-4 py-3 text-sm text-muted-foreground">
         {formatTime(run.UpdatedAt)}
+      </td>
+      <td className="px-4 py-3 text-sm">
+        <a
+          href={run.URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-testid="external-link-icon"
+          className="inline-flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors"
+          title="View on GitHub"
+        >
+          <ExternalLink className="h-4 w-4" />
+        </a>
       </td>
     </motion.tr>
   )
@@ -199,6 +211,9 @@ export function RunsTable({ runs }: RunsTableProps) {
                     Time
                     <ArrowUpDown className="h-3 w-3" />
                   </button>
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium">
+                  Link
                 </th>
               </tr>
             </thead>

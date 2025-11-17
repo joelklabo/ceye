@@ -1,7 +1,7 @@
 # ceye Development Plan
 
-**Last Updated**: 2025-11-17 19:05 UTC  
-**Status**: Phase 0.7 Critical Issues - 🟢 **10 of 19 COMPLETE**
+**Last Updated**: 2025-11-17 18:56 UTC  
+**Status**: Phase 0.7 Critical Issues - 🟢 **10 of 20 COMPLETE**
 
 ## Current Status
 
@@ -77,6 +77,34 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 
 **Time**: 3-4 hours
 
+#### 4. Add Workflow Source Links (HIGH 🟡) - 🔄 **IN PROGRESS** - 1-2 hours
+**Problem**: No way to open workflow run at source (GitHub/Azure DevOps)
+- Users can't navigate to original CI system
+- Missing Run.URL field usage in UI
+- Hard to investigate failures without source link
+
+**Requirements**:
+1. **Each workflow card** - Add external link icon → Run.URL
+2. **Activity feed items** - Clickable link to source
+3. **Run details modal** - Prominent "View on GitHub" button
+4. **Provider-aware icons** - GitHub logo for GitHub, Azure logo for Azure
+
+**Steps**:
+1. [ ] Add external link icon to RunRow component
+2. [ ] Add onClick handler to open Run.URL in new tab
+3. [ ] Update ActivityFeed to show clickable links
+4. [ ] Test with GitHub runs (verify URL format)
+5. [ ] Add Azure DevOps URL format (future-proof)
+6. [ ] Write test verifying links are clickable
+7. [ ] Commit + push
+
+**Success Criteria**:
+- [ ] Can click to open run on GitHub
+- [ ] External link icon visible on every run
+- [ ] Opens in new tab
+- [ ] Works for both completed and in-progress runs
+- [ ] Ready for Azure DevOps URLs
+
 #### 5. Enhanced Activity Feed with Message Details (HIGH 🟡) - 2-3 hours
 **Problem**: Activity feed shows minimal info - just workflow name and status
 - No message content details
@@ -96,7 +124,7 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 **Expandable Details**:
 - Click to expand full message JSON
 - Show complete webhook payload
-- Link to GitHub/Azure/GitLab run URL
+- Link to GitHub/Azure/GitLab run URL (see Task 4)
 
 **Steps**:
 1. [ ] Extend ActivityItem type with rich data

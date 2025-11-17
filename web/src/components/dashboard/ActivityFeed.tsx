@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle2, XCircle, Clock, Activity as ActivityIcon } from 'lucide-react'
+import { CheckCircle2, XCircle, Clock, Activity as ActivityIcon, ExternalLink } from 'lucide-react'
 import { useState } from 'react'
 
 interface ActivityItem {
@@ -94,6 +94,7 @@ export function ActivityFeed({ items, maxItems = 10 }: ActivityFeedProps) {
                   {displayItems.map((item, index) => (
                     <motion.div
                       key={item.id}
+                      data-testid="activity-item"
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.2, delay: index * 0.03 }}
@@ -108,9 +109,11 @@ export function ActivityFeed({ items, maxItems = 10 }: ActivityFeedProps) {
                               href={item.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-xs text-primary hover:underline"
+                              data-testid="activity-external-link"
+                              className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                              title="View on GitHub"
                             >
-                              →
+                              <ExternalLink className="h-3 w-3" />
                             </a>
                           )}
                         </div>
