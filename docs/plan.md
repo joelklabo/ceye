@@ -6,7 +6,7 @@
 ## Current Status
 
 **React Migration**: Complete ✅  
-**Test Suite**: 27/29 passing ✅  
+**Test Suite**: Go ✅ ALL PASSING | Playwright: 50/58 passing (8 failing)  
 **Status**: ✅ **ONLINE - WebSocket FIXED!**
 
 The React dashboard is now working! WebSocket connection was fixed by removing infinite reconnection loop.
@@ -39,6 +39,68 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 **Priority**: CRITICAL - Validate webhook functionality!
 
 **Tasks**:
+
+#### 0.0.1. Fix All Test Failures (CRITICAL 🔴) - 🔄 **IN PROGRESS** - 4-6 hours
+
+**Problem**: Tests are failing locally and in CI
+- Go tests: ALL PASSING ✅ (fixed by earlier commits)
+- Playwright tests: 8 failing, 50 passing, 14 skipped
+
+**Root Causes**:
+1. **Missing data-testid attributes** - React migration removed test IDs
+2. **Old test selectors** - Tests written for static HTML, now using React
+3. **Changed component structure** - Elements moved/renamed during migration
+
+**Failing Tests**:
+```
+1. dashboard-react.spec.ts:70 - Provider health card refresh button
+2. provider-health-ui.spec.ts:10 - Full-width layout check
+3. provider-health-ui.spec.ts:107 - Match Activity feed width
+4. websocket-connection.spec.js:4 - Old JS test, looking for #lastUpdate
+5. websocket-connection.spec.js:28 - Old JS test, periodic updates
+6. websocket-connection.spec.js:55 - Old JS test, activity log
+7. websocket-critical.spec.ts:60 - Missing data-testid="activity-feed"
+8. websocket-critical.spec.ts:79 - Missing data-testid="stat-*"
+```
+
+**Analysis - What Tests Expect**:
+- `[data-testid="activity-feed"]` - ActivityFeed component container
+- `[data-testid="stat-total-runs"]` - Stats card for total runs
+- `[data-testid="stat-active-runs"]` - Stats card for active runs  
+- `.connection-indicator.connected` - Old static HTML class
+- `#lastUpdate`, `#activityToggle` - Old static HTML IDs
+
+**Solution Strategy**:
+
+**Phase 1: Add Missing data-testid Attributes** (2 hours)
+1. ActivityFeed.tsx - Add `data-testid="activity-feed"` to container
+2. StatsCards.tsx - Add test IDs to each stat card
+3. Verify all test selectors match current React structure
+
+**Phase 2: Update/Remove Obsolete Tests** (2 hours)
+4. websocket-connection.spec.js - Rewrite for React or skip
+5. provider-health-ui.spec.ts - Update selectors for current structure
+6. dashboard-react.spec.ts - Fix refresh button test
+
+**Phase 3: Run Full Test Suite** (1 hour)
+7. Run all tests locally until green
+8. Document any remaining skipped tests
+9. Update plan with results
+
+**Phase 4: CI Validation** (1 hour)
+10. Push changes to trigger CI
+11. Fix any CI-specific failures
+12. Verify all tests pass in CI environment
+
+**Success Criteria**:
+- [ ] All Go tests passing (already done ✅)
+- [ ] All Playwright tests passing (0 failures)
+- [ ] No flaky tests (run 3 times, all pass)
+- [ ] CI green (all checks passing)
+- [ ] Tests document what they're testing
+- [ ] No unnecessary skipped tests
+
+**Time Estimate**: 4-6 hours total
 
 #### 0.7. Provider Health UI Redesign - Full Width & Details (HIGH 🟡) - 🔄 **IN PROGRESS** - 3-4 hours
 
