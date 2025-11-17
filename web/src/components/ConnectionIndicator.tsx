@@ -25,7 +25,7 @@ export function ConnectionIndicator({ isConnected, lastUpdate, onUpdate }: Conne
   }, [lastUpdate, isConnected, onUpdate])
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3" data-testid="connection-indicator">
       {/* Connection Status with Pulse */}
       <div className="relative flex items-center gap-2">
         {/* Pulse Ring - Only when receiving messages */}

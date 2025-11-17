@@ -64,7 +64,7 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 
 **Time**: 1.5 hours (vs estimated 2-3 hours)
 
-#### 2. Remove Orphaned Code (HIGH 🟡) - 30 minutes
+#### 2. Remove Orphaned Code (HIGH 🟡) - 🔄 **IN PROGRESS** - 30 minutes
 **Problem**: Duplicate implementations causing confusion
 - `/internal/server/web/` - Old vanilla JS (NOT USED)
 - `/web/src/` - New React (ACTIVE)
