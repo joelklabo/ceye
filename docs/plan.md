@@ -118,6 +118,230 @@ Since there's no longer a terminal UI, we shouldn't call it "Web UI" anymore. It
 
 ---
 
+### Phase 2.5: UI Modernization (22 hours) - **PRIORITY 1.5**
+
+**Goal**: Transform dashboard with modern design, smooth animations, and real-time feel
+
+**Philosophy**: Hybrid approach combining Nordic elegance + Command Center clarity + tasteful Neon delight
+
+**Tech Stack**:
+- **CSS**: Tailwind CSS 3.x (utility-first, highly customizable)
+- **Components**: DaisyUI (themed Tailwind components)
+- **Animation**: Framer Motion (smooth React animations)
+- **Charts**: ApexCharts (real-time updates, beautiful animations)
+- **Icons**: Lucide Icons (clean, modern, extensive)
+
+**Design System**:
+```
+Dark Mode (default):
+- Background: #0f0f23 (deep blue-black)
+- Surface: #1a1a3e (cards, panels)
+- Text: #e5e7eb (soft white)
+- Accent: #60a5fa (vibrant blue)
+- Success: #34d399 (emerald green)
+- Error: #f87171 (coral red)
+- Warning: #fbbf24 (amber)
+
+Typography:
+- Display/Body: Inter (400, 500, 600, 700)
+- Monospace: JetBrains Mono (timestamps, IDs, code)
+
+Animation Timing:
+- Fast: 150ms (micro-interactions)
+- Normal: 250ms (state changes)
+- Slow: 350ms (page transitions)
+- Easing: Spring physics via Framer Motion
+```
+
+**Key Features to Implement**:
+1. **Pulse effects** - Active runs glow subtly
+2. **Smooth transitions** - Status changes morph colors
+3. **Animated charts** - Data points update with motion
+4. **Breathing cards** - Subtle scale animation on activity
+5. **Skeleton screens** - Better loading experience
+6. **Hover effects** - Scale to 102%, smooth and responsive
+7. **Entrance animations** - New items slide in gracefully
+
+---
+
+#### Phase 2.5.1: Foundation Setup (4 hours)
+
+**Goal**: Install and configure the modern tech stack
+
+**Tasks**:
+- [ ] Install Tailwind CSS via npm
+  - `npm install -D tailwindcss postcss autoprefixer`
+  - `npx tailwindcss init -p`
+- [ ] Install DaisyUI plugin
+  - `npm install -D daisyui@latest`
+  - Configure in `tailwind.config.js`
+- [ ] Install Framer Motion
+  - `npm install framer-motion`
+- [ ] Install ApexCharts
+  - `npm install apexcharts`
+- [ ] Install Lucide Icons
+  - `npm install lucide-react` or use CDN
+- [ ] Configure Tailwind design tokens
+  - Set custom colors in config
+  - Set typography scale
+  - Set spacing scale
+- [ ] Create base CSS file with Tailwind directives
+  - `@tailwind base; @tailwind components; @tailwind utilities;`
+- [ ] Test build process works
+  - Verify Tailwind classes compile
+  - Check for conflicts with existing CSS
+
+**Success Criteria**:
+- All packages installed
+- Tailwind compiles successfully
+- No build errors
+- Can use basic Tailwind classes
+
+---
+
+#### Phase 2.5.2: Component Rebuild (8 hours)
+
+**Goal**: Rebuild core UI components with new design system
+
+**Tasks**:
+- [ ] **Stats Tiles** (1.5 hours)
+  - Replace existing tiles with DaisyUI stat components
+  - Add Framer Motion for number counting animation
+  - Add pulse effect for changing values
+  - Gradient backgrounds for visual interest
+  
+- [ ] **Active Runs Table** (2 hours)
+  - Rebuild table with Tailwind utilities
+  - Add row hover effects (scale, background)
+  - Status badges with appropriate colors
+  - Smooth entrance animation for new rows
+  - Exit animation for removed rows
+  
+- [ ] **Provider Cards** (1.5 hours)
+  - Card component with soft shadows
+  - Health indicator with pulse when active
+  - Hover effect with lift animation
+  - Status colors that transition smoothly
+  
+- [ ] **Activity Feed** (1.5 hours)
+  - Rebuild with stacked timeline design
+  - Slide-in animation for new entries
+  - Icon system using Lucide
+  - Timestamp formatting
+  - Auto-scroll behavior
+  
+- [ ] **Charts** (1.5 hours)
+  - Replace Chart.js with ApexCharts
+  - Configure real-time update animations
+  - Dark mode colors
+  - Smooth data transitions
+  - Responsive sizing
+
+**Success Criteria**:
+- All components render correctly
+- Animations smooth at 60fps
+- Dark mode looks professional
+- Responsive on desktop sizes
+
+---
+
+#### Phase 2.5.3: Real-Time Feel (6 hours)
+
+**Goal**: Add animations that emphasize the live, real-time nature
+
+**Tasks**:
+- [ ] **Pulse Effects** (1.5 hours)
+  - Active run rows pulse subtly
+  - Provider health indicators breathe
+  - New data indicators flash briefly
+  - Implement with CSS animations + Framer Motion
+  
+- [ ] **State Transitions** (2 hours)
+  - Run status changes morph colors smoothly
+  - Success/failure animations
+  - Queue → Running → Complete transitions
+  - Use Framer Motion's AnimatePresence
+  
+- [ ] **Data Updates** (1.5 hours)
+  - Numbers count up/down with animation
+  - Chart data points animate in
+  - Table rows reorder smoothly
+  - WebSocket message arrival feedback
+  
+- [ ] **Loading States** (1 hour)
+  - Skeleton screens for initial load
+  - Shimmer effect on loading
+  - Smooth content replacement
+  - No layout shifts
+
+**Success Criteria**:
+- Feels alive and responsive
+- Clear feedback for all state changes
+- No jarring transitions
+- Performance stays at 60fps
+
+---
+
+#### Phase 2.5.4: Polish & Performance (4 hours)
+
+**Goal**: Micro-interactions and optimization
+
+**Tasks**:
+- [ ] **Micro-interactions** (1.5 hours)
+  - Button hover/press states
+  - Ripple effect on clicks
+  - Tooltip animations
+  - Focus states for accessibility
+  - Copy feedback (success toast)
+  
+- [ ] **Performance Optimization** (1.5 hours)
+  - Enable GPU acceleration (transform3d, will-change)
+  - Optimize re-renders (React.memo where needed)
+  - Debounce WebSocket updates
+  - Lazy load off-screen content
+  - Reduce bundle size (tree shaking)
+  
+- [ ] **Accessibility** (0.5 hour)
+  - Keyboard navigation works
+  - Screen reader labels
+  - Focus indicators visible
+  - Color contrast meets WCAG AA
+  
+- [ ] **Responsive Check** (0.5 hour)
+  - Test on 1280px, 1440px, 1920px widths
+  - Mobile view (hide/adapt as needed)
+  - No horizontal scroll
+  - Touch targets adequate size
+
+**Success Criteria**:
+- Time to First Paint < 1s
+- 60fps maintained during animations
+- Accessible to keyboard users
+- Zero layout shifts
+- Feels polished and professional
+
+---
+
+**Overall Success Metrics**:
+- ✅ Modern, professional appearance
+- ✅ Feels alive and real-time
+- ✅ Smooth 60fps animations
+- ✅ No performance degradation
+- ✅ Maintainable with popular libraries
+- ✅ Sets foundation for future features
+
+**Inspiration Examples**:
+- Vercel Dashboard (https://vercel.com/dashboard)
+- Linear (https://linear.app)
+- Railway (https://railway.app)
+- Stripe Dashboard (https://dashboard.stripe.com)
+
+**Reference Documents**:
+- Full proposals: `tmp/ui-modernization-proposals.md`
+- Executive summary: `tmp/ui-modernization-summary.md`
+
+---
+
 ### Phase 3: UI Simplification (2 hours) - **PRIORITY 2**
 
 **Goal**: Simplify UI based on user feedback
@@ -614,8 +838,10 @@ All 5 phases complete:
 | Phase | Priority | Hours | Status |
 |-------|----------|-------|--------|
 | 1. Remove TUI | P1 🔥 | 2h | ✅ Done |
-| 2. Fix Critical Bugs | P1 🔥 | 1h | ⏳ Ready |
-| 3. UI Simplification | P2 | 2h | ⏳ Blocked by P1 |
+| 1.5. Remove "Web UI" Term | P1 🔥 | 0.25h | ✅ Done |
+| 2. Fix Critical Bugs | P1 🔥 | 1h | 🚧 In Progress |
+| 2.5. UI Modernization | P1.5 🔥 | 22h | ⏳ Ready |
+| 3. UI Simplification | P2 | 2h | ⏳ Blocked |
 | 4. Activity Feed | P2 | 3h | ⏳ Blocked by P2 |
 | 5. Provider Cards | P3 | 4h | ⏳ Blocked by P2 |
 | 6. Webhook Visual | P3 | 2h | ⏳ Blocked by P2 |
@@ -623,138 +849,17 @@ All 5 phases complete:
 | 8. Webhook Integration | P1 🔥 | 2h | ⏳ Ready |
 | 9. E2E Tests | P4 | 3h | ⏳ Blocked by all |
 | 10. Documentation | P4 | 1h | ⏳ Blocked by all |
-| **11. UI Modernization** | **P2** | **22h** | **⏳ Ready** |
 | **Total** | | **46h** | |
 
 **Next Steps**:
 1. ✅ Phase 1 (Remove TUI) - DONE
-2. ✅ Phase 1.5 (Remove "Web UI" terminology) - DONE
+2. ✅ Phase 1.5 (Remove "Web UI" terminology) - DONE  
 3. 🚧 Phase 2 (Fix Bugs) - IN PROGRESS (1/4 tasks done)
-4. Phase 11 (UI Modernization) - READY TO START
-5. Build momentum with quick wins!
+4. ⏳ Phase 2.5 (UI Modernization) - **NEXT UP** after Phase 2
+5. Continue building momentum!
 
 ---
 
-### Phase 11: UI Modernization (22 hours) - **PRIORITY 2**
-
-**Goal**: Transform the dashboard with modern design, smooth animations, and a real-time feel
-
-Based on research of 2024-2025 best practices, we have three proposals plus a consolidated recommendation.
-
-**Full Research Document**: `tmp/ui-modernization-proposals.md`
-
-#### Three Design Proposals
-
-**1. "Command Center" - Stark & Minimal** (8-12 hours)
-- Military/mission control aesthetic
-- Pure black background, monochrome + status colors
-- ASCII-art borders, terminal typography
-- Minimal animations (blink, slide)
-- Tech: Tailwind + GSAP + Chart.js
-- Best for: Information density, no-nonsense monitoring
-
-**2. "Neon Dreams" - Over-the-Top & Fun** (24-32 hours)
-- Cyberpunk/arcade aesthetic
-- Neon glows, animated gradients, particles
-- Glass morphism, 3D effects, confetti
-- Playful micro-interactions everywhere
-- Tech: Tailwind + DaisyUI + Framer Motion + Anime.js + Three.js + ApexCharts + MagicUI
-- Best for: Making CI/CD monitoring *fun* and memorable
-
-**3. "Nordic Minimalism" - Stark but Different** (16-20 hours)
-- Scandinavian/Apple aesthetic
-- Generous whitespace, soft shadows
-- Muted sophisticated palette
-- Gentle, purposeful animations
-- Tech: Tailwind + Chakra UI + Framer Motion + Chart.js
-- Best for: Elegance, professionalism, easy on the eyes
-
-#### Recommended: Consolidated Hybrid Approach (22 hours)
-
-**Philosophy**: Nordic base + Command Center clarity + Neon Dreams delight (dialed back)
-
-**Tech Stack**:
-```
-- CSS: Tailwind CSS 3.x
-- Components: DaisyUI + MagicUI
-- Animation: Framer Motion (primary) + GSAP (complex)
-- Charts: ApexCharts (real-time) with Chart.js fallback
-- Icons: Lucide Icons
-```
-
-**Design System**:
-```
-Dark Mode (default):
-- Background: #0f0f23 (deep blue-black)
-- Surface: #1a1a3e
-- Text: #e5e7eb
-- Accent: #60a5fa (vibrant blue)
-- Success: #34d399 | Error: #f87171 | Warning: #fbbf24
-
-Typography:
-- Display/Body: Inter (400, 500, 600, 700)
-- Mono: JetBrains Mono (timestamps, IDs)
-
-Animations:
-- Fast: 150ms | Normal: 250ms | Slow: 350ms
-- Spring physics via Framer Motion
-- Only animate meaningful state changes
-```
-
-**Key Features**:
-1. Real-time pulse effects on active runs
-2. Smooth state transitions for runs
-3. Animated data updates in charts
-4. Micro-interactions (scale 102% on hover)
-5. Skeleton loading states
-6. Subtle background breathing animation
-
-**Implementation Phases**:
-
-**Phase 11.1: Foundation** (4 hours)
-- [ ] Install Tailwind CSS + DaisyUI
-- [ ] Configure design tokens (colors, spacing, typography)
-- [ ] Set up Framer Motion
-- [ ] Create base layout with new styling
-
-**Phase 11.2: Components** (8 hours)
-- [ ] Build animated card components
-- [ ] Status indicator system with pulse effects
-- [ ] Chart components with ApexCharts
-- [ ] Activity feed with entrance animations
-- [ ] Rebuild stats tiles with smooth updates
-
-**Phase 11.3: Real-time Feel** (6 hours)
-- [ ] Pulse effects for active items
-- [ ] Smooth state transitions (run status changes)
-- [ ] Entrance/exit animations for new runs
-- [ ] Loading skeletons for better perceived performance
-- [ ] Animated counters for stats
-
-**Phase 11.4: Polish** (4 hours)
-- [ ] Micro-interactions (hover, press, ripple)
-- [ ] Performance optimization (GPU acceleration)
-- [ ] Accessibility testing
-- [ ] Dark/light mode refinement
-- [ ] Mobile responsiveness check
-
-**Success Metrics**:
-- Time to First Paint < 1s
-- 60fps animations
-- Zero layout shifts
-- Feels alive even when idle
-- Modern, professional appearance
-
-**Inspiration References**:
-- Vercel Dashboard (clean, modern)
-- Linear (animations)
-- Railway (dark mode excellence)
-- Stripe Dashboard (data density)
-- Grafana (monitoring UX)
-
----
-
-## Optional Future Work
 
 ### Advanced Testing (Not needed yet)
 - Load testing
