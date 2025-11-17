@@ -180,7 +180,7 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 - [ ] Works for completed runs (shows total duration)
 - [ ] Format is human-readable
 
-#### 10. Enhanced Debug Panel - Unified Log Stream (HIGH 🟡) - ✅ **COMPLETE** (Commit: 4395dce) - 3 hours
+#### 10. Enhanced Debug Panel - Unified Log Stream (HIGH 🟡) - ✅ **COMPLETED** (Commit: 2b21a48) - 3-4 hours
 **Problem**: No way to see backend logs in UI, have to switch between terminal and browser
 
 **Vision**: One place to see EVERYTHING happening in the system
