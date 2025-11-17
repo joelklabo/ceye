@@ -1,7 +1,7 @@
 # ceye Development Plan
 
-**Last Updated**: 2025-11-17 17:45 UTC  
-**Status**: Phase 0.7 Critical Issues - 🟢 **5 of 13 COMPLETE**
+**Last Updated**: 2025-11-17 17:55 UTC  
+**Status**: Phase 0.7 Critical Issues - 🟢 **6 of 13 COMPLETE**
 
 ## Current Status
 
@@ -18,8 +18,6 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 - 27 Playwright integration tests passing
 
 **🚨 REMAINING ISSUES**:
-- 🔴 **ngrok must auto-start** - Currently manual prerequisite
-- 🔴 **Webhook setup undocumented** - gh CLI commands not documented
 - 🟡 Provider Health UI needs full-width redesign + webhook indicators
 - 🟡 Can't view webhook payloads in UI
 - 🟡 Activity Feed needs enhanced message details
@@ -423,7 +421,7 @@ echo "✅ Test complete"
 
 ---
 
-#### 0.6. Automatic ngrok Setup & Webhook Documentation (HIGH 🟡) - 🔄 **IN PROGRESS** - 2-3 hours
+#### 0.6. Automatic ngrok Setup & Webhook Documentation (HIGH 🟡) - ✅ **COMPLETE** (Commit: aa98180) - 30 minutes
 
 **Problem**: Manual ngrok setup is error-prone and undocumented
 - User must manually start ngrok every time
@@ -1128,8 +1126,8 @@ type WebhookEvent struct {
 **Priority Order**: 
 0. ✅ **Webhook vs Polling Validation (CRITICAL)** - **COMPLETE** (edfc9fb)
 0.5. ✅ **Webhook Integration Testing (CRITICAL)** - **COMPLETE** (940a953) 🎉
-0.6. 🔴 **Automatic ngrok Setup & Documentation (HIGH)** - **NEXT**
-0.7. 🔴 **Provider Health UI Redesign (HIGH)**
+0.6. ✅ **Automatic ngrok Setup & Documentation (HIGH)** - **COMPLETE** (aa98180)
+0.7. 🔴 **Provider Health UI Redesign (HIGH)** - **NEXT**
 1. ✅ WebSocket Connection Fix (CRITICAL) - **COMPLETE** (2bde007)
 2. ✅ Remove Orphaned Code - **COMPLETE** (9ad241b)
 3. ✅ Startup Performance Metrics (HIGH) - **COMPLETE** (ab83713)
