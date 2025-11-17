@@ -150,11 +150,20 @@ return
 log.Printf("✅ Parsed GitHub webhook: %s/%s (status: %s, conclusion: %s)",
 run.Repo, run.WorkflowName, run.Status, run.Conclusion)
 
-// Emit RunEvent
+// Create webhook metadata
+webhookMeta := &core.WebhookMetadata{
+EventType:  eventType,
+DeliveryID: deliveryID,
+Payload:    string(buf),
+ReceivedAt: time.Now(),
+}
+
+// Emit RunEvent with webhook metadata
 event := core.RunEvent{
-Provider:  "github", // Use same provider name as GitHub provider
-Runs:      []core.Run{run},
-Timestamp: time.Now(),
+Provider:    "github", // Use same provider name as GitHub provider
+Runs:        []core.Run{run},
+Timestamp:   time.Now(),
+WebhookMeta: webhookMeta,
 }
 
 select {

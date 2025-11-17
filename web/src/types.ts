@@ -23,10 +23,19 @@ export type RunStatus =
   | "failed"
   | "cancelled"
 
+export interface WebhookMetadata {
+  event_type: string
+  delivery_id: string
+  payload: string
+  received_at: string
+}
+
 export interface ProviderHealth {
   LastError: string
   ErrorCount: number
   LastSuccess: string
+  MessageCount?: number
+  LastWebhook?: WebhookMetadata | null
 }
 
 export interface ProviderMeta {

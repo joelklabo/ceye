@@ -33,14 +33,23 @@ type Run struct {
 	URL          string
 }
 
+// WebhookMetadata contains information about a received webhook
+type WebhookMetadata struct {
+	EventType  string `json:"event_type"`  // "workflow_run", "ping", etc
+	DeliveryID string `json:"delivery_id"` // GitHub delivery ID
+	Payload    string `json:"payload"`     // Full webhook payload as JSON string
+	ReceivedAt time.Time `json:"received_at"`
+}
+
 // RunEvent batches run updates emitted by providers.
 type RunEvent struct {
-	Provider  string
-	Runs      []Run
-	Timestamp time.Time
-	Err       error
-	Message   string
-	Health    map[string]ProviderHealth
+	Provider     string
+	Runs         []Run
+	Timestamp    time.Time
+	Err          error
+	Message      string
+	Health       map[string]ProviderHealth
+	WebhookMeta  *WebhookMetadata // Optional: populated for webhook-triggered events
 }
 
 // Provider is implemented by CI backends (GitHub, Azure, etc.).
@@ -51,9 +60,11 @@ type Provider interface {
 
 // ProviderHealth tracks recent health details for a provider.
 type ProviderHealth struct {
-	LastError   time.Time
-	ErrorCount  int
-	LastSuccess time.Time
+	LastError        time.Time
+	ErrorCount       int
+	LastSuccess      time.Time
+	MessageCount     int              // Total messages received
+	LastWebhook      *WebhookMetadata // Last webhook received (if any)
 }
 
 // AlertRecord represents a fired alert for display/history

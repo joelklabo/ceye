@@ -66,4 +66,17 @@ test.describe('Dashboard - React App', () => {
     // Should have at least one interactive button
     expect(buttonCount).toBeGreaterThan(0)
   })
+
+  test('displays provider health card with refresh button', async ({ page }) => {
+    await page.goto('http://localhost:8080')
+    await page.waitForTimeout(3000) // Give time for React and data to render
+
+    // Find the Provider Health title
+    const providerHealthTitle = page.locator('h2:has-text("Provider Health")').first();
+    await expect(providerHealthTitle).toBeVisible();
+
+    // Find the refresh button which is next to the title inside the CardHeader.
+    const refreshButton = page.locator('button:has(svg[data-lucide="refresh-cw"])').first();
+    await expect(refreshButton).toBeVisible();
+  })
 })

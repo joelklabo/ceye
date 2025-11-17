@@ -18,27 +18,36 @@ type StorageBackend interface {
 
 // Store aggregates Run updates from providers in a thread-safe map.
 type Store struct {
-	mu      sync.RWMutex
-	runs    map[string]Run
-	alerts  []AlertRecord // Recent alerts (last 100)
-	storage StorageBackend // Optional persistent storage
+	mu              sync.RWMutex
+	runs            map[string]Run
+	alerts          []AlertRecord                  // Recent alerts (last 100)
+	storage         StorageBackend                 // Optional persistent storage
+	providerHealth  map[string]ProviderHealth      // Provider health tracking
+	webhookHistory  map[string][]WebhookMetadata   // Recent webhooks per provider (last 100)
+	messageCount    map[string]int                 // Total messages per provider
 }
 
 // NewStore constructs an empty Store.
 func NewStore() *Store {
 	return &Store{
-		runs:    make(map[string]Run),
-		alerts:  make([]AlertRecord, 0, 100),
-		storage: nil,
+		runs:           make(map[string]Run),
+		alerts:         make([]AlertRecord, 0, 100),
+		storage:        nil,
+		providerHealth: make(map[string]ProviderHealth),
+		webhookHistory: make(map[string][]WebhookMetadata),
+		messageCount:   make(map[string]int),
 	}
 }
 
 // NewStoreWithStorage creates a store with persistent storage backend
 func NewStoreWithStorage(storage StorageBackend) *Store {
 	return &Store{
-		runs:    make(map[string]Run),
-		alerts:  make([]AlertRecord, 0, 100),
-		storage: storage,
+		runs:           make(map[string]Run),
+		alerts:         make([]AlertRecord, 0, 100),
+		storage:        storage,
+		providerHealth: make(map[string]ProviderHealth),
+		webhookHistory: make(map[string][]WebhookMetadata),
+		messageCount:   make(map[string]int),
 	}
 }
 
@@ -52,6 +61,29 @@ func (s *Store) Merge(event RunEvent) {
 	}
 
 	log.Printf("STORE: merge called - %d runs from provider '%s'", len(event.Runs), event.Provider)
+
+	// Track message count
+	s.messageCount[event.Provider]++
+
+	// Track webhook metadata if present
+	if event.WebhookMeta != nil {
+		// Add to webhook history (keep last 100)
+		history := s.webhookHistory[event.Provider]
+		history = append(history, *event.WebhookMeta)
+		if len(history) > 100 {
+			history = history[len(history)-100:]
+		}
+		s.webhookHistory[event.Provider] = history
+
+		// Update provider health with last webhook
+		health := s.providerHealth[event.Provider]
+		health.LastWebhook = event.WebhookMeta
+		health.MessageCount = s.messageCount[event.Provider]
+		s.providerHealth[event.Provider] = health
+		
+		log.Printf("STORE: webhook received - type=%s, delivery=%s", 
+			event.WebhookMeta.EventType, event.WebhookMeta.DeliveryID)
+	}
 
 	var completedRuns []Run
 
@@ -187,4 +219,38 @@ func (s *Store) GetAlertCount() int {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return len(s.alerts)
+}
+
+// GetProviderHealth returns health information for all providers
+func (s *Store) GetProviderHealth() map[string]ProviderHealth {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	// Return a copy to avoid race conditions
+	result := make(map[string]ProviderHealth)
+	for k, v := range s.providerHealth {
+		result[k] = v
+	}
+	return result
+}
+
+// GetWebhookHistory returns recent webhooks for a provider
+func (s *Store) GetWebhookHistory(provider string, limit int) []WebhookMetadata {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	history := s.webhookHistory[provider]
+	if limit <= 0 || limit > len(history) {
+		limit = len(history)
+	}
+
+	// Return most recent webhooks
+	if len(history) == 0 {
+		return []WebhookMetadata{}
+	}
+
+	result := make([]WebhookMetadata, limit)
+	start := len(history) - limit
+	copy(result, history[start:])
+	return result
 }

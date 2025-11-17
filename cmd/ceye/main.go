@@ -1090,6 +1090,17 @@ func runWebServer(ctx context.Context, store *core.Store, storageBackend *storag
 					}
 				}
 				
+				// Merge Store health (which has webhook metadata) with local health
+				storeHealth := store.GetProviderHealth()
+				for provider, health := range storeHealth {
+					localHealth := providerHealth[provider]
+					// Preserve error tracking from local
+					// But add webhook data from store
+					localHealth.MessageCount = health.MessageCount
+					localHealth.LastWebhook = health.LastWebhook
+					providerHealth[provider] = localHealth
+				}
+				
 				srv.UpdateStatus(providerStatus, providerHealth)
 				srv.BroadcastUpdate()
 			}
