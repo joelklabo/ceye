@@ -100,7 +100,13 @@ func (s *Server) Start(ctx context.Context) error {
 	}()
 	
 	log.Printf("Web server starting on http://localhost:%d", s.port)
-	return server.ListenAndServe()
+	
+	// Start listening
+	err = server.ListenAndServe()
+	if err != nil && err != http.ErrServerClosed {
+		log.Printf("Web server error: %v", err)
+	}
+	return err
 }
 
 func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {

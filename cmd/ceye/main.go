@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -1203,8 +1204,12 @@ func runWebServer(ctx context.Context, store *core.Store, storageBackend *storag
 		serverErr <- srv.Start(ctx)
 	}()
 	
+	// Wait a moment for server to start
+	time.Sleep(100 * time.Millisecond)
+	log.Printf("✓ Web server ready at http://localhost:%d", port)
+	
 	// Open browser
-	time.Sleep(500 * time.Millisecond)
+	time.Sleep(400 * time.Millisecond)
 	openURL(fmt.Sprintf("http://localhost:%d", port))
 	
 	// Process events and broadcast to connected clients
