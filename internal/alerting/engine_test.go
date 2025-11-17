@@ -46,11 +46,13 @@ func TestEngineCooldown(t *testing.T) {
 
 	engine := NewEngine(store)
 
-	// Track alerts fired
+	// Track alerts fired with synchronization
 	alertCount := 0
+	alertSent := make(chan struct{}, 10)
 	testChannel := &testChannel{
 		onSend: func(alert Alert) error {
 			alertCount++
+			alertSent <- struct{}{}
 			return nil
 		},
 	}
@@ -78,21 +80,29 @@ func TestEngineCooldown(t *testing.T) {
 
 	// Fire first alert
 	engine.evaluateRun(failedRun)
+	<-alertSent // Wait for alert to be sent
 	if alertCount != 1 {
 		t.Errorf("expected 1 alert, got %d", alertCount)
 	}
 
 	// Try to fire immediately (should be blocked by cooldown)
 	engine.evaluateRun(failedRun)
+	select {
+	case <-alertSent:
+		t.Error("should not have sent alert during cooldown")
+	case <-time.After(50 * time.Millisecond):
+		// Expected - no alert sent
+	}
 	if alertCount != 1 {
 		t.Errorf("expected still 1 alert due to cooldown, got %d", alertCount)
 	}
 
 	// Wait for cooldown to expire
-	time.Sleep(150 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 
 	// Fire again (should work now)
 	engine.evaluateRun(failedRun)
+	<-alertSent // Wait for second alert
 	if alertCount != 2 {
 		t.Errorf("expected 2 alerts after cooldown, got %d", alertCount)
 	}
@@ -105,9 +115,11 @@ func TestEngineProviderFiltering(t *testing.T) {
 	engine := NewEngine(store)
 
 	alertCount := 0
+	alertSent := make(chan struct{}, 10)
 	testChannel := &testChannel{
 		onSend: func(alert Alert) error {
 			alertCount++
+			alertSent <- struct{}{}
 			return nil
 		},
 	}
@@ -131,6 +143,7 @@ func TestEngineProviderFiltering(t *testing.T) {
 		Conclusion: "failure",
 	}
 	engine.evaluateRun(githubRun)
+	<-alertSent // Wait for alert
 	if alertCount != 1 {
 		t.Errorf("expected 1 alert for github run, got %d", alertCount)
 	}
@@ -142,6 +155,12 @@ func TestEngineProviderFiltering(t *testing.T) {
 		Conclusion: "failure",
 	}
 	engine.evaluateRun(azureRun)
+	select {
+	case <-alertSent:
+		t.Error("should not have sent alert for filtered provider")
+	case <-time.After(50 * time.Millisecond):
+		// Expected - no alert sent
+	}
 	if alertCount != 1 {
 		t.Errorf("expected still 1 alert (azure filtered), got %d", alertCount)
 	}
