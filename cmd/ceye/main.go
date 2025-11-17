@@ -110,6 +110,7 @@ func main() {
 
 	rootCmd.AddCommand(providerCmd())
 	rootCmd.AddCommand(versionCmd())
+	rootCmd.AddCommand(validateCmd())
 
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
 		os.Exit(1)
