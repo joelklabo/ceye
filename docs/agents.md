@@ -254,9 +254,9 @@ http://localhost:8080
 - Search works
 - Responsive layout
 
-## Configuration
+<h2>Configuration</h2>
 
-### Config File Format (ceye.yaml)
+<h3>Config File Format (ceye.yaml)</h3>
 
 ```yaml
 providers:
@@ -289,7 +289,7 @@ server:
   host: "0.0.0.0"
 ```
 
-### Provider Logos
+<h3>Provider Logos</h3>
 
 **Built-in Logos**: GitHub, Azure DevOps, GitLab (automatically used based on provider type)
 
@@ -314,18 +314,18 @@ If no logo is specified or file is missing, the UI falls back to:
 1. Built-in logo (if provider type matches: github, azure, gitlab)
 2. Generic provider icon (colorful gradient circle with first letter)
 
-### Environment Variables
+<h3>Environment Variables</h3>
 
 - `GITHUB_TOKEN` - GitHub personal access token
 - `AZURE_PAT` - Azure DevOps personal access token
 - `GITLAB_TOKEN` - GitLab personal access token
 - `CEYE_CONFIG_ROOT` - Config directory override
 
-## Development Plan
+<h2>Development Plan</h2>
 
 See [docs/plan.md](docs/plan.md) for the comprehensive master plan.
 
-### Current Sprint (Options 2-5)
+<h3>Current Sprint (Options 2-5)</h3>
 
 **Option 2: Enhanced Monitoring** (4 weeks)
 - Historical data storage (SQLite)
@@ -350,23 +350,23 @@ See [docs/plan.md](docs/plan.md) for the comprehensive master plan.
 - E2E tests (Playwright)
 - Performance benchmarks
 
-### Future Roadmap
+<h3>Future Roadmap</h3>
 
 - Enterprise features (auth, RBAC, audit logs)
 - Additional providers (Jenkins, CircleCI, Buildkite)
 - Mobile app (React Native)
 - AI/ML features (failure prediction, anomaly detection)
 
-## Testing Standards
+<h2>Testing Standards</h2>
 
-### Required for All Code
+<h3>Required for All Code</h3>
 
 - **Unit tests** for all new code
 - **Integration tests** for cross-component features
 - **Contract tests** for provider implementations
 - **E2E tests** for user-facing features
 
-### Test Coverage Goals
+<h3>Test Coverage Goals</h3>
 
 - Overall coverage: > 80%
 - All critical paths tested
@@ -374,7 +374,7 @@ See [docs/plan.md](docs/plan.md) for the comprehensive master plan.
 - Zero known security issues
 - All linters passing
 
-### TDD Workflow
+<h3>TDD Workflow</h3>
 
 1. Write failing test
 2. Implement minimal code to pass
@@ -382,9 +382,9 @@ See [docs/plan.md](docs/plan.md) for the comprehensive master plan.
 4. Commit with tests
 5. Run full test suite before push
 
-## Success Metrics
+<h2>Success Metrics</h2>
 
-### Performance Targets
+<h3>Performance Targets</h3>
 
 - Event processing: < 10ms p99
 - Store query: < 5ms p99
@@ -392,14 +392,14 @@ See [docs/plan.md](docs/plan.md) for the comprehensive master plan.
 - Memory usage: < 100MB at 1000 runs
 - CPU usage: < 5% idle, < 20% under load
 
-### Reliability Targets
+<h3>Reliability Targets</h3>
 
 - Uptime: 99.9%
 - Provider crash recovery: < 5s
 - Zero data loss
 - Zero UI freezes
 
-### Quality Targets
+<h3>Quality Targets</h3>
 
 - Test coverage: > 80%
 - All critical paths tested
@@ -407,9 +407,9 @@ See [docs/plan.md](docs/plan.md) for the comprehensive master plan.
 - Zero memory leaks
 - All linters passing
 
-## React Development
+<h2>React Development</h2>
 
-### Component Performance
+<h3>Component Performance</h3>
 
 **Use React.memo for expensive components**:
 ```tsx
@@ -426,7 +426,7 @@ const activityItems = useMemo(() =>
 )
 ```
 
-### Theme Support
+<h3>Theme Support</h3>
 
 **All components support light/dark modes via CSS variables**:
 - Use Tailwind classes: `bg-background`, `text-foreground`
@@ -439,7 +439,7 @@ const activityItems = useMemo(() =>
 3. Respects system preference on first load
 4. Apply `dark` class to `<html>` element
 
-### Provider Icons
+<h3>Provider Icons</h3>
 
 **Adding built-in provider logos**:
 1. Create SVG component in `web/src/components/icons/logos/`
@@ -454,9 +454,9 @@ const activityItems = useMemo(() =>
 <ProviderIcon provider="unknown" fallback="monogram" />
 ```
 
-## Common Tasks
+<h2>Common Tasks</h2>
 
-### Adding a New Provider
+<h3>Adding a New Provider</h3>
 
 1. Create provider package in `internal/providers/yourprovider/`
 2. Implement `Provider` interface
@@ -466,7 +466,7 @@ const activityItems = useMemo(() =>
 6. Document setup and configuration
 7. Update README
 
-### Adding a New Feature
+<h3>Adding a New Feature</h3>
 
 1. Check if it's in [docs/plan.md](docs/plan.md)
 2. Create feature branch
@@ -477,7 +477,7 @@ const activityItems = useMemo(() =>
 7. Update plan.md with progress
 8. Submit PR
 
-### Fixing a Bug
+<h3>Fixing a Bug</h3>
 
 1. Write test that reproduces bug
 2. Fix bug
@@ -486,25 +486,25 @@ const activityItems = useMemo(() =>
 5. Commit with test
 6. No changes to plan.md needed for bugs
 
-## Troubleshooting Bash Sessions
+<h2>Troubleshooting Bash Sessions</h2>
 
 When AI agents have issues with bash sessions (timeouts, hangs, unresponsive), use these steps:
 
-### Diagnosing Issues
+<h3>Diagnosing Issues</h3>
 
 1. **List active bash sessions**: Check what's running
 2. **Check for hung processes**: `ps aux | grep -E "(playwright|node|ceye)"`
 3. **Check port conflicts**: `lsof -i :8080` to see if port is already in use
 4. **Check process tree**: See if background processes are blocking
 
-### Resolving Issues
+<h3>Resolving Issues</h3>
 
 1. **Kill specific processes**: `pkill -f "process-name"` (e.g., `pkill -f "ceye"`)
 2. **Kill port users**: `kill -9 <PID>` for processes blocking ports
 3. **Use new session IDs**: Don't reuse a problematic sessionId
 4. **Stop bash sessions**: Use `stop_bash` tool with the sessionId (kills the whole session)
 
-### Prevention
+<h3>Prevention</h3>
 
 - **Unique sessionIds**: Always use unique sessionIds for different operations
 - **Appropriate timeouts**: Set `initial_wait` to 60-120s for builds/tests
@@ -512,7 +512,7 @@ When AI agents have issues with bash sessions (timeouts, hangs, unresponsive), u
 - **Clean up after**: Always `pkill -f "process-name"` after testing
 - **Check before starting**: Verify port is free before starting server
 
-### Example Cleanup Sequence
+<h3>Example Cleanup Sequence</h3>
 
 ```bash
 # Stop any running ceye instances
@@ -525,38 +525,38 @@ lsof -i :8080
 kill -9 <PID>
 
 # Now start fresh
-go build -o bin/ci-dash ./cmd/ci-dash
-./bin/ci-dash --demo --port 8080
+go build -o bin/ceye ./cmd/ceye
+./bin/ceye --demo --port 8080
 ```
 
-## Key Files and Locations
+<h2>Key Files and Locations</h2>
 
-### Code
+<h3>Code</h3>
 - `cmd/ceye/main.go` - Entry point
 - `internal/core/types.go` - Core types
 - `internal/core/store.go` - Run store
 - `internal/providers/safe.go` - SafeProvider wrapper
 - `internal/server/server.go` - Web server
 
-### Configuration
+<h3>Configuration</h3>
 - `ceye.yaml` - Main config file
 - `config.example.yaml` - Example config
 
-### Documentation
+<h3>Documentation</h3>
 - `docs/plan.md` - Master development plan ⭐
 - `docs/README.md` - Documentation guide
 - `docs/references/testing-guide.md` - Testing strategy
 - `docs/references/agents.md` - UI testing guide
 - `AGENTS.md` - This file
 
-### Tests
+<h3>Tests</h3>
 - `internal/core/provider_contract_test.go` - Contract test suite
 - `cmd/ceye/integration_test.go` - Integration tests
 - `internal/providers/safe_test.go` - Safety tests
 
-## Provider Implementation Guide
+<h2>Provider Implementation Guide</h2>
 
-### Implementing the Provider Interface
+<h3>Implementing the Provider Interface</h3>
 
 ```go
 package myprovider
@@ -614,7 +614,7 @@ func (p *Provider) Start(ctx context.Context, out chan<- core.RunEvent) error {
 }
 ```
 
-### Provider Contract Requirements
+<h3>Provider Contract Requirements</h3>
 
 Every provider MUST:
 
@@ -639,9 +639,9 @@ func TestMyProviderContract(t *testing.T) {
 }
 ```
 
-## Communication Guidelines
+<h2>Communication Guidelines</h2>
 
-### What to Include in Responses
+<h3>What to Include in Responses</h3>
 
 - ✅ Concrete actions taken
 - ✅ Test results (pass/fail counts)
@@ -649,14 +649,14 @@ func TestMyProviderContract(t *testing.T) {
 - ✅ Commands to verify changes
 - ✅ Next steps or blockers
 
-### What to Avoid
+<h3>What to Avoid</h3>
 
 - ❌ Asking user to verify things you can check
 - ❌ Suggesting changes without making them
 - ❌ Incomplete implementations
 - ❌ Tests that don't actually test the feature
 
-### When Making Changes
+<h3>When Making Changes</h3>
 
 1. Make the change
 2. Write/update tests
@@ -664,13 +664,13 @@ func TestMyProviderContract(t *testing.T) {
 4. Verify tests pass
 5. Report results with proof
 
-## Important Context
+<h2>Important Context</h2>
 
-### Provider = Agent
+<h3>Provider = Agent</h3>
 
 In ceye, **providers are the "agents"**. They monitor CI systems and report status via the `Provider` interface.
 
-### SafeProvider Wrapper
+<h3>SafeProvider Wrapper</h3>
 
 All providers are wrapped in `SafeProvider` which:
 - Catches panics and converts to errors
@@ -678,11 +678,11 @@ All providers are wrapped in `SafeProvider` which:
 - Logs errors with stack traces
 - Ensures system stability
 
-### Adaptive Polling
+<h3>Adaptive Polling</h3>
 
 Providers poll frequently (10-15s) when runs are active and slow down (60-120s) when idle to reduce API load.
 
-### Event-Driven Architecture
+<h3>Event-Driven Architecture</h3>
 
 Everything flows through events:
 1. Provider fetches data from CI system
@@ -692,9 +692,9 @@ Everything flows through events:
 
 This decouples providers from UI and enables real-time updates.
 
-## Troubleshooting
+<h2>Troubleshooting</h2>
 
-### Tests Failing
+<h3>Tests Failing</h3>
 
 ```bash
 # Run specific test
@@ -707,7 +707,7 @@ go test -race ./...
 go test -v -count=1 ./...
 ```
 
-### Provider Not Fetching Data
+<h3>Provider Not Fetching Data</h3>
 
 - Check authentication (tokens set?)
 - Check network connectivity
@@ -715,7 +715,7 @@ go test -v -count=1 ./...
 - Look for error events in logs
 - Verify configuration is correct
 
-### WebSocket Not Connecting
+<h3>WebSocket Not Connecting</h3>
 
 **Common Error**: "WebSocket connection failed: Insufficient resources"
 
@@ -767,9 +767,9 @@ useEffect(() => {
 - Verify WebSocket endpoint exists
 - Check browser console for errors
 
-### JavaScript Errors in Browser
+<h3>JavaScript Errors in Browser</h3>
 
-#### DOM Manipulation Race Conditions
+<h4>DOM Manipulation Race Conditions</h4>
 
 Common error: `Cannot read properties of undefined (reading 'X')`
 
@@ -813,7 +813,7 @@ This is especially important for:
 - Operations that modify children array during iteration
 - Custom properties that may not always be present
 
-#### React Framer Motion Table Flicker
+<h4>React Framer Motion Table Flicker</h4>
 
 Common issue: **Table rows flicker/re-animate on every state update**
 
@@ -891,7 +891,7 @@ test('should not flicker on updates', async ({ page }) => {
 
 **Reference**: See `e2e/flicker-test.spec.ts` for complete test suite
 
-#### Playwright WebSocket Test Patterns
+<h4>Playwright WebSocket Test Patterns</h4>
 
 When testing WebSocket messages in Playwright:
 
@@ -913,7 +913,7 @@ await page.goto(URL);
 
 **Why**: WebSocket connections establish during page load. If you inject the interceptor after `goto()`, you miss the initial snapshot.
 
-#### Migrating Playwright Tests from Static HTML to React
+<h4>Migrating Playwright Tests from Static HTML to React</h4>
 
 **Problem**: After migrating from static HTML to a React SPA, 25/95 tests fail with "element not found" errors.
 
@@ -967,7 +967,7 @@ test('shows connection status', async ({ page }) => {
 
 **Result**: 20/22 tests passing (2 skipped for cross-browser screenshots)
 
-### React + Vite + Go Embedding
+<h3>React + Vite + Go Embedding</h3>
 
 **Problem**: Need to embed a React app built with Vite into a Go binary.
 
@@ -1020,16 +1020,16 @@ build: web-build
 - Shadcn/ui requires Tailwind v3
 - If you see v4 installed, downgrade: `npm install -D tailwindcss@^3`
 
-## Quick Reference
+<h2>Quick Reference</h2>
 
-### Most Important Files
+<h3>Most Important Files</h3>
 
 1. **docs/plan.md** - What to work on next
 2. **internal/core/types.go** - Core data structures
 3. **internal/providers/safe.go** - Provider safety wrapper
 4. **cmd/ceye/main.go** - Application entry point
 
-### Most Important Commands
+<h3>Most Important Commands</h3>
 
 ```bash
 # Build and test
@@ -1046,7 +1046,7 @@ go test ./...
 sudo cp bin/ceye /usr/local/bin/
 ```
 
-### Most Important Patterns
+<h3>Most Important Patterns</h3>
 
 - **TDD**: Write tests first
 - **Event-driven**: Communicate via channels
@@ -1054,14 +1054,14 @@ sudo cp bin/ceye /usr/local/bin/
 - **SafeProvider**: Wrap everything for safety
 - **Contract tests**: Validate implementations
 
-## Links
+<h2>Links</h2>
 
 - **Master Plan**: [plan.md](plan.md)
 - **Project README**: [readme.md](readme.md)
 - **Testing Guide**: [references/testing-guide.md](references/testing-guide.md)
 - **Webhook Guide**: [references/webhook-guide.md](references/webhook-guide.md)
 
-## Symlink Structure
+<h2>Symlink Structure</h2>
 
 **This file (`docs/agents.md`) is the SOURCE OF TRUTH for agent context.**
 
@@ -1080,7 +1080,7 @@ Similarly, the project README:
 
 **Never edit the symlinks directly - always edit `docs/agents.md` or `docs/readme.md`.**
 
-## Documentation Organization
+<h2>Documentation Organization</h2>
 
 All documentation lives in the `docs/` folder:
 
@@ -1104,7 +1104,7 @@ docs/
 - Only active/useful reference docs kept
 - Consolidate related docs (6 webhook docs → 1 guide)
 
-## Summary
+<h2>Summary</h2>
 
 ceye is a production-ready CI/CD monitoring dashboard with:
 - Real-time interface with WebSocket updates
@@ -1120,3 +1120,25 @@ ceye is a production-ready CI/CD monitoring dashboard with:
 ---
 
 **For AI Agents**: This file provides complete context about the ceye project. Read this first before working on tasks. Always check docs/plan.md for current priorities.
+## Learnings from Phase 0.6: Automatic ngrok Setup & Webhook Documentation
+
+### Debugging Go Build Errors: `undefined` for Standard Library Packages
+
+**Problem**: Encountered `undefined: strconv` error during `go test`.
+**Root Cause**: The `strconv` package was used in `manager_test.go` but was not explicitly imported in that file. While `manager.go` correctly imported it, the test file needed its own import.
+**Lesson**: Even if a package is imported in a related file, each Go file (`.go` or `_test.go`) must explicitly import all packages it uses. The Go compiler reports `undefined` for missing imports, which can be misleading if you expect a "missing import" error. Always double-check imports in the specific file reporting the error.
+
+### Testing External Processes in Go: Challenges and Best Practices
+
+**Problem**: Writing tests for `internal/ngrok/manager.go` which interacts with the external `ngrok` executable.
+**Challenges**:
+1.  **External Dependency**: `ngrok` must be installed and in the system's PATH for tests to run. Handled by `isNgrokInstalled()` and `t.Skip()`.
+2.  **Process Management**: Starting and stopping `ngrok` processes reliably. Used `exec.Command` and `cmd.Process.Kill()`.
+3.  **API Interaction**: Querying `ngrok`'s local API (`http://localhost:4040`) to get tunnel details.
+4.  **Simulating Failure Modes**: Difficult to simulate scenarios like "ngrok starts but fails to provide a tunnel URL" without complex mocking or environment manipulation.
+
+**Key Learnings**:
+-   **Clean State**: Always ensure a clean state before and after tests by killing any lingering external processes (e.g., `killNgrokProcesses()` using `pkill`).
+-   **Heuristic Delays**: `time.Sleep()` is often necessary when waiting for external processes to initialize, but it can introduce flakiness. More robust solutions involve polling the external process's API or output.
+-   **Test Premise Validation**: Critically evaluate the premise of your tests. `TestManager_Start_NgrokStartsButNoTunnel` was removed because it attempted to test a failure mode that the `Start` method (and its `getTunnelURL` helper) was not designed to detect directly, given `ngrok`'s normal operation. If `ngrok` successfully starts and exposes its local API, `getTunnelURL` will find a tunnel. Simulating a "no tunnel" scenario would require `ngrok` itself to misbehave in a specific way, which is beyond the scope of unit/integration testing for the `Manager`.
+-   **Process Verification**: Use `pgrep` or similar tools to verify that external processes are indeed running or stopped as expected.
