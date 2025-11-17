@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { StatsCards } from '@/components/dashboard/StatsCards'
 import { RunsTable } from '@/components/dashboard/RunsTable'
 import { ProviderCards } from '@/components/dashboard/ProviderCards'
@@ -12,7 +13,8 @@ function App() {
 
   // For activity feed, we'll generate from runs for now
   // In the future, this could be its own WebSocket stream
-  const activityItems = runs.slice(0, 10).map((run) => ({
+  // Memoized to avoid recalculating on every render
+  const activityItems = useMemo(() => runs.slice(0, 10).map((run) => ({
     id: run.ID,
     type: run.Status === 'completed' && run.Conclusion === 'success' 
       ? 'success' as const
@@ -23,7 +25,7 @@ function App() {
       : 'queued' as const,
     message: `${run.WorkflowName} • ${run.Repo}/${run.Branch}`,
     timestamp: new Date(run.UpdatedAt),
-  }))
+  })), [runs])
 
   return (
     <div className="min-h-screen bg-background text-foreground">

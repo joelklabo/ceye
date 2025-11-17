@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { memo } from 'react'
 import { Activity, Clock, CheckCircle2, XCircle } from 'lucide-react'
 import type { StatsData } from '@/types'
 
@@ -14,7 +15,7 @@ interface StatCardProps {
   delay: number
 }
 
-function StatCard({ title, value, icon, gradient, delay }: StatCardProps) {
+const StatCard = memo(function StatCard({ title, value, icon, gradient, delay }: StatCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -52,9 +53,9 @@ function StatCard({ title, value, icon, gradient, delay }: StatCardProps) {
       )}
     </motion.div>
   )
-}
+})
 
-export function StatsCards({ stats }: StatsCardsProps) {
+export const StatsCards = memo(function StatsCards({ stats }: StatsCardsProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <StatCard
@@ -87,4 +88,4 @@ export function StatsCards({ stats }: StatsCardsProps) {
       />
     </div>
   )
-}
+})

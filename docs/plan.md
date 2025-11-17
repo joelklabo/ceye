@@ -68,8 +68,8 @@ File: `e2e/screenshots/generate-marketing.spec.ts`
 **Tasks** (6 hours):
 - [✅] **Animations** (2h) - Loading states, micro-interactions, page transitions (Commit: 939f320)
 - [✅] **Responsive** (1h) - Mobile, tablet, desktop layouts (Commit: 9557169)
-- [🚧] **Accessibility** (1h) - Keyboard nav, ARIA labels, focus indicators
-- [ ] **Performance** (1h) - Code splitting, memoization, virtual scrolling
+- [✅] **Accessibility** (1h) - Keyboard nav, ARIA labels, focus indicators (Commit: 1fbb980)
+- [🚧] **Performance** (1h) - Code splitting, memoization, virtual scrolling
 - [ ] **Error Handling** (1h) - Error boundaries, fallback UI, retry logic
 - [ ] **Dark/Light Mode** (1h) - Theme toggle, system preference
 
