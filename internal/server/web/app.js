@@ -218,7 +218,7 @@ function addActivityItem(type, message, details) {
     }
     
     // Clear "waiting" message on first real item
-    if (log.children.length === 1 && log.firstChild.classList.contains('muted')) {
+    if (log.children.length === 1 && log.firstChild && log.firstChild.classList && log.firstChild.classList.contains('muted')) {
         log.innerHTML = '';
     }
     

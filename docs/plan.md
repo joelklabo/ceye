@@ -59,6 +59,8 @@ Based on user feedback, we're making significant changes:
 
 Since there's no longer a terminal UI, we shouldn't call it "Web UI" anymore. It's just the interface.
 
+**Commit**: f6b718c
+
 **Tasks**:
 - [✅] Update `docs/agents.md`: "Web UI" → "UI" or "dashboard"
 - [✅] Update `docs/readme.md`: "Web UI" → "dashboard" or remove qualifier
@@ -99,7 +101,7 @@ Since there's no longer a terminal UI, we shouldn't call it "Web UI" anymore. It
    - Fix: Verify HTML structure matches JavaScript expectations
 
 **Tasks**:
-- [ ] Fix activity log JavaScript error (add null checks)
+- [🚧] Fix activity log JavaScript error (add null checks)
 - [ ] Fix WebSocket initial broadcast (send snapshot on connect)
 - [ ] Fix timer update mechanism (call on every message)
 - [ ] Fix provider cards rendering (verify HTML/CSS/JS alignment)
