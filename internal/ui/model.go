@@ -565,6 +565,27 @@ func (m Model) renderHeader() string {
 		m.runTotals["failed"],
 		m.runTotals["success"],
 	)
+	
+	// Add alert indicator if alerts exist
+	alertCount := m.Store.GetAlertCount()
+	if alertCount > 0 {
+		// Check if any alerts in last 5 minutes
+		recentAlerts := m.Store.GetRecentAlerts(10)
+		hasRecent := false
+		for _, alert := range recentAlerts {
+			if time.Since(alert.TriggeredAt) < 5*time.Minute {
+				hasRecent = true
+				break
+			}
+		}
+		
+		alertIndicator := fmt.Sprintf("Alerts: %d", alertCount)
+		if hasRecent {
+			alertIndicator = fmt.Sprintf("🔴 Alerts: %d", alertCount)
+		}
+		totals = fmt.Sprintf("%s  •  %s", totals, alertIndicator)
+	}
+	
 	sortLabel := titleCase(m.sortModes[m.sortIndex])
 	filters := fmt.Sprintf("Provider: %s | Status: %s | Sort: %s | Search: %s",
 		titleCase(m.ActiveProvider),
