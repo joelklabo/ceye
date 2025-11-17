@@ -379,8 +379,8 @@ function updateProviderHealth(status, health) {
         const isHealthy = !error;
         
         return `
-            <div class="health-item ${isHealthy ? 'healthy' : 'error'}">
-                <div class="health-name">${escapeHtml(provider)}</div>
+            <div class="provider-card health-item ${isHealthy ? 'healthy' : 'error'}">
+                <div class="provider-name health-name">${escapeHtml(provider)}</div>
                 <div class="health-status">
                     ${error ? `❌ ${escapeHtml(error)}` : '✅ Healthy'}
                 </div>
