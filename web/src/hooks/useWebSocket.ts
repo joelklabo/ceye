@@ -116,7 +116,8 @@ export function useWebSocket({
         wsRef.current.close()
       }
     }
-  }, [connect])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Only run once on mount
 
   return {
     isConnected,
