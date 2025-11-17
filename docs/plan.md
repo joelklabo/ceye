@@ -32,7 +32,7 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 
 ## 🚧 Active Tasks
 
-### 🚨 CRITICAL BUILD FAILURE - TypeScript Build Broken (CRITICAL 🔴🔴🔴)
+### 🚨 CRITICAL BUILD FAILURE - Fix TypeScript Build (CRITICAL 🔴🔴🔴)
 
 **Discovered**: 2025-11-17 21:34 UTC by Nova  
 **Status**: 🔥 **BLOCKS ALL DEVELOPMENT** 🔥
@@ -44,20 +44,62 @@ Error: src/components/dashboard/ActivityFeed.tsx(152,1): error TS1005: ',' expec
 # ... 8 more similar errors lines 152-194
 ```
 
+**Root Cause Analysis**:
+- File syntax is correct (visual inspection + `tsc --noEmit` passes)
+- `tsc -b` (project build mode) fails consistently
+- Affects multiple commits (9205aa8 through HEAD)
+- Clean builds don't help
+- **Most likely culprit**: `erasableSyntaxOnly: true` in web/tsconfig.app.json line 27
+  - This is a TypeScript 5.7+ feature
+  - May have compatibility issues with current setup
+
 **Impact**:
 - ❌ Cannot rebuild web app
 - ❌ Cannot make any UI changes
 - ❌ Blocks Task 0.7.1 and all UI tasks
 - ✅ Existing binary (bin/ceye) still works for testing
 
-**Investigation**:
-- File syntax is correct (visual inspection + `tsc --noEmit` passes)
-- `tsc -b` fails consistently
-- Affects multiple commits (9205aa8 through HEAD)
-- Clean builds don't help
-- Possibly related to `erasableSyntaxOnly: true` in tsconfig.app.json
+**Fix Strategy** (1-2 hours):
 
-**Fix Priority**: **IMMEDIATE** - Must fix before any other work
+1. **Try removing erasableSyntaxOnly** (15 min)
+   - Edit `web/tsconfig.app.json` line 27
+   - Remove `"erasableSyntaxOnly": true,`
+   - Test: `cd web && npm run build`
+
+2. **Check TypeScript version** (10 min)
+   - Run: `cd web && npx tsc --version`
+   - Check package.json for TypeScript version
+   - Verify compatibility with erasableSyntaxOnly
+
+3. **Try disabling project references** (20 min)
+   - If #1 fails, try building without `-b` flag
+   - Modify package.json build script: `"build": "tsc && vite build"`
+   - Test build
+
+4. **Check tsconfig.node.json conflicts** (15 min)
+   - Review node config for conflicting settings
+   - Ensure no duplicate or conflicting compiler options
+
+5. **Verify the fix** (10 min)
+   - Run full build: `make build`
+   - Test binary: `./bin/ceye --demo`
+   - Run affected tests: `npx playwright test provider-health-ui.spec.ts`
+
+6. **Document solution** (10 min)
+   - Update agents.md with root cause and fix
+   - Commit with clear message
+
+**Files to Modify**:
+- `web/tsconfig.app.json` - Remove erasableSyntaxOnly (primary fix)
+- `web/package.json` - Possibly adjust build script (fallback)
+
+**Success Criteria**:
+- [ ] `make build` completes successfully
+- [ ] Web app builds without TypeScript errors
+- [ ] Binary runs: `./bin/ceye --demo --port 8080`
+- [ ] Can continue with Task 0.7.1
+
+**Time Estimate**: 1-2 hours
 
 **See**: docs/agents.md line 1544 for full investigation details
 
