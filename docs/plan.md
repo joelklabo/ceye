@@ -22,6 +22,215 @@ Based on research and user approval, we're migrating to a modern React stack to 
 
 ## 🚧 Active Development Tasks
 
+### Phase -1: Comprehensive Testing & Screenshots (6 hours) - **PRIORITY -1** 🔥🔥🔥🔥
+
+**Goal**: Implement robust browser automation testing with Playwright and generate marketing-grade screenshots for README
+
+**Why Playwright?**
+Based on 2024 research, Playwright is superior for this project:
+- ✅ **Fastest execution** (beats Cypress & Puppeteer in benchmarks)
+- ✅ **Cross-browser** (Chromium, Firefox, WebKit)
+- ✅ **TypeScript-first** (matches our stack)
+- ✅ **Built-in screenshot** (fullPage, element, viewport options)
+- ✅ **Auto-waiting** (less flaky tests)
+- ✅ **Multi-tab support** (Cypress can't do this)
+- ✅ **Network mocking** (for testing without backend)
+- ✅ **Parallel testing** (fast CI/CD)
+
+**Already Installed**: Playwright is already in package.json from previous E2E tests
+
+**Test Strategy**:
+1. **Integration Tests** - Full user journeys with real WebSocket
+2. **Visual Regression** - Screenshot comparison between releases
+3. **Marketing Screenshots** - Automated, consistent, high-quality
+4. **Cross-browser** - Test on Chrome, Firefox, Safari (WebKit)
+
+---
+
+#### Phase -1.1: Integration Test Suite (3 hours) - **CURRENT TASK**
+
+**Goal**: Comprehensive Playwright tests covering all dashboard functionality
+
+**Tests to Implement**:
+
+1. **Dashboard Loading & Connection** (30min)
+   - [ ] Page loads successfully
+   - [ ] WebSocket connects within 5s
+   - [ ] Connection indicator shows green
+   - [ ] Initial data loads (runs, stats, providers)
+   - [ ] Error handling if WebSocket fails
+
+2. **Stats Cards** (30min)
+   - [ ] All 4 cards render (Running, Queued, Success, Failed)
+   - [ ] Counters display correct numbers from WebSocket
+   - [ ] Animations trigger on value changes
+   - [ ] Icons display correctly
+   - [ ] Responsive layout (mobile, tablet, desktop)
+
+3. **Runs Table** (1 hour)
+   - [ ] Table renders with runs from WebSocket
+   - [ ] Sorting works (Provider, Repo, Status, Time)
+   - [ ] Search/filter works correctly
+   - [ ] Status badges show correct colors
+   - [ ] Row hover effects work
+   - [ ] Links to GitHub/Azure are correct
+   - [ ] Empty state shows when no runs
+   - [ ] Pagination (if implemented)
+
+4. **Provider Health Cards** (30min)
+   - [ ] Cards render for each provider
+   - [ ] Health indicator pulsing animation
+   - [ ] Last update timestamp formats correctly
+   - [ ] Error states display with count
+   - [ ] Hover effects work
+
+5. **Activity Feed** (30min)
+   - [ ] Feed renders recent activities
+   - [ ] Expand/collapse works
+   - [ ] Icons match event types
+   - [ ] Timestamps format correctly
+   - [ ] Auto-scroll behavior (if implemented)
+
+6. **Real-Time Updates** (30min)
+   - [ ] New runs appear automatically
+   - [ ] Stats update in real-time
+   - [ ] Provider health updates
+   - [ ] Activity feed updates
+   - [ ] Smooth animations on updates
+   - [ ] No UI flicker or jumps
+
+**Test Structure**:
+```
+e2e/
+├── dashboard.spec.ts          # Main dashboard tests
+├── websocket.spec.ts          # WebSocket connectivity
+├── components/
+│   ├── stats-cards.spec.ts
+│   ├── runs-table.spec.ts
+│   ├── provider-cards.spec.ts
+│   └── activity-feed.spec.ts
+├── visual/
+│   └── screenshot-regression.spec.ts
+└── fixtures/
+    └── mock-websocket-data.ts  # Test data
+```
+
+**Success Criteria**:
+- ✅ All tests pass on Chrome, Firefox, Safari
+- ✅ Tests run in <2 minutes
+- ✅ 100% code coverage of components
+- ✅ No flaky tests (retry logic where needed)
+- ✅ CI/CD integration ready
+
+---
+
+#### Phase -1.2: Marketing Screenshots (3 hours)
+
+**Goal**: Automated, professional screenshots for README and documentation
+
+**Screenshots Needed**:
+
+1. **Hero Screenshot** (Full dashboard view)
+   - Desktop (1920x1080) - Dark mode
+   - Shows all components with live data
+   - 25+ runs in table
+   - 3+ providers healthy
+   - Activity feed populated
+   - Connection indicator green
+
+2. **Component Highlights** (Individual features)
+   - Stats cards with animated counters
+   - Runs table with sorting/filtering
+   - Provider health cards
+   - Activity feed expanded
+   - Mobile responsive view
+
+3. **Feature Demonstrations**
+   - Real-time update sequence (before/after)
+   - WebSocket reconnection
+   - Error states (provider down)
+   - Empty states
+
+4. **Cross-Platform**
+   - Chrome desktop
+   - Firefox desktop  
+   - Safari desktop
+   - Mobile (iPhone 14, Pixel 7)
+
+**Implementation**:
+```typescript
+// e2e/screenshots/generate-marketing.spec.ts
+test('Generate marketing screenshots', async ({ page }) => {
+  await page.goto('http://localhost:8080');
+  await page.waitForSelector('.stats-cards');
+  
+  // Full dashboard hero shot
+  await page.screenshot({
+    path: 'docs/screenshots/dashboard-hero.png',
+    fullPage: true,
+  });
+  
+  // Highlight specific component
+  await page.evaluate(() => {
+    const element = document.querySelector('.stats-cards');
+    element.style.border = '2px solid #22c55e';
+  });
+  await page.screenshot({
+    path: 'docs/screenshots/stats-cards-highlight.png',
+    clip: { x: 0, y: 100, width: 1200, height: 400 },
+  });
+});
+```
+
+**Automated Workflow**:
+1. Start ceye server with demo data
+2. Run screenshot generation script
+3. Compress images (80% quality JPEG)
+4. Auto-update README with new screenshots
+5. Git commit with descriptive message
+
+**Directory Structure**:
+```
+docs/
+└── screenshots/
+    ├── hero/
+    │   ├── dashboard-dark.png
+    │   └── dashboard-mobile.png
+    ├── components/
+    │   ├── stats-cards.png
+    │   ├── runs-table.png
+    │   ├── provider-cards.png
+    │   └── activity-feed.png
+    ├── features/
+    │   ├── real-time-update.gif
+    │   ├── sorting-filtering.png
+    │   └── websocket-reconnect.png
+    └── cross-platform/
+        ├── chrome.png
+        ├── firefox.png
+        ├── safari.png
+        └── mobile.png
+```
+
+**Success Criteria**:
+- ✅ All screenshots are 4K-ready
+- ✅ Consistent styling (dark mode)
+- ✅ No placeholder/loading states visible
+- ✅ Marketing-quality composition
+- ✅ README auto-updated with images
+- ✅ CI generates screenshots on release
+
+---
+
+**Commit Strategy**:
+- Commit 1: Integration test suite
+- Commit 2: Screenshot generation script
+- Commit 3: README with screenshots
+
+**Next**: After Phase -1 complete, continue with Phase 0.4 (Polish & Excellence)
+
+---
+
 ### Phase 0: React Migration (22 hours) - **PRIORITY 0** 🔥🔥🔥
 
 **Goal**: Migrate to React + Vite + Shadcn/ui for a stunning, production-quality dashboard
