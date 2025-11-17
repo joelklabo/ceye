@@ -1,6 +1,6 @@
 # ceye Development Plan
 
-**Last Updated**: 2025-11-17 19:48 UTC  
+**Last Updated**: 2025-11-17 21:19 UTC  
 **Status**: Phase 0.7 Critical Issues - 🟢 **12 of 20 COMPLETE**
 
 ## Current Status
@@ -51,56 +51,143 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 2. **Old test selectors** - Tests written for static HTML, now using React
 3. **Changed component structure** - Elements moved/renamed during migration
 
-**Failing Tests**:
-```
-1. dashboard-react.spec.ts:70 - Provider health card refresh button
-2. provider-health-ui.spec.ts:10 - Full-width layout check
-3. provider-health-ui.spec.ts:107 - Match Activity feed width
-4. websocket-connection.spec.js:4 - Old JS test, looking for #lastUpdate
-5. websocket-connection.spec.js:28 - Old JS test, periodic updates
-6. websocket-connection.spec.js:55 - Old JS test, activity log
-7. websocket-critical.spec.ts:60 - Missing data-testid="activity-feed"
-8. websocket-critical.spec.ts:79 - Missing data-testid="stat-*"
-```
+**Current Status**: 10 failing tests (increased from 8 after adding data-testid)
 
-**Analysis - What Tests Expect**:
-- `[data-testid="activity-feed"]` - ActivityFeed component container
-- `[data-testid="stat-total-runs"]` - Stats card for total runs
-- `[data-testid="stat-active-runs"]` - Stats card for active runs  
-- `.connection-indicator.connected` - Old static HTML class
-- `#lastUpdate`, `#activityToggle` - Old static HTML IDs
+**Detailed Test-by-Test Analysis**:
 
-**Solution Strategy**:
+**Group A: Old Static HTML Tests (3 tests) - DELETE/REWRITE**
+These tests were written for the old static HTML dashboard and need complete rewrite:
 
-**Phase 1: Add Missing data-testid Attributes** (2 hours)
-1. ActivityFeed.tsx - Add `data-testid="activity-feed"` to container
-2. StatsCards.tsx - Add test IDs to each stat card
-3. Verify all test selectors match current React structure
+1. **websocket-connection.spec.js:4** - `#connectionStatus`, `#lastUpdate` elements
+   - **Problem**: Looking for `#connectionStatus` and `#lastUpdate` DOM IDs that don't exist in React
+   - **Solution**: DELETE this file - functionality covered by websocket-critical.spec.ts
+   
+2. **websocket-connection.spec.js:28** - `.connection-indicator.connected` class
+   - **Problem**: Looking for specific CSS classes from static HTML
+   - **Solution**: DELETE - redundant with websocket-critical.spec.ts
+   
+3. **websocket-connection.spec.js:55** - `#activityToggle` element
+   - **Problem**: Activity log was removed in React migration
+   - **Solution**: DELETE - no equivalent in React app
 
-**Phase 2: Update/Remove Obsolete Tests** (2 hours)
-4. websocket-connection.spec.js - Rewrite for React or skip
-5. provider-health-ui.spec.ts - Update selectors for current structure
-6. dashboard-react.spec.ts - Fix refresh button test
+**Group B: Provider Health Tests (3 tests) - FIX SELECTORS**
+Tests are looking for wrong elements or have flaky selectors:
 
-**Phase 3: Run Full Test Suite** (1 hour)
-7. Run all tests locally until green
-8. Document any remaining skipped tests
-9. Update plan with results
+4. **provider-health-ui.spec.ts:10** - Full-width layout check
+   - **Problem**: `[class*="space-y"]` selector too generic, finds multiple elements
+   - **Solution**: Target specific ProviderCards container with data-testid
+   
+5. **provider-health-ui.spec.ts:33** - Provider with health indicator  
+   - **Problem**: `text=github` fails because provider is "demo" in test mode
+   - **Solution**: Use `text=demo` or generic provider selector
+   
+6. **provider-health-ui.spec.ts:107** - Match Activity feed width
+   - **Problem**: `.locator('..')` parent selector is fragile
+   - **Solution**: Add data-testid to both containers, compare directly
 
-**Phase 4: CI Validation** (1 hour)
-10. Push changes to trigger CI
-11. Fix any CI-specific failures
-12. Verify all tests pass in CI environment
+**Group C: React Dashboard Tests (2 tests) - FIX SVG SELECTOR**
+
+7. **dashboard-react.spec.ts:70** - Refresh button with SVG
+   - **Problem**: `svg[data-lucide="refresh-cw"]` attribute doesn't exist
+   - **Solution**: Use simpler selector or add data-testid to button
+
+**Group D: Activity Feed Tests (1 test) - FIX ASSERTION**
+
+8. **activity-feed-enhanced.spec.ts:36** - Duration display
+   - **Problem**: Test expects "Duration:" but we hide it when 0 seconds
+   - **Solution**: Update test to handle both cases OR ensure test data has duration
+
+**Group E: WebSocket Critical Tests (2 tests) - FIXED BY data-testid**
+
+9. **websocket-critical.spec.ts:60** - ✅ SHOULD BE FIXED (added data-testid="activity-feed")
+10. **websocket-critical.spec.ts:79** - ✅ SHOULD BE FIXED (added data-testid="stat-*")
+
+**Note**: Tests 9-10 should now pass with commit 0e1fdd3. Need to verify.
+
+**Detailed Fix Plan** (6-8 hours total):
+
+**Phase 1: Add Missing data-testid Attributes** ✅ DONE (Commit: 0e1fdd3)
+- [x] ActivityFeed.tsx - Added `data-testid="activity-feed"`
+- [x] StatsCards.tsx - Added test IDs to all stat cards
+- [x] Should fix tests 9-10 (websocket-critical.spec.ts)
+
+**Phase 2: Delete Obsolete Static HTML Tests** (30 minutes)
+- [ ] Delete `e2e/websocket-connection.spec.js` entirely (fixes tests 1-3)
+- [ ] Verify coverage exists in websocket-critical.spec.ts
+- [ ] Commit: "test: Remove obsolete static HTML WebSocket tests"
+
+**Phase 3: Fix Provider Health Test Selectors** (1.5 hours)
+- [ ] **Test 4** - Add data-testid="provider-cards" to ProviderCards container
+  - Update test to use `[data-testid="provider-cards"]` instead of `[class*="space-y"]`
+  
+- [ ] **Test 5** - Fix provider name selector
+  - Change `text=github` to `text=demo` (demo mode provider name)
+  - Or use `.capitalize()` to accept any provider name
+  
+- [ ] **Test 6** - Add container test IDs
+  - Add data-testid="provider-cards-container" to ProviderCards
+  - Add data-testid="activity-feed-container" to ActivityFeed
+  - Compare widths using testid selectors
+  
+- [ ] Commit: "test: Fix Provider Health UI test selectors"
+
+**Phase 4: Fix React Dashboard Refresh Button Test** (45 minutes)
+- [ ] **Test 7** - Option A: Add data-testid="provider-refresh-button"
+  - OR Option B: Simplify selector to find RefreshCw icon by className
+  - Update test to use new selector
+- [ ] Commit: "test: Fix provider health refresh button test"
+
+**Phase 5: Fix Activity Feed Duration Test** (45 minutes)
+- [ ] **Test 8** - Option A: Update test to handle "Duration: 0s" being hidden
+  - Check if duration exists, if not, verify it's a queued/starting run
+  - OR Option B: Ensure demo data always has duration > 0
+- [ ] Commit: "test: Fix activity feed duration display test"
+
+**Phase 6: Verification & Cleanup** (2 hours)
+- [ ] Run all tests 3 times to check for flakiness
+- [ ] Fix any flaky tests found
+- [ ] Verify websocket-critical tests now pass (data-testid changes)
+- [ ] Update test counts in plan.md
+- [ ] Document any remaining skipped tests with reasons
+- [ ] Commit: "test: All Playwright tests passing"
+
+**Phase 7: CI Validation** (1 hour)
+- [ ] Push all changes to trigger CI
+- [ ] Monitor CI test runs
+- [ ] Fix any CI-specific issues (timing, env differences)
+- [ ] Verify green CI badge
 
 **Success Criteria**:
-- [ ] All Go tests passing (already done ✅)
-- [ ] All Playwright tests passing (0 failures)
+- [x] All Go tests passing (already done ✅)
+- [ ] All Playwright tests passing (currently 10 failing → target 0)
 - [ ] No flaky tests (run 3 times, all pass)
 - [ ] CI green (all checks passing)
 - [ ] Tests document what they're testing
-- [ ] No unnecessary skipped tests
+- [ ] No unnecessary skipped tests (currently 14 → review needed)
 
-**Time Estimate**: 4-6 hours total
+**Time Estimate**: 6-8 hours total (updated after detailed analysis)
+
+**Files to Modify**:
+```
+DELETE:
+- e2e/websocket-connection.spec.js (obsolete static HTML tests)
+
+MODIFY (add data-testid):
+- web/src/components/dashboard/ProviderCards.tsx
+- web/src/components/dashboard/ActivityFeed.tsx (already has testid)
+- web/src/components/dashboard/StatsCards.tsx (already has testid)
+
+MODIFY (fix test selectors):
+- e2e/provider-health-ui.spec.ts (3 tests)
+- e2e/dashboard-react.spec.ts (1 test)  
+- e2e/activity-feed-enhanced.spec.ts (1 test)
+
+VERIFY (should pass now):
+- e2e/websocket-critical.spec.ts (2 tests)
+```
+
+**Quick Win Check** (10 minutes):
+Run `npx playwright test e2e/websocket-critical.spec.ts` to verify tests 9-10 now pass with data-testid changes. If they pass, we're down to 8 failing tests immediately.
 
 #### 0.7. Provider Health UI Redesign - Full Width & Details (HIGH 🟡) - 🔄 **IN PROGRESS** - 3-4 hours
 
