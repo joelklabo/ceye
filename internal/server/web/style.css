@@ -783,3 +783,117 @@ footer {
     background: var(--bg-tertiary);
     border-style: solid;
 }
+
+/* Settings page */
+.settings-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.settings-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.settings-section h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-primary);
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-primary);
+}
+
+.setting-item:last-child {
+    border-bottom: none;
+}
+
+.setting-item label {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.setting-item select,
+.setting-item input[type="number"] {
+    min-width: 200px;
+}
+
+.setting-item input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.info-text {
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.shortcuts-list-compact {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.shortcut-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.shortcut-row kbd {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-secondary);
+    border-radius: 4px;
+    padding: 4px 8px;
+    min-width: 40px;
+    text-align: center;
+    font-size: 12px;
+}
+
+.shortcut-row span {
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.btn-danger {
+    background: var(--accent-red);
+    color: #fff;
+    border: none;
+}
+
+.btn-danger:hover {
+    opacity: 0.8;
+}
+
+.btn-secondary {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-secondary);
+}
+
+.btn-secondary:hover {
+    background: var(--bg-secondary);
+}
+
+/* Density classes */
+.density-compact {
+    --spacing: 0.5;
+}
+
+.density-comfortable {
+    --spacing: 1;
+}
+
+.density-spacious {
+    --spacing: 1.5;
+}

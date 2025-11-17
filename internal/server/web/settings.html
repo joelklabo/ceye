@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - ceye</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚙️ Settings</h1>
+            <div class="controls">
+                <a href="/" class="nav-link">← Dashboard</a>
+                <button onclick="resetAllSettings()" class="btn-danger">Reset All</button>
+                <button onclick="exportSettings()" class="btn-secondary">Export</button>
+                <button onclick="importSettings()" class="btn-secondary">Import</button>
+            </div>
+        </header>
+
+        <div class="settings-container">
+            <!-- Appearance Section -->
+            <div class="settings-section">
+                <h2>🎨 Appearance</h2>
+                <div class="setting-item">
+                    <label for="settingsTheme">Theme</label>
+                    <select id="settingsTheme" onchange="updateSetting('theme', this.value)">
+                        <option value="dark">🌙 Dark</option>
+                        <option value="light">☀️ Light</option>
+                        <option value="solarized-dark">🔆 Solarized Dark</option>
+                        <option value="dracula">🧛 Dracula</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label for="settingsFontSize">Font Size</label>
+                    <select id="settingsFontSize" onchange="updateSetting('fontSize', this.value)">
+                        <option value="small">Small</option>
+                        <option value="medium">Medium</option>
+                        <option value="large">Large</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label for="settingsDensity">Density</label>
+                    <select id="settingsDensity" onchange="updateSetting('density', this.value)">
+                        <option value="compact">Compact</option>
+                        <option value="comfortable">Comfortable</option>
+                        <option value="spacious">Spacious</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Behavior Section -->
+            <div class="settings-section">
+                <h2>⚡ Behavior</h2>
+                <div class="setting-item">
+                    <label for="settingsAutoRefresh">Auto Refresh</label>
+                    <input type="checkbox" id="settingsAutoRefresh" onchange="updateSetting('autoRefresh', this.checked)">
+                </div>
+                <div class="setting-item">
+                    <label for="settingsRefreshInterval">Refresh Interval (seconds)</label>
+                    <input type="number" id="settingsRefreshInterval" min="5" max="300" value="10" onchange="updateSetting('refreshInterval', this.value)">
+                </div>
+                <div class="setting-item">
+                    <label for="settingsShowNotifications">Show Notifications</label>
+                    <input type="checkbox" id="settingsShowNotifications" onchange="updateSetting('showNotifications', this.checked)">
+                </div>
+                <div class="setting-item">
+                    <label for="settingsPlaySounds">Play Sounds</label>
+                    <input type="checkbox" id="settingsPlaySounds" onchange="updateSetting('playSounds', this.checked)">
+                </div>
+            </div>
+
+            <!-- Filters Section -->
+            <div class="settings-section">
+                <h2>🔍 Filters</h2>
+                <div class="setting-item">
+                    <label for="settingsSaveFilters">Remember Filters</label>
+                    <input type="checkbox" id="settingsSaveFilters" checked onchange="updateSetting('saveFilters', this.checked)">
+                </div>
+                <div class="setting-item">
+                    <label>Current Saved Filters</label>
+                    <div id="savedFiltersInfo" class="info-text">No filters saved</div>
+                </div>
+                <button onclick="clearSavedFilters()" class="btn-secondary">Clear Saved Filters</button>
+            </div>
+
+            <!-- Keyboard Section -->
+            <div class="settings-section">
+                <h2>⌨️ Keyboard Shortcuts</h2>
+                <div class="shortcuts-list-compact">
+                    <div class="shortcut-row">
+                        <kbd>r</kbd><span>Refresh</span>
+                    </div>
+                    <div class="shortcut-row">
+                        <kbd>/</kbd><span>Focus search</span>
+                    </div>
+                    <div class="shortcut-row">
+                        <kbd>Esc</kbd><span>Clear/Close</span>
+                    </div>
+                    <div class="shortcut-row">
+                        <kbd>a</kbd><span>Alerts</span>
+                    </div>
+                    <div class="shortcut-row">
+                        <kbd>?</kbd><span>Help</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Section -->
+            <div class="settings-section">
+                <h2>🔧 Advanced</h2>
+                <div class="setting-item">
+                    <label for="settingsDebugMode">Debug Mode</label>
+                    <input type="checkbox" id="settingsDebugMode" onchange="updateSetting('debugMode', this.checked)">
+                </div>
+                <div class="setting-item">
+                    <label>Version</label>
+                    <div class="info-text">ceye v0.1.0</div>
+                </div>
+                <div class="setting-item">
+                    <label>Storage Used</label>
+                    <div id="storageInfo" class="info-text">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <span>All settings saved automatically</span>
+        </footer>
+    </div>
+
+    <script src="settings.js"></script>
+</body>
+</html>
