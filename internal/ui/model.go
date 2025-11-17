@@ -73,6 +73,7 @@ type keyMap struct {
 	Contrast      key.Binding
 	Detail        key.Binding
 	Trends        key.Binding
+	Alerts        key.Binding
 	Help          key.Binding
 	Quit          key.Binding
 }
@@ -93,6 +94,7 @@ func newKeyMap() keyMap {
 		Contrast:      key.NewBinding(key.WithKeys("H"), key.WithHelp("H", "toggle high contrast")),
 		Detail:        key.NewBinding(key.WithKeys("D"), key.WithHelp("D", "toggle detail view")),
 		Trends:        key.NewBinding(key.WithKeys("T"), key.WithHelp("T", "toggle trends")),
+		Alerts:        key.NewBinding(key.WithKeys("A"), key.WithHelp("A", "toggle alerts")),
 		Help:          key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "toggle help")),
 		Quit:          key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "quit")),
 	}
@@ -107,7 +109,7 @@ func (k keyMap) FullHelp() [][]key.Binding {
 		{k.Provider, k.Status, k.Sort, k.Search},
 		{k.Palette, k.ProviderStore, k.Focus, k.Refresh},
 		{k.Open, k.CopyURL, k.CopyInfo, k.Contrast},
-		{k.Detail, k.Trends},
+		{k.Detail, k.Trends, k.Alerts},
 		{k.Help},
 		{k.Quit},
 	}
@@ -181,6 +183,7 @@ type Model struct {
 	commitCache               map[string]commitInfo // key: SHA
 	trendAnalyzer             interface{}           // *storage.TrendAnalyzer (optional, interface to avoid import)
 	showTrends                bool                  // Whether to show trends panel
+	showAlerts                bool                  // Whether to show alerts panel
 }
 
 type commitInfo struct {
@@ -482,6 +485,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.showTrends = !m.showTrends
 				}
 				return m, nil
+			case "A":
+				m.showAlerts = !m.showAlerts
+				return m, nil
 			case "1", "2", "3", "4", "5", "6", "7", "8", "9":
 				if idx, err := strconv.Atoi(r); err == nil && idx < len(m.Providers) {
 					m.ActiveProvider = m.Providers[idx]
@@ -622,6 +628,13 @@ func (m Model) renderDashboardBody() string {
 	if m.showTrends && m.trendAnalyzer != nil {
 		if trendsPanel := m.renderTrendsPanelForProvider(); trendsPanel != "" {
 			sidebarParts = append(sidebarParts, trendsPanel)
+		}
+	}
+	
+	// Add alerts panel
+	if m.showAlerts {
+		if alertsPanel := m.renderAlertsPanel(); alertsPanel != "" {
+			sidebarParts = append(sidebarParts, alertsPanel)
 		}
 	}
 	
@@ -2514,4 +2527,67 @@ func (m *Model) toggleContrast() {
 	} else {
 		m.flashMessage = "High contrast disabled"
 	}
+}
+
+func (m Model) renderAlertsPanel() string {
+alerts := m.Store.GetRecentAlerts(20)
+if len(alerts) == 0 {
+lines := []string{
+sectionTitleStyle.Render("Recent Alerts"),
+bodyTextStyle.Render("  No alerts fired yet"),
+}
+return m.panelStyle.Render(lipgloss.JoinVertical(lipgloss.Left, lines...))
+}
+
+title := sectionTitleStyle.Render(fmt.Sprintf("Recent Alerts (%d)", len(alerts)))
+lines := []string{title}
+
+for i, alert := range alerts {
+if i >= 10 { // Show max 10 in panel
+break
+}
+
+// Format time
+timeAgo := time.Since(alert.TriggeredAt)
+var timeStr string
+if timeAgo < time.Minute {
+timeStr = "just now"
+} else if timeAgo < time.Hour {
+timeStr = fmt.Sprintf("%dm ago", int(timeAgo.Minutes()))
+} else if timeAgo < 24*time.Hour {
+timeStr = fmt.Sprintf("%dh ago", int(timeAgo.Hours()))
+} else {
+timeStr = fmt.Sprintf("%dd ago", int(timeAgo.Hours()/24))
+}
+
+// Severity icon and color
+var icon string
+var style lipgloss.Style
+switch alert.Severity {
+case "critical":
+icon = "🔴"
+style = m.errorStyle
+case "warning":
+icon = "⚠️ "
+style = m.tagWarningStyle
+default:
+icon = "ℹ️ "
+style = bodyTextStyle
+}
+
+// First line: time and rule
+line1 := fmt.Sprintf("%s %s  %s",
+icon,
+timeStr,
+truncate(alert.RuleName, 18),
+)
+lines = append(lines, style.Render(line1))
+
+// Second line: message (indented)
+message := truncate(alert.Message, 26)
+line2 := fmt.Sprintf("  %s", message)
+lines = append(lines, bodyTextStyle.Render(line2))
+}
+
+return m.panelStyle.Render(lipgloss.JoinVertical(lipgloss.Left, lines...))
 }

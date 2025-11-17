@@ -113,8 +113,8 @@ Add UI visibility for the alerting system so users can see alert history, debug 
 
 #### Implementation Plan
 
-**Phase B.1.1: Alert Storage in Core (1 hour)**
-- [ ] Add `AlertHistory` to core.Store
+**Phase B.1.1: Alert Storage in Core (1 hour)** ✅ **COMPLETE**
+- [x] Add `AlertHistory` to core.Store
   ```go
   type AlertRecord struct {
       RuleName    string
@@ -125,12 +125,12 @@ Add UI visibility for the alerting system so users can see alert history, debug 
       TriggeredAt time.Time
   }
   ```
-- [ ] Add `store.RecordAlert(alert)` method
-- [ ] Keep last 100 alerts in memory
-- [ ] Add `store.GetRecentAlerts(limit)` method
-- [ ] Update alerting engine to record to store
+- [x] Add `store.RecordAlert(alert)` method
+- [x] Keep last 100 alerts in memory
+- [x] Add `store.GetRecentAlerts(limit)` method
+- [x] Update alerting engine to record to store
 
-**Phase B.1.2: TUI Alerts Panel (1.5 hours)**
+**Phase B.1.2: TUI Alerts Panel (1.5 hours)** 🎯 **IN PROGRESS**
 - [ ] Create `renderAlertsPanel()` in ui/model.go
 - [ ] Add 'A' key binding to toggle alerts view
 - [ ] Show table with: Time, Severity, Rule, Message
