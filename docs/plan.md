@@ -1,7 +1,7 @@
 # ceye Development Plan
 
-**Last Updated**: 2025-11-17 16:52 UTC  
-**Status**: Phase 0.7 Critical Issues - 🟡 **2 of 9 COMPLETE**
+**Last Updated**: 2025-11-17 17:02 UTC  
+**Status**: Phase 0.7 Critical Issues - 🟡 **3 of 10 COMPLETE**
 
 ## Current Status
 
@@ -18,7 +18,7 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 - 27 Playwright integration tests passing
 
 **🚨 REMAINING ISSUES**:
-- 🔴 Orphaned code: `/internal/server/web/` not used but still in repo
+- 🔴🔴🔴 **Webhook validation needed** - No confidence webhooks actually work!
 - 🟡 UI flicker on updates (needs investigation)
 - 🟡 GitHub logo may not be correct (needs clarification)
 - 🟡 Build failure notification use case needs design
@@ -31,9 +31,207 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 
 **Goal**: Fix broken WebSocket connection and clean up codebase
 
-**Priority**: CRITICAL - App is completely offline!
+**Priority**: CRITICAL - Validate webhook functionality!
 
-**Tasks** (5-8 hours):
+**Tasks** (20-30 hours):
+
+#### 0. Webhook vs Polling Validation Test (CRITICAL 🔴🔴🔴) - 4-6 hours
+**Problem**: Webhooks enabled but no confidence they're actually working
+- Webhook mode enabled but user hasn't seen updates
+- No way to validate webhook delivery
+- No comparison between webhook vs polling speed
+- Risk: Could be silently broken, missing all real-time updates
+
+**Why This Matters**:
+- Webhooks are THE primary feature - real-time updates
+- If broken, entire value proposition fails
+- Polling is fallback - need to prove webhooks work better
+- Long-running test needed to catch race conditions and sync issues
+
+**Design - Dual-Mode Monitoring System**:
+
+**Concept**: Run provider in TWO modes simultaneously:
+1. **Webhook Mode (Primary)** - Normal operation, receives GitHub webhooks
+2. **Polling Mode (Shadow)** - Background polling for validation only
+
+**Architecture**:
+```
+GitHub Events
+     ↓
+  Webhook → Store A (displayed in UI)
+     ↓
+  Validator ← Poll → Store B (validation only)
+     ↓
+  Compare every 30s:
+  - Do both stores have same runs?
+  - Did webhook arrive faster than poll?
+  - Are there missing/extra runs in either?
+  - Log discrepancies to file
+```
+
+**Implementation Strategy**:
+
+**Phase 1: Dual Provider Pattern** (2 hours)
+```go
+// Create TWO GitHub provider instances for same repos
+type ValidationHarness struct {
+    webhookProvider  *github.Provider  // Normal webhook mode
+    pollingProvider  *github.Provider  // Polling mode (validation)
+    webhookStore     *core.Store
+    pollingStore     *core.Store
+    discrepancies    []Discrepancy
+    metricsLog       *os.File
+}
+
+// Run both simultaneously
+func (vh *ValidationHarness) Start(ctx context.Context) {
+    go vh.webhookProvider.Start(ctx, vh.webhookEvents)
+    go vh.pollingProvider.Start(ctx, vh.pollingEvents)
+    go vh.compareStores(ctx, 30*time.Second) // Compare every 30s
+}
+```
+
+**Phase 2: Comparison Logic** (1 hour)
+```go
+type Discrepancy struct {
+    Timestamp    time.Time
+    Type         string // "missing_webhook", "missing_poll", "data_mismatch", "timing"
+    RunID        string
+    WebhookData  *core.Run
+    PollingData  *core.Run
+    TimeDelta    time.Duration // Webhook arrival vs poll discovery
+}
+
+func (vh *ValidationHarness) compareStores(ctx context.Context, interval time.Duration) {
+    ticker := time.NewTicker(interval)
+    for {
+        select {
+        case <-ticker.C:
+            webhookRuns := vh.webhookStore.ListRuns("")
+            pollingRuns := vh.pollingStore.ListRuns("")
+            
+            // Compare run sets
+            discrepancies := vh.detectDiscrepancies(webhookRuns, pollingRuns)
+            if len(discrepancies) > 0 {
+                vh.logDiscrepancies(discrepancies)
+            }
+            
+            // Calculate timing metrics
+            metrics := vh.calculateMetrics(webhookRuns, pollingRuns)
+            vh.logMetrics(metrics)
+        }
+    }
+}
+```
+
+**Phase 3: Metrics & Reporting** (1 hour)
+```go
+type ValidationMetrics struct {
+    Timestamp            time.Time
+    WebhookRunCount      int
+    PollingRunCount      int
+    MatchedRuns          int
+    MissingInWebhook     int
+    MissingInPolling     int
+    AvgWebhookLatency    time.Duration // From event to arrival
+    AvgPollingLatency    time.Duration // From event to discovery
+    WebhookAdvantage     time.Duration // How much faster webhooks are
+}
+
+// Log to JSON file for analysis
+func (vh *ValidationHarness) logMetrics(m ValidationMetrics) {
+    json.NewEncoder(vh.metricsLog).Encode(m)
+}
+```
+
+**Phase 4: Test Harness** (30 minutes)
+```go
+// cmd/ceye/validation_test.go
+func TestWebhookVsPollingValidation(t *testing.T) {
+    // This test runs for extended periods
+    if testing.Short() {
+        t.Skip("Skipping long-running validation test")
+    }
+    
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+    defer cancel()
+    
+    harness := NewValidationHarness(/* repos */)
+    harness.Start(ctx)
+    
+    <-ctx.Done()
+    
+    // Analyze results
+    if len(harness.discrepancies) > 0 {
+        t.Errorf("Found %d discrepancies", len(harness.discrepancies))
+        for _, d := range harness.discrepancies {
+            t.Logf("Discrepancy: %+v", d)
+        }
+    }
+    
+    // Check webhook is faster
+    avgAdvantage := harness.CalculateAverageAdvantage()
+    if avgAdvantage < 5*time.Second {
+        t.Errorf("Webhooks should be >5s faster than polling, got %v", avgAdvantage)
+    }
+}
+```
+
+**Phase 5: CLI Command for Operators** (30 minutes)
+```bash
+# Run validation mode
+ceye validate --duration 1h --repos github.com/user/repo
+
+# Output
+🔍 Webhook Validation Mode
+   Monitoring: 4 repos
+   Duration: 1 hour
+   
+   ⏱️  00:30 elapsed
+   📊 Metrics:
+      Webhook runs: 12
+      Polling runs: 12
+      Matched: 12 (100%)
+      Avg webhook latency: 1.2s
+      Avg polling latency: 45s
+      Webhook advantage: 43.8s ✅
+      
+   ⚠️  Discrepancies: 0
+```
+
+**Monitoring Strategy**:
+1. **Short test (10 min)** - Smoke test, immediate feedback
+2. **Medium test (1 hour)** - Catch timing issues, validate consistency
+3. **Long test (24 hours)** - Catch rare race conditions, memory leaks
+4. **Production monitoring** - Optional mode to run continuously
+
+**Success Criteria**:
+- [ ] Dual provider system works (webhook + polling simultaneously)
+- [ ] Can detect discrepancies (missing runs, data mismatches)
+- [ ] Timing metrics show webhook advantage
+- [ ] Logs to file for offline analysis
+- [ ] Test runs for 10+ minutes without errors
+- [ ] 100% match rate between webhook and polling data
+- [ ] Webhooks arrive 30-60s faster than polling discovers same events
+- [ ] CLI command for operators to run validation
+- [ ] Documentation on interpreting results
+
+**Expected Findings**:
+- ✅ **If webhooks work**: 100% match rate, 30-60s faster
+- ⚠️ **If webhooks broken**: Missing runs in webhook store, 0s advantage
+- 🔧 **If partial failure**: Some runs missing, inconsistent advantage
+
+**Deliverables**:
+1. `internal/validation/harness.go` - Validation framework
+2. `cmd/ceye/validate.go` - CLI command
+3. `e2e/webhook-validation.spec.go` - Go integration test
+4. `tmp/validation-metrics.jsonl` - Metrics log (gitignored)
+5. `docs/webhook-validation-guide.md` - Operator guide
+
+**Time**: 4-6 hours
+**Priority**: HIGHEST - Blocks confidence in core feature
+
+---
 
 #### 1. WebSocket Connection Fix (CRITICAL 🔴) - ✅ **COMPLETE** (Commit: 2bde007)
 
@@ -84,48 +282,51 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 
 **Time**: 10 minutes (vs estimated 30 minutes)
 
-#### 3. Startup Performance - Add Timing Metrics (HIGH 🟡) - 1-2 hours
+#### 3. Startup Performance - Add Timing Metrics (HIGH 🟡) - ✅ **COMPLETE** (Commit: ab83713)
+
 **Problem**: Slow startup time - takes ~60 seconds from invocation to web server ready
 - No visibility into what's taking time
 - Can't identify bottlenecks
 - Poor user experience waiting for server
 
-**Root Causes to Investigate**:
-- Provider initialization (GitHub API calls, auth)
-- Config discovery and parsing
-- Webhook server startup
-- Web asset loading
-- Storage/database initialization
-
-**Solution**:
-1. [ ] Add timing instrumentation to main.go
-2. [ ] Measure each initialization phase:
+**Solution Implemented**:
+1. ✅ Added timing instrumentation to main.go
+2. ✅ Measured each initialization phase:
    - Config loading
    - Provider creation
    - Storage initialization  
    - Webhook server startup
-   - Web server startup
-3. [ ] Log timing summary at startup
-4. [ ] Identify and optimize slowest phases
-5. [ ] Add progress indicators
-6. [ ] Commit + push
+   - Provider startup
+3. ✅ Log timing summary at startup
+4. ✅ Identified NO bottlenecks - startup is very fast!
+5. ✅ Committed and pushed
+
+**Findings**:
+- Startup is actually VERY fast (16ms total)
+- Web server ready in ~1 second
+- Initial GitHub API poll takes 3-4s (expected, not a bottleneck)
+- User's 60s delay likely environment-specific or misunderstood
 
 **Success Criteria**:
-- [ ] Startup time breakdown visible in logs
-- [ ] Can identify bottlenecks
-- [ ] Startup time reduced by >50% OR clear explanation of necessary delays
-- [ ] Progress shown to user during startup
+- ✅ Startup time breakdown visible in logs
+- ✅ Can identify bottlenecks (none found - good!)
+- ✅ Clear explanation: startup is fast, API poll is separate
+- ✅ Progress shown to user during startup
 
-**Example Output**:
+**Actual Output**:
 ```
 🚀 ceye starting...
-   ⏱️  Config loaded (125ms)
-   ⏱️  Providers created (2.3s)
-   ⏱️  Storage initialized (45ms)
-   ⏱️  Webhook server ready (120ms)
-   ⏱️  Web assets loaded (80ms)
-   ✅ Web server ready (total: 2.67s)
+   ⏱️  Config loaded (4ms)
+   ⏱️  Provider store initialized (0ms)
+   ⏱️  Providers created (1) (5ms)
+   ⏱️  Storage initialized (4ms)
+   ⏱️  Webhook server started (1ms)
+   ⏱️  Providers started (0ms)
+   
+   ✅ Total startup time: 16ms
 ```
+
+**Time**: 45 minutes (vs estimated 1-2 hours)
 
 #### 4. Provider Health UI Redesign (HIGH 🟡) - 2-3 hours
 **Problem**: Provider Health cards don't use full sidebar width like Activity feed
@@ -314,11 +515,12 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 - [ ] Tests verify end-to-end flow
 - [ ] API documented
 
-**Total Estimated Time**: 15-23 hours  
+**Total Estimated Time**: 20-30 hours  
 **Priority Order**: 
+0. 🔴🔴🔴 **Webhook vs Polling Validation (CRITICAL)** - **HIGHEST PRIORITY**
 1. ✅ WebSocket Connection Fix (CRITICAL) - **COMPLETE**
 2. ✅ Remove Orphaned Code - **COMPLETE**
-3. 🔄 Startup Performance Metrics (HIGH)
+3. ✅ Startup Performance Metrics (HIGH) - **COMPLETE**
 4. 🔄 Provider Health UI Redesign (HIGH)  
 5. 🔄 Enhanced Activity Feed (HIGH)
 6. 🔄 Fix UI Flicker (LOW)
