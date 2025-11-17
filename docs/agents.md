@@ -262,16 +262,23 @@ http://localhost:8080
 providers:
   - type: github
     display_name: "GitHub Prod"
+    logo: "/static/logos/github.svg"  # Optional: custom logo path
     repos:
       - owner: "myorg"
         repo: "myrepo"
   
   - type: azure
     display_name: "Azure DevOps"
+    logo: "/static/logos/azure.svg"   # Optional: uses built-in if omitted
     org: "myorg"
     projects:
       - name: "MyProject"
         pipelines: [123, 456]
+  
+  - type: jenkins
+    display_name: "Jenkins CI"
+    logo: "/static/logos/jenkins.svg"  # Custom logo for unsupported providers
+    # ... jenkins-specific config
   
   - type: demo
     count: 5
@@ -281,6 +288,31 @@ server:
   port: 8080
   host: "0.0.0.0"
 ```
+
+### Provider Logos
+
+**Built-in Logos**: GitHub, Azure DevOps, GitLab (automatically used based on provider type)
+
+**Custom Logos**:
+- Add `logo` field to provider config with path to SVG file
+- Logo files should be placed in `web/static/logos/` directory
+- Requirements:
+  - Format: SVG only (scalable, theme-compatible)
+  - ViewBox: 24x24 recommended
+  - File size: < 10KB
+  - Colors: Use `currentColor` for theme compatibility
+
+**Example**:
+```yaml
+providers:
+  - type: jenkins
+    display_name: "Jenkins"
+    logo: "/static/logos/jenkins.svg"  # Place file in web/static/logos/
+```
+
+If no logo is specified or file is missing, the UI falls back to:
+1. Built-in logo (if provider type matches: github, azure, gitlab)
+2. Generic provider icon (colorful gradient circle with first letter)
 
 ### Environment Variables
 
