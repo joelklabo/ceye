@@ -190,12 +190,12 @@ ceye/
 
 ---
 
-#### Phase 0.3: Real-Time Integration (4 hours)
+#### Phase 0.3: Real-Time Integration (4 hours) - **IN PROGRESS** 🚧
 
 **Goal**: Connect React to Go WebSocket for live updates
 
 **Tasks**:
-- [ ] **WebSocket Hook** (2 hours)
+- [🚧] **WebSocket Hook** (2 hours)
   - Custom `useWebSocket` hook
   - Auto-reconnect on disconnect
   - Heartbeat/ping-pong

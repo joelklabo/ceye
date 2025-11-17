@@ -2,109 +2,66 @@ import { StatsCards } from '@/components/dashboard/StatsCards'
 import { RunsTable } from '@/components/dashboard/RunsTable'
 import { ProviderCards } from '@/components/dashboard/ProviderCards'
 import { ActivityFeed } from '@/components/dashboard/ActivityFeed'
-import type { StatsData, Run, ProviderHealth } from '@/types'
+import { useDashboard } from '@/contexts/DashboardContext'
+import { Circle } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 function App() {
-  // Mock data for now - will be replaced with WebSocket data in Phase 0.3
-  const stats: StatsData = {
-    running: 3,
-    queued: 2,
-    success: 142,
-    failed: 8,
-  }
+  const { runs, stats, providers, isConnected, lastUpdate } = useDashboard()
 
-  const mockProviders: Record<string, ProviderHealth> = {
-    github: {
-      LastError: '',
-      ErrorCount: 0,
-      LastSuccess: new Date(Date.now() - 120000).toISOString(),
-    },
-  }
-
-  const mockActivity = [
-    {
-      id: '1',
-      type: 'success' as const,
-      message: 'Build completed successfully for ceye/main',
-      timestamp: new Date(Date.now() - 120000),
-    },
-    {
-      id: '2',
-      type: 'started' as const,
-      message: 'CI Tests started for ceye/main',
-      timestamp: new Date(Date.now() - 60000),
-    },
-    {
-      id: '3',
-      type: 'failure' as const,
-      message: 'Deploy failed for api-server/develop',
-      timestamp: new Date(Date.now() - 7200000),
-    },
-  ]
-
-  const mockRuns: Run[] = [
-    {
-      ID: '1',
-      Provider: 'github',
-      Repo: 'ceye',
-      WorkflowName: 'CI Tests',
-      Status: 'in_progress',
-      Conclusion: '',
-      Branch: 'main',
-      CommitSHA: 'abc123',
-      StartedAt: new Date(Date.now() - 300000).toISOString(),
-      UpdatedAt: new Date(Date.now() - 60000).toISOString(),
-      Duration: 240000000000,
-      URL: 'https://github.com/example/ceye/actions/runs/1',
-    },
-    {
-      ID: '2',
-      Provider: 'github',
-      Repo: 'ceye',
-      WorkflowName: 'Build',
-      Status: 'completed',
-      Conclusion: 'success',
-      Branch: 'main',
-      CommitSHA: 'def456',
-      StartedAt: new Date(Date.now() - 3600000).toISOString(),
-      UpdatedAt: new Date(Date.now() - 3300000).toISOString(),
-      Duration: 180000000000,
-      URL: 'https://github.com/example/ceye/actions/runs/2',
-    },
-    {
-      ID: '3',
-      Provider: 'github',
-      Repo: 'api-server',
-      WorkflowName: 'Deploy',
-      Status: 'failed',
-      Conclusion: 'failure',
-      Branch: 'develop',
-      CommitSHA: 'ghi789',
-      StartedAt: new Date(Date.now() - 7200000).toISOString(),
-      UpdatedAt: new Date(Date.now() - 7000000).toISOString(),
-      Duration: 420000000000,
-      URL: 'https://github.com/example/api-server/actions/runs/3',
-    },
-  ]
+  // For activity feed, we'll generate from runs for now
+  // In the future, this could be its own WebSocket stream
+  const activityItems = runs.slice(0, 10).map((run) => ({
+    id: run.ID,
+    type: run.Status === 'completed' && run.Conclusion === 'success' 
+      ? 'success' as const
+      : run.Status === 'failed' || run.Conclusion === 'failure'
+      ? 'failure' as const
+      : run.Status === 'in_progress'
+      ? 'started' as const
+      : 'queued' as const,
+    message: `${run.WorkflowName} • ${run.Repo}/${run.Branch}`,
+    timestamp: new Date(run.UpdatedAt),
+  }))
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border px-8 py-4">
-        <h1 className="text-2xl font-bold">🔍 ceye</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          CI/CD Monitoring Dashboard
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">🔍 ceye</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              CI/CD Monitoring Dashboard
+            </p>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <Circle
+              className={cn(
+                'h-2 w-2',
+                isConnected ? 'fill-green-400 text-green-400' : 'fill-red-400 text-red-400'
+              )}
+            />
+            <span className="text-muted-foreground">
+              {isConnected ? 'Connected' : 'Disconnected'}
+            </span>
+            {lastUpdate && (
+              <span className="text-muted-foreground">
+                • {lastUpdate.toLocaleTimeString()}
+              </span>
+            )}
+          </div>
+        </div>
       </header>
       <main className="container mx-auto p-8 space-y-8">
         <StatsCards stats={stats} />
         
         <div className="grid gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            <RunsTable runs={mockRuns} />
+            <RunsTable runs={runs} />
           </div>
           <div className="space-y-8">
-            <ProviderCards providers={mockProviders} />
-            <ActivityFeed items={mockActivity} />
+            <ProviderCards providers={providers} />
+            <ActivityFeed items={activityItems} />
           </div>
         </div>
       </main>
