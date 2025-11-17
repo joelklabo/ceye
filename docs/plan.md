@@ -191,6 +191,8 @@ Run `npx playwright test e2e/websocket-critical.spec.ts` to verify tests 9-10 no
 
 #### 0.7. Provider Health UI Redesign - Full Width & Details (HIGH 🟡) - 🔄 **IN PROGRESS** - 3-4 hours
 
+**📋 HANDOFF DOCUMENT**: See `tmp/task-0.7-handoff.md` for detailed status and next steps
+
 **Problem**: Provider cards don't match Activity feed styling
 - Cards use grid layout (doesn't fill width)
 - Missing webhook activity indicators
