@@ -1,0 +1,48 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - heading "🔍 ceye" [level=1] [ref=e4]
+    - generic [ref=e5]:
+      - link "🔔 Alerts" [ref=e6] [cursor=pointer]:
+        - /url: /alerts.html
+      - link "⚙️ Settings" [ref=e7] [cursor=pointer]:
+        - /url: /settings.html
+      - combobox "Change theme" [ref=e8] [cursor=pointer]:
+        - option "🌙 Dark" [selected]
+        - option "☀️ Light"
+        - option "🔆 Solarized Dark"
+        - option "🧛 Dracula"
+      - button "↻ Refresh" [ref=e9] [cursor=pointer]
+      - textbox "Search runs..." [ref=e10] [cursor=pointer]
+      - button "⌨️" [ref=e11] [cursor=pointer]
+  - generic [ref=e13]:
+    - generic [ref=e14]: ● Connected
+    - generic [ref=e15]: No updates yet
+    - button "Activity ▼" [ref=e16] [cursor=pointer]
+  - generic [ref=e18]:
+    - button "+ Provider" [ref=e19] [cursor=pointer]
+    - button "+ Status" [ref=e20] [cursor=pointer]
+    - generic [ref=e21]:
+      - combobox [ref=e22] [cursor=pointer]:
+        - option "Select Workspace..." [selected]
+      - button "💾 Save" [ref=e23] [cursor=pointer]
+  - generic [ref=e24]:
+    - generic [ref=e25]:
+      - generic [ref=e26]: Running
+      - generic [ref=e27]: "0"
+    - generic [ref=e28]:
+      - generic [ref=e29]: Queued
+      - generic [ref=e30]: "0"
+    - generic [ref=e31]:
+      - generic [ref=e32]: Success
+      - generic [ref=e33]: "0"
+    - generic [ref=e34]:
+      - generic [ref=e35]: Failed
+      - generic [ref=e36]: "0"
+  - generic [ref=e37]:
+    - heading "Active Runs" [level=2] [ref=e39]
+    - heading "Provider Health" [level=2] [ref=e41]
+  - contentinfo [ref=e42]
+```

@@ -5,7 +5,7 @@ COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 BUILD_TIME ?= $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 LDFLAGS := -X 'main.Version=$(VERSION)' -X 'main.GitCommit=$(COMMIT)' -X 'main.BuildTime=$(BUILD_TIME)'
 
-.PHONY: build run test fmt clean demo snapshot install
+.PHONY: build run test fmt clean demo snapshot install build-and-serve e2e-test
 
 build:
 	@echo "🔨 Building ceye..."
@@ -42,3 +42,11 @@ fmt:
 
 clean:
 	rm -rf bin
+
+build-and-serve: build
+	@echo "🚀 Starting ceye web server..."
+	@$(BINARY) --web
+
+e2e-test: build
+	@echo "🧪 Running E2E tests..."
+	@npm test

@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/atotto/clipboard"
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 
 	"github.com/joelklabo/ceye/internal/config"
@@ -34,7 +33,6 @@ import (
 	"github.com/joelklabo/ceye/internal/providers/manager"
 	"github.com/joelklabo/ceye/internal/server"
 	"github.com/joelklabo/ceye/internal/storage"
-	"github.com/joelklabo/ceye/internal/ui"
 	"github.com/joelklabo/ceye/internal/webhooks"
 )
 
@@ -83,7 +81,7 @@ func main() {
 	var webhookSecret string
 	rootCmd := &cobra.Command{
 		Use:     "ceye",
-		Short:   "CI Status Dashboard TUI",
+		Short:   "CI Status Dashboard Web UI",
 		Version: fmt.Sprintf("%s (%s)", Version, GitCommit),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return run(ctx, cfgPath, configDirFlag, demo, demoRuns, demoDuration, eventLogPath, notify, historyPath, webhookURL, resolveProviderStorePath(providerStoreFlag), githubOrgFlag, azureOrgFlag, azureProjectFlag, web, webPort, enableWebhooks, webhookPort, webhookSecret)
@@ -103,8 +101,8 @@ func main() {
 	rootCmd.PersistentFlags().StringVar(&githubOrgFlag, "github-org", "", "GitHub org used when auto-discovering repos via `gh repo list`")
 	rootCmd.PersistentFlags().StringVar(&azureOrgFlag, "azure-org", "", "Azure DevOps org (or URL) used when auto-discovering pipelines via `az pipelines list`")
 	rootCmd.PersistentFlags().StringVar(&azureProjectFlag, "azure-project", "", "Azure DevOps project scanned when auto-discovering pipelines")
-	rootCmd.PersistentFlags().BoolVar(&web, "web", false, "Start web server instead of TUI")
-	rootCmd.PersistentFlags().IntVar(&webPort, "port", 8080, "Port for web server (requires --web)")
+	rootCmd.PersistentFlags().BoolVar(&web, "web", true, "Start web server (default: true)")
+	rootCmd.PersistentFlags().IntVar(&webPort, "port", 8080, "Port for web server")
 	rootCmd.PersistentFlags().BoolVar(&alertDebug, "alert-debug", false, "Enable verbose alert debugging (logs all rule evaluations)")
 	rootCmd.PersistentFlags().BoolVar(&enableWebhooks, "webhooks", true, "Enable webhook receiver for push-based updates (default: true)")
 	rootCmd.PersistentFlags().IntVar(&webhookPort, "webhook-port", 9090, "Port for webhook server")
@@ -243,12 +241,8 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 
 	var providerInstances []core.Provider
 	var providerNames []string
-	var refreshers []func()
 	providerStatus := make(map[string]string)
-	providerTimes := make(map[string]time.Time)
 	providerHealth := make(map[string]core.ProviderHealth)
-	providerLastPoll := make(map[string]time.Time)
-	providerLag := make(map[string]time.Duration)
 
 	for _, candidate := range buildProviderEntries(cfg, providerStore) {
 		provider, err := providers.CreateProvider(candidate.Config, deps)
@@ -268,9 +262,6 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 		safeProvider := providers.NewSafeProvider(provider)
 		
 		alias := candidate.Alias
-		if refresher, ok := provider.(interface{ TriggerRefresh() }); ok {
-			refreshers = append(refreshers, refresher.TriggerRefresh)
-		}
 		providerInstances = append(providerInstances, wrapProvider(safeProvider, alias))
 		providerNames = append(providerNames, alias)
 		providerStatus[alias] = ""
@@ -395,299 +386,8 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 		}(provider)
 	}
 
-	refresh := func() {
-		for _, fn := range refreshers {
-			fn()
-		}
-	}
-
-	// If web mode, start HTTP server instead of TUI
-	if web {
-		return runWebServer(ctx, store, storageBackend, providerNames, providerStatus, providerHealth, storeEventCh, webPort, notify, webhookURL)
-	}
-
-	buildInfo := fmt.Sprintf("%s (%s)", Version, GitCommit)
-	model := ui.NewModelWithBuildInfo(store, providerNames, refresh, openURL, copyToClipboard, buildInfo)
-	
-	// Add trend analyzer if storage is available
-	if storageBackend != nil {
-		trendAnalyzer := storage.NewTrendAnalyzer(storageBackend)
-		model.SetTrendAnalyzer(trendAnalyzer)
-	}
-	
-	var program *tea.Program
-	snapshotMissing := func() []string {
-		missingConfigMu.RLock()
-		defer missingConfigMu.RUnlock()
-		return copyMissing(missingConfigs)
-	}
-
-	notifyMissing := func() {
-		if program == nil {
-			return
-		}
-		program.Send(ui.RunUpdatedMsg{
-			Timestamp:    time.Now(),
-			MissingRepos: snapshotMissing(),
-		})
-	}
-
-	model.SetMissingRepoAction(func() {
-		if configRoot == "" {
-			return
-		}
-		go func() {
-			list, listErr := listMissingConfigs(configRoot)
-			if listErr != nil {
-				fmt.Fprintf(os.Stderr, "missing configs: %v\n", listErr)
-				return
-			}
-			missingConfigMu.Lock()
-			missingConfigs = list
-			missingConfigMu.Unlock()
-			notifyMissing()
-		}()
-	})
-	model.SetProviderStoreAction(func(entry manager.ProviderRecord, action ui.ProviderStoreActionType) {
-		go func() {
-			switch action {
-			case ui.ProviderStoreActionToggle:
-				if err := providerStore.SetEnabled("ui", entry.ID, entry.Enabled); err != nil {
-					fmt.Fprintf(os.Stderr, "provider store: %v\n", err)
-					if program != nil {
-						program.Send(ui.RunUpdatedMsg{
-							Timestamp: time.Now(),
-							Message:   fmt.Sprintf("store update failed: %v", err),
-							Level:     "error",
-							Store:     copyProviderRecords(providerStore.List()),
-							Audit:     copyAudit(providerStore.Audit()),
-						})
-					}
-					return
-				}
-				msg := fmt.Sprintf("%s %s", providers.DisplayName(entry.Config), map[bool]string{true: "enabled", false: "disabled"}[entry.Enabled])
-				if program != nil {
-					program.Send(ui.RunUpdatedMsg{
-						Timestamp: time.Now(),
-						Message:   msg,
-						Level:     "info",
-						Store:     copyProviderRecords(providerStore.List()),
-						Audit:     copyAudit(providerStore.Audit()),
-					})
-				}
-			case ui.ProviderStoreActionEdit:
-				if err := providerStore.Update("ui", entry.ID, entry.Config); err != nil {
-					fmt.Fprintf(os.Stderr, "provider store: %v\n", err)
-					if program != nil {
-						program.Send(ui.RunUpdatedMsg{
-							Timestamp: time.Now(),
-							Message:   fmt.Sprintf("store update failed: %v", err),
-							Level:     "error",
-							Store:     copyProviderRecords(providerStore.List()),
-							Audit:     copyAudit(providerStore.Audit()),
-						})
-					}
-					return
-				}
-				if program != nil {
-					program.Send(ui.RunUpdatedMsg{
-						Timestamp: time.Now(),
-						Message:   fmt.Sprintf("%s updated", providers.DisplayName(entry.Config)),
-						Level:     "info",
-						Store:     copyProviderRecords(providerStore.List()),
-						Audit:     copyAudit(providerStore.Audit()),
-					})
-				}
-			case ui.ProviderStoreActionRemove:
-				if err := providerStore.Remove("ui", entry.ID); err != nil {
-					fmt.Fprintf(os.Stderr, "provider store: %v\n", err)
-					if program != nil {
-						program.Send(ui.RunUpdatedMsg{
-							Timestamp: time.Now(),
-							Message:   fmt.Sprintf("store removal failed: %v", err),
-							Level:     "error",
-							Store:     copyProviderRecords(providerStore.List()),
-							Audit:     copyAudit(providerStore.Audit()),
-						})
-					}
-					return
-				}
-				if program != nil {
-					program.Send(ui.RunUpdatedMsg{
-						Timestamp: time.Now(),
-						Message:   fmt.Sprintf("%s removed", providers.DisplayName(entry.Config)),
-						Level:     "info",
-						Store:     copyProviderRecords(providerStore.List()),
-						Audit:     copyAudit(providerStore.Audit()),
-					})
-				}
-			case ui.ProviderStoreActionDuplicate:
-				record, err := providerStore.Add("ui", entry.Config,
-					manager.WithAuditAction("duplicate"),
-					manager.WithAuditDetails(fmt.Sprintf("from %s", shortID(entry.ID))),
-				)
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "provider store duplicate: %v\n", err)
-					if program != nil {
-						program.Send(ui.RunUpdatedMsg{
-							Timestamp: time.Now(),
-							Message:   fmt.Sprintf("store duplication failed: %v", err),
-							Level:     "error",
-							Store:     copyProviderRecords(providerStore.List()),
-							Audit:     copyAudit(providerStore.Audit()),
-						})
-					}
-					return
-				}
-				if program != nil {
-					program.Send(ui.RunUpdatedMsg{
-						Timestamp: time.Now(),
-						Message:   fmt.Sprintf("%s duplicated (%s)", providers.DisplayName(entry.Config), shortID(record.ID)),
-						Level:     "info",
-						Store:     copyProviderRecords(providerStore.List()),
-						Audit:     copyAudit(providerStore.Audit()),
-					})
-				}
-			}
-		}()
-	})
-	program = tea.NewProgram(model)
-
-	runErr := make(chan error, 1)
-	go func() {
-		_, err := program.Run()
-		runErr <- err
-	}()
-
-	notifyMissing()
-
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case event := <-storeEventCh:
-				if eventLog != nil {
-					if err := writeEventLog(eventLog, event); err != nil {
-						fmt.Fprintf(os.Stderr, "log event: %v\n", err)
-					}
-				}
-				store.Merge(event)
-				message := ""
-				level := ""
-				ts := event.Timestamp
-				if ts.IsZero() {
-					ts = time.Now()
-				}
-				if event.Provider != "" {
-					if event.Err != nil {
-						providerStatus[event.Provider] = event.Err.Error()
-						message = fmt.Sprintf("%s: %v", event.Provider, event.Err)
-						level = "error"
-						health := providerHealth[event.Provider]
-						health.ErrorCount++
-						health.LastError = ts
-						providerHealth[event.Provider] = health
-					} else {
-						providerStatus[event.Provider] = ""
-						switch {
-						case event.Message != "":
-							message = fmt.Sprintf("%s: %s", event.Provider, event.Message)
-						case len(event.Runs) > 0:
-							message = fmt.Sprintf("%s refreshed %d run(s)", event.Provider, len(event.Runs))
-						default:
-							message = fmt.Sprintf("%s refreshed", event.Provider)
-						}
-						health := providerHealth[event.Provider]
-						health.LastSuccess = ts
-						health.ErrorCount = 0
-						providerHealth[event.Provider] = health
-						if len(event.Runs) > 0 {
-							hist := providerHistory[event.Provider]
-							for _, run := range event.Runs {
-								summary := fmt.Sprintf("%s • %s • %s", run.WorkflowName, run.Status, run.Branch)
-								if run.Conclusion != "" {
-									summary = fmt.Sprintf("%s (%s)", summary, run.Conclusion)
-								}
-								hist = append([]string{summary}, hist...)
-							}
-							if len(hist) > 5 {
-								hist = hist[:5]
-							}
-							providerHistory[event.Provider] = hist
-						}
-						if last, ok := providerLastPoll[event.Provider]; ok && last.After(time.Time{}) {
-							delta := ts.Sub(last)
-							providerLag[event.Provider] = delta
-							if delta > 10*time.Second {
-								message = fmt.Sprintf("%s (slow poll %s)", message, delta.Round(time.Second))
-							}
-						}
-						level = "info"
-					}
-					providerLastPoll[event.Provider] = ts
-					providerTimes[event.Provider] = ts
-					if historyPath != "" {
-						appendHistory(providerHistory, event.Provider, event.Runs, ts)
-						if err := saveHistory(historyPath, providerHistory); err != nil {
-							fmt.Fprintf(os.Stderr, "history: %v\n", err)
-						}
-					}
-				} else if event.Message != "" {
-					message = event.Message
-					if event.Err != nil {
-						level = "error"
-					} else {
-						level = "info"
-					}
-				}
-				if notify && event.Err != nil {
-					if err := sendNotification(event.Provider, event.Err.Error()); err != nil {
-						fmt.Fprintf(os.Stderr, "notify: %v\n", err)
-					}
-				}
-				if webhookURL != "" && event.Err != nil {
-					if err := sendWebhook(ctx, webhookURL, event.Provider, event.Err.Error(), ts); err != nil {
-						fmt.Fprintf(os.Stderr, "webhook: %v\n", err)
-					}
-				}
-				// Check if this is a webhook event (provider name ends with "-webhook")
-				isWebhook := strings.HasSuffix(event.Provider, "-webhook")
-				var webhookRun *core.Run
-				if isWebhook && len(event.Runs) > 0 {
-					webhookRun = &event.Runs[0]
-				}
-				
-				program.Send(ui.RunUpdatedMsg{
-					Timestamp:    ts,
-					Status:       copyStatus(providerStatus),
-					Times:        copyTimes(providerTimes),
-					Message:      message,
-					Level:        level,
-					Health:       copyHealth(providerHealth),
-					Lag:          copyLag(providerLag),
-					History:      copyHistory(providerHistory),
-					Store:        copyProviderRecords(providerStore.List()),
-					MissingRepos: snapshotMissing(),
-					IsWebhook:    isWebhook,
-					WebhookRun:   webhookRun,
-				})
-			}
-		}
-	}()
-
-	select {
-	case err := <-runErr:
-		if err != nil {
-			return fmt.Errorf("run UI: %w", err)
-		}
-	case <-ctx.Done():
-		program.Quit()
-		if err := <-runErr; err != nil {
-			return fmt.Errorf("run UI: %w", err)
-		}
-	}
-	return nil
+	// Web mode is now the default and only mode
+	return runWebServer(ctx, store, storageBackend, providerNames, providerStatus, providerHealth, storeEventCh, webPort, notify, webhookURL)
 }
 
 func githubToken() string {

@@ -27,6 +27,18 @@
             </div>
         </header>
 
+        <!-- Activity Monitor -->
+        <div class="activity-monitor">
+            <div class="activity-header">
+                <span id="connectionStatus" class="connection-indicator">● Connecting...</span>
+                <span id="lastUpdate" class="last-update">No updates yet</span>
+                <button onclick="toggleActivityLog()" class="btn-activity">Activity <span id="activityToggle">▼</span></button>
+            </div>
+            <div id="activityLog" class="activity-log" style="display: none;">
+                <div class="activity-item muted">Waiting for updates...</div>
+            </div>
+        </div>
+
         <!-- Filter Pills -->
         <div id="filterPills" class="filter-pills-container"></div>
 
@@ -74,8 +86,7 @@
         </div>
 
         <footer>
-            <span id="connectionStatus">Connecting...</span>
-            <span id="lastUpdate"></span>
+            <span id="versionInfo"></span>
         </footer>
     </div>
 

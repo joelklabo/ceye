@@ -1,0 +1,30 @@
+{
+  "name": "ceye",
+  "version": "1.0.0",
+  "description": "[![CI Status](https://github.com/joelklabo/ceye/workflows/CI/badge.svg)](https://github.com/joelklabo/ceye/actions) [![Tests](https://github.com/joelklabo/ceye/workflows/Comprehensive%20Tests/badge.svg)](https://github.com/joelklabo/ceye/actions/workflows/tests.yml) [![Security](https://github.com/joelklabo/ceye/workflows/Security%20Checks/badge.svg)](https://github.com/joelklabo/ceye/actions/workflows/security.yml) [![Code Quality](https://github.com/joelklabo/ceye/workflows/Code%20Quality/badge.svg)](https://github.com/joelklabo/ceye/actions/workflows/code-quality.yml) [![Go Report Card](https://goreportcard.com/badge/github.com/joelklabo/ceye)](https://goreportcard.com/report/github.com/joelklabo/ceye) [![codecov](https://codecov.io/gh/joelklabo/ceye/branch/main/graph/badge.svg)](https://codecov.io/gh/joelklabo/ceye) [![Go Version](https://img.shields.io/github/go-mod/go-version/joelklabo/ceye)](https://github.com/joelklabo/ceye/blob/main/go.mod) [![Release](https://img.shields.io/github/v/release/joelklabo/ceye)](https://github.com/joelklabo/ceye/releases/latest) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joelklabo/ceye.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/joelklabo/ceye/issues"
+  },
+  "homepage": "https://github.com/joelklabo/ceye#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "playwright": "^1.56.1"
+  }
+}

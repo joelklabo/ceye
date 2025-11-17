@@ -136,11 +136,21 @@ function connect() {
     ws.onopen = () => {
         console.log('WebSocket connected');
         updateConnectionStatus(true);
+        addActivityItem('websocket', 'Connected to server');
     };
     
     ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
         currentData = data;
+        
+        // Log activity
+        const runCount = data.runs ? data.runs.length : 0;
+        const activeCount = data.totals ? (data.totals.running + data.totals.queued) : 0;
+        addActivityItem('success', `Received update: ${runCount} runs (${activeCount} active)`);
+        
+        // Update last update timestamp
+        updateLastUpdate();
+        
         render(data);
     };
     
@@ -152,14 +162,75 @@ function connect() {
     ws.onclose = () => {
         console.log('WebSocket closed, reconnecting...');
         updateConnectionStatus(false);
+        addActivityItem('error', 'Disconnected from server, reconnecting...');
         reconnectTimeout = setTimeout(connect, 3000);
     };
 }
 
 function updateConnectionStatus(connected) {
     const status = document.getElementById('connectionStatus');
-    status.textContent = connected ? '● Connected' : '○ Disconnected';
-    status.className = connected ? 'connected' : 'disconnected';
+    if (connected) {
+        status.textContent = '● Connected';
+        status.className = 'connection-indicator connected';
+    } else {
+        status.textContent = '○ Disconnected';
+        status.className = 'connection-indicator disconnected';
+    }
+}
+
+function updateLastUpdate() {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString();
+    const lastUpdate = document.getElementById('lastUpdate');
+    if (lastUpdate) {
+        lastUpdate.textContent = `Last update: ${timeStr}`;
+    }
+}
+
+// Activity Log
+let activityLogOpen = false;
+const maxActivityItems = 50;
+
+function toggleActivityLog() {
+    const log = document.getElementById('activityLog');
+    const toggle = document.getElementById('activityToggle');
+    activityLogOpen = !activityLogOpen;
+    log.style.display = activityLogOpen ? 'block' : 'none';
+    toggle.textContent = activityLogOpen ? '▲' : '▼';
+}
+
+function addActivityItem(type, message, details) {
+    const log = document.getElementById('activityLog');
+    if (!log) return;
+    
+    const now = new Date();
+    const timestamp = now.toLocaleTimeString();
+    
+    const item = document.createElement('div');
+    item.className = `activity-item ${type} activity-pulse`;
+    
+    const content = `<span class="timestamp">${timestamp}</span><span class="message">${message}</span>`;
+    item.innerHTML = details ? `${content}<div class="details">${details}</div>` : content;
+    
+    // Remove first item if over limit
+    if (log.children.length >= maxActivityItems) {
+        log.removeChild(log.firstChild);
+    }
+    
+    // Clear "waiting" message on first real item
+    if (log.children.length === 1 && log.firstChild.classList.contains('muted')) {
+        log.innerHTML = '';
+    }
+    
+    log.appendChild(item);
+    
+    // Auto-scroll to bottom if near bottom
+    if (log.scrollHeight - log.scrollTop <= log.clientHeight + 50) {
+        log.scrollTop = log.scrollHeight;
+    }
+    
+    // Remove pulse after animation
+    setTimeout(() => item.classList.remove('activity-pulse'), 500);
 }
 
 function render(data) {
@@ -403,6 +474,7 @@ const shortcuts = {
 
 function refresh() {
     if (ws && ws.readyState === WebSocket.OPEN) {
+        addActivityItem('websocket', 'Requesting refresh from server');
         ws.send('refresh');
     }
 }
@@ -446,6 +518,7 @@ function addProviderFilter() {
     if (provider && !filters.providers.includes(provider)) {
         filters.providers.push(provider);
         saveFilters();
+        addActivityItem('success', `Added provider filter: ${provider}`);
         if (currentData) render(currentData);
     }
 }
@@ -455,6 +528,7 @@ function addStatusFilter() {
     if (status && availableStatuses.includes(status) && !filters.statuses.includes(status)) {
         filters.statuses.push(status);
         saveFilters();
+        addActivityItem('success', `Added status filter: ${status}`);
         if (currentData) render(currentData);
     }
 }
@@ -475,9 +549,7 @@ document.addEventListener('keydown', (e) => {
 
 // Event listeners
 document.getElementById('refreshBtn').addEventListener('click', () => {
-    if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send('refresh');
-    }
+    refresh();
 });
 
 document.getElementById('searchBox').addEventListener('input', (e) => {

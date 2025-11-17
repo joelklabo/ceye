@@ -25,21 +25,21 @@ Based on user feedback, we're making significant changes:
 **Goal**: Remove terminal UI completely and focus on web-only
 
 **Tasks**:
-- [ ] Delete `internal/ui/` package entirely
-- [ ] Remove Bubble Tea dependencies (`go.mod`, `go.sum`)
+- [✅] Delete `internal/ui/` package entirely
+- [✅] Remove Bubble Tea dependencies (`go.mod`, `go.sum`)
   - `github.com/charmbracelet/bubbletea`
   - `github.com/charmbracelet/bubbles`
   - `github.com/charmbracelet/lipgloss`
-- [ ] Update `cmd/ceye/main.go`:
+- [✅] Update `cmd/ceye/main.go`:
   - Remove TUI mode flags
   - Remove TUI initialization code
   - Make `--web` the default mode
   - Keep webhook and demo flags
-- [ ] Remove TUI tests from test suite
+- [✅] Remove TUI tests from test suite (no separate TUI tests existed)
 - [ ] Update `docs/agents.md` (remove all TUI sections)
 - [ ] Update `docs/readme.md` (remove TUI examples)
-- [ ] Run `go mod tidy` to clean dependencies
-- [ ] Verify: `make build && make test` passes
+- [✅] Run `go mod tidy` to clean dependencies
+- [✅] Verify: `make build && make test` passes
 
 **Success Criteria**: 
 - No TUI code remains
