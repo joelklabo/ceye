@@ -1,0 +1,145 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - heading "🔍 ceye" [level=1] [ref=e7]
+        - paragraph [ref=e8]: CI/CD Monitoring Dashboard
+      - generic [ref=e9]:
+        - generic [ref=e10]:
+          - img [ref=e13]
+          - generic [ref=e15]:
+            - img [ref=e16]
+            - generic [ref=e23]: OFFLINE
+        - button "Switch to dark theme" [ref=e24] [cursor=pointer]:
+          - img [ref=e25]
+  - main [ref=e27]:
+    - paragraph [ref=e29]: "Connection error: WebSocket error occurred. Retrying..."
+    - generic [ref=e30]:
+      - generic [ref=e32]:
+        - generic [ref=e33]:
+          - paragraph [ref=e34]: Running
+          - paragraph [ref=e35]: "1"
+        - img [ref=e37]
+      - generic [ref=e41]:
+        - generic [ref=e42]:
+          - paragraph [ref=e43]: Queued
+          - paragraph [ref=e44]: "1"
+        - img [ref=e46]
+      - generic [ref=e51]:
+        - generic [ref=e52]:
+          - paragraph [ref=e53]: Success
+          - paragraph [ref=e54]: "1"
+        - img [ref=e56]
+      - generic [ref=e61]:
+        - generic [ref=e62]:
+          - paragraph [ref=e63]: Failed
+          - paragraph [ref=e64]: "1"
+        - img [ref=e66]
+    - generic [ref=e71]:
+      - generic [ref=e73]:
+        - generic [ref=e74]:
+          - img [ref=e75]
+          - textbox "Search runs..." [ref=e78]
+        - table [ref=e81]:
+          - rowgroup [ref=e82]:
+            - row "Provider Repo Workflow Status Duration Time" [ref=e83]:
+              - cell "Provider" [ref=e84]:
+                - button "Provider" [ref=e85] [cursor=pointer]:
+                  - text: Provider
+                  - img [ref=e86]
+              - cell "Repo" [ref=e89]:
+                - button "Repo" [ref=e90] [cursor=pointer]:
+                  - text: Repo
+                  - img [ref=e91]
+              - cell "Workflow" [ref=e94]
+              - cell "Status" [ref=e95]:
+                - button "Status" [ref=e96] [cursor=pointer]:
+                  - text: Status
+                  - img [ref=e97]
+              - cell "Duration" [ref=e100]
+              - cell "Time" [ref=e101]:
+                - button "Time" [ref=e102] [cursor=pointer]:
+                  - text: Time
+                  - img [ref=e103]
+          - rowgroup [ref=e106]:
+            - row "demo example/service-3 Deploy success 5m 0s just now" [ref=e107]:
+              - cell "demo" [ref=e108]
+              - cell "example/service-3" [ref=e109]:
+                - link "example/service-3" [ref=e110] [cursor=pointer]:
+                  - /url: https://example.com/demo/3
+              - cell "Deploy" [ref=e111]
+              - cell "success" [ref=e112]:
+                - generic [ref=e113]: success
+              - cell "5m 0s" [ref=e114]
+              - cell "just now" [ref=e115]
+            - row "demo example/service-1 Build failed 4m 0s just now" [ref=e116]:
+              - cell "demo" [ref=e117]
+              - cell "example/service-1" [ref=e118]:
+                - link "example/service-1" [ref=e119] [cursor=pointer]:
+                  - /url: https://example.com/demo/4
+              - cell "Build" [ref=e120]
+              - cell "failed" [ref=e121]:
+                - generic [ref=e122]: failed
+              - cell "4m 0s" [ref=e123]
+              - cell "just now" [ref=e124]
+            - row "demo example/service-1 Build queued - just now" [ref=e125]:
+              - cell "demo" [ref=e126]
+              - cell "example/service-1" [ref=e127]:
+                - link "example/service-1" [ref=e128] [cursor=pointer]:
+                  - /url: https://example.com/demo/1
+              - cell "Build" [ref=e129]
+              - cell "queued" [ref=e130]:
+                - generic [ref=e131]: queued
+              - cell "-" [ref=e132]
+              - cell "just now" [ref=e133]
+            - row "demo example/service-2 Test in_progress - just now" [ref=e134]:
+              - cell "demo" [ref=e135]
+              - cell "example/service-2" [ref=e136]:
+                - link "example/service-2" [ref=e137] [cursor=pointer]:
+                  - /url: https://example.com/demo/2
+              - cell "Test" [ref=e138]
+              - cell "in_progress" [ref=e139]:
+                - generic [ref=e140]: in_progress
+              - cell "-" [ref=e141]
+              - cell "just now" [ref=e142]
+      - generic [ref=e143]:
+        - generic [ref=e144]:
+          - heading "Provider Health" [level=2] [ref=e145]
+          - generic [ref=e147]:
+            - generic [ref=e148]:
+              - generic [ref=e149]:
+                - generic [ref=e150]: D
+                - generic [ref=e151]:
+                  - heading "demo" [level=3] [ref=e152]
+                  - paragraph [ref=e153]: "Last update: just now"
+              - img [ref=e155]
+            - generic [ref=e157]: ✓ Healthy
+        - generic [ref=e158]:
+          - generic [ref=e159]:
+            - heading "Activity" [level=2] [ref=e160]
+            - button "Collapse" [ref=e161] [cursor=pointer]
+          - generic [ref=e164]:
+            - generic [ref=e165]:
+              - img [ref=e167]
+              - generic [ref=e169]:
+                - paragraph [ref=e170]: Test • example/service-2/develop
+                - paragraph [ref=e171]: 06:11:41 AM
+            - generic [ref=e172]:
+              - img [ref=e174]
+              - generic [ref=e177]:
+                - paragraph [ref=e178]: Build • example/service-1/main
+                - paragraph [ref=e179]: 06:11:41 AM
+            - generic [ref=e180]:
+              - img [ref=e182]
+              - generic [ref=e186]:
+                - paragraph [ref=e187]: Build • example/service-1/main
+                - paragraph [ref=e188]: 06:11:41 AM
+            - generic [ref=e189]:
+              - img [ref=e191]
+              - generic [ref=e194]:
+                - paragraph [ref=e195]: Deploy • example/service-3/release
+                - paragraph [ref=e196]: 06:11:41 AM
+```

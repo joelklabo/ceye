@@ -22,7 +22,7 @@
 
 ```
 ceye/
-├── cmd/ci-dash/           # Main application entry point
+├── cmd/ceye/              # Main application entry point
 ├── internal/
 │   ├── core/              # Core types (Run, RunEvent, Provider, Store)
 │   ├── config/            # Configuration loading and validation
@@ -197,8 +197,8 @@ See [docs/plan.md](docs/plan.md) for full details on Options 2-5.
 
 ```bash
 cd /Users/honk/code/ceye
-go build -o bin/ci-dash ./cmd/ci-dash
-sudo cp bin/ci-dash /usr/local/bin/ci-dash
+go build -o bin/ceye ./cmd/ceye
+sudo cp bin/ceye /usr/local/bin/ceye
 ```
 
 **Important**: Rebuild after any code changes to keep the CLI on your PATH up to date.
@@ -223,13 +223,13 @@ go test -cover ./...
 
 ```bash
 # Web mode (default and only mode)
-ci-dash --port 8080
+ceye --port 8080
 
 # Demo mode
-ci-dash --demo --demo-duration 5m --port 8080
+ceye --demo --demo-duration 5m --port 8080
 
 # With config
-ci-dash --config path/to/ceye.yaml --port 8080
+ceye --config path/to/ceye.yaml --port 8080
 ```
 
 ## UI Testing Strategy
@@ -238,7 +238,7 @@ ci-dash --config path/to/ceye.yaml --port 8080
 
 1. **Start web server**
 ```bash
-./bin/ci-dash --port 8080
+./bin/ceye --port 8080
 ```
 
 2. **Open browser**
@@ -486,10 +486,53 @@ const activityItems = useMemo(() =>
 5. Commit with test
 6. No changes to plan.md needed for bugs
 
+## Troubleshooting Bash Sessions
+
+When AI agents have issues with bash sessions (timeouts, hangs, unresponsive), use these steps:
+
+### Diagnosing Issues
+
+1. **List active bash sessions**: Check what's running
+2. **Check for hung processes**: `ps aux | grep -E "(playwright|node|ceye)"`
+3. **Check port conflicts**: `lsof -i :8080` to see if port is already in use
+4. **Check process tree**: See if background processes are blocking
+
+### Resolving Issues
+
+1. **Kill specific processes**: `pkill -f "process-name"` (e.g., `pkill -f "ceye"`)
+2. **Kill port users**: `kill -9 <PID>` for processes blocking ports
+3. **Use new session IDs**: Don't reuse a problematic sessionId
+4. **Stop bash sessions**: Use `stop_bash` tool with the sessionId (kills the whole session)
+
+### Prevention
+
+- **Unique sessionIds**: Always use unique sessionIds for different operations
+- **Appropriate timeouts**: Set `initial_wait` to 60-120s for builds/tests
+- **Detached mode for servers**: Use `mode="detached"` for long-running servers
+- **Clean up after**: Always `pkill -f "process-name"` after testing
+- **Check before starting**: Verify port is free before starting server
+
+### Example Cleanup Sequence
+
+```bash
+# Stop any running ceye instances
+pkill -f "ceye"
+
+# Check if port 8080 is free
+lsof -i :8080
+
+# If occupied, kill it
+kill -9 <PID>
+
+# Now start fresh
+go build -o bin/ci-dash ./cmd/ci-dash
+./bin/ci-dash --demo --port 8080
+```
+
 ## Key Files and Locations
 
 ### Code
-- `cmd/ci-dash/main.go` - Entry point
+- `cmd/ceye/main.go` - Entry point
 - `internal/core/types.go` - Core types
 - `internal/core/store.go` - Run store
 - `internal/providers/safe.go` - SafeProvider wrapper
@@ -508,7 +551,7 @@ const activityItems = useMemo(() =>
 
 ### Tests
 - `internal/core/provider_contract_test.go` - Contract test suite
-- `cmd/ci-dash/integration_test.go` - Integration tests
+- `cmd/ceye/integration_test.go` - Integration tests
 - `internal/providers/safe_test.go` - Safety tests
 
 ## Provider Implementation Guide
@@ -939,23 +982,23 @@ build: web-build
 1. **docs/plan.md** - What to work on next
 2. **internal/core/types.go** - Core data structures
 3. **internal/providers/safe.go** - Provider safety wrapper
-4. **cmd/ci-dash/main.go** - Application entry point
+4. **cmd/ceye/main.go** - Application entry point
 
 ### Most Important Commands
 
 ```bash
 # Build and test
-go build -o bin/ci-dash ./cmd/ci-dash
+go build -o bin/ceye ./cmd/ceye
 go test ./...
 
 # Run locally with demo
-./bin/ci-dash --demo --port 8080
+./bin/ceye --demo --port 8080
 
 # Run dashboard
-./bin/ci-dash --port 8080
+./bin/ceye --port 8080
 
 # Install globally
-sudo cp bin/ci-dash /usr/local/bin/
+sudo cp bin/ceye /usr/local/bin/
 ```
 
 ### Most Important Patterns
