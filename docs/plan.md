@@ -61,57 +61,163 @@
 
 ## Current Sprint
 
-### Sprint Status (Updated: 2025-11-16 18:48 UTC)
+### Sprint Status (Updated: 2025-11-16 20:51 UTC)
 
-**Current Work**: Option 3 - Azure DevOps Provider ✅ **WEEKS 1-2 COMPLETE**
+**Current Work**: Option 2 - Enhanced Monitoring - **Phase 2.3 COMPLETE** ✅
 
-**Progress**:
+**Recently Completed (2025-11-16)**:
+- ✅ **Phase 2.3: Alerting and Notifications (COMPLETE - 2025-11-16)**
+  - Alert engine with rule evaluation and cooldown (engine.go, 1160 lines)
+  - 4 alert conditions: workflow_failed, high_failure_rate, duration_spike, build_queued_too_long
+  - 3 notification channels: Slack, Webhook, Log
+  - Configuration system with env var expansion
+  - Full integration with main app (event fan-out)
+  - 10 alerting tests, all passing
+  - Total: 165+ tests passing
+
+**Progress Timeline**:
 - ✅ Week 1, Phase 1: API Client Completion (COMPLETE)
-  - Created comprehensive Azure REST API client (`client.go`, 400 lines)
-  - Implemented retry logic, rate limiting, error handling
-  - Added status/conclusion mapping for all Azure states
-  - Created test suite (`client_test.go`, 360 lines, 20+ tests)
 - ✅ Week 1, Phase 2: Response Parsing (COMPLETE)
-  - All Azure statuses and results mapped to core types
-  - Build parsing with duration calculation
-  - Branch name normalization
-  - In-progress build handling
 - ✅ Week 1, Phase 3: Testing (COMPLETE)
-  - Unit tests: 25+ tests covering all mappings and parsing
-  - Contract tests: Provider interface compliance
-  - Multi-project configuration tests
-  - Custom display name tests
 - ✅ Week 2, Phase 1: Provider Core (COMPLETE)
-  - Enhanced provider with multi-project support
-  - Configurable display names
-  - Environment variable integration (AZURE_PAT)
-  - Adaptive polling with custom intervals
-  - Comprehensive documentation (README.md, 10KB)
-- ✅ Week 2, Phase 2: Config Integration (COMPLETE - 2025-11-16)
-  - Updated factory to support multi-project configuration
-  - Added configurable fast/slow polling intervals via config
-  - Fixed main.go integration with new client interface
-  - All tests passing (140+)
-  - Binary builds successfully
-- ✅ **Phase 2.1: Historical Data Storage (COMPLETE - 2025-11-16)**
-  - SQLite storage backend with 11 storage tests
-  - Store integration with async persistence
-  - Query interface with 4 query methods
-  - 155+ tests passing
-- 🎯 Next: Phase 2.2 - Trends and Analytics
+- ✅ Week 2, Phase 2: Config Integration (COMPLETE)
+- ✅ **Phase 2.1: Historical Data Storage (COMPLETE)**
+- ✅ **Phase 2.2: Trends and Analytics (COMPLETE)**
+- ✅ **Phase 2.3: Alerting and Notifications (COMPLETE)**
+- 🎯 **Next: Option B - Polish Alerting UI (1 day)**
+- 🎯 **Then: Option C - User Experience Enhancements (1 week)**
 
 ### Sprint Goals
-Implement enhanced monitoring, complete Azure DevOps provider, improve UX, and add advanced testing capabilities.
+Polish alerting with UI visibility, then enhance overall user experience with keyboard shortcuts, themes, and advanced features.
 
 ### Priority Order
-1. ✅ Azure DevOps Provider (foundational) - **COMPLETE** (Weeks 1-2 done, Week 3 deferred)
-2. 🎯 **Enhanced Monitoring** (high value) - **STARTING NOW**
-3. Advanced Testing (quality assurance)
-4. User Experience (polish)
+1. ✅ Azure DevOps Provider (foundational) - **COMPLETE**
+2. ✅ Enhanced Monitoring - Phases 2.1-2.3 **COMPLETE**
+3. 🎯 **Option B: Polish Alerting UI** (1 day) - **CURRENT PRIORITY**
+4. 🎯 **Option C: User Experience** (1 week) - **NEXT**
+5. Option 5: Advanced Testing (quality assurance)
 
 ---
 
-## Option 2: Enhanced Monitoring
+## Option B: Polish Alerting UI
+
+### Overview
+Add UI visibility for the alerting system so users can see alert history, debug rules, and understand alert patterns. Makes the powerful alerting engine user-visible and debuggable.
+
+**Duration**: 1 day  
+**Status**: 🎯 **READY TO START**
+
+### B.1 TUI Alert History Panel (3 hours)
+
+**Goal**: Show recent alerts in the terminal UI
+
+#### Implementation Plan
+
+**Phase B.1.1: Alert Storage in Core (1 hour)**
+- [ ] Add `AlertHistory` to core.Store
+  ```go
+  type AlertRecord struct {
+      RuleName    string
+      Condition   string
+      Message     string
+      Severity    string
+      Run         core.Run
+      TriggeredAt time.Time
+  }
+  ```
+- [ ] Add `store.RecordAlert(alert)` method
+- [ ] Keep last 100 alerts in memory
+- [ ] Add `store.GetRecentAlerts(limit)` method
+- [ ] Update alerting engine to record to store
+
+**Phase B.1.2: TUI Alerts Panel (1.5 hours)**
+- [ ] Create `renderAlertsPanel()` in ui/model.go
+- [ ] Add 'A' key binding to toggle alerts view
+- [ ] Show table with: Time, Severity, Rule, Message
+- [ ] Color-code by severity (red=critical, yellow=warning)
+- [ ] Add "No alerts" empty state
+- [ ] Update help text with 'A' key
+
+**Phase B.1.3: Alert Indicator (30 min)**
+- [ ] Add alert count to status bar
+- [ ] Visual indicator (🔴) when alert fired in last 5 min
+- [ ] Flash effect when new alert arrives
+
+**Testing**
+- [ ] Unit test AlertRecord storage
+- [ ] Test alert panel rendering
+- [ ] Test keyboard navigation
+
+### B.2 Web UI Alerts Page (3 hours)
+
+**Goal**: Show alert history in web dashboard
+
+#### Implementation Plan
+
+**Phase B.2.1: API Endpoint (1 hour)**
+- [ ] Add `/api/alerts/history` endpoint
+  - Query params: `limit`, `severity`, `rule`
+- [ ] Return JSON array of AlertRecord
+- [ ] Add to WebSocket updates (broadcast new alerts)
+- [ ] Add endpoint tests
+
+**Phase B.2.2: Alerts HTML Page (1.5 hours)**
+- [ ] Create `web/alerts.html`
+- [ ] Table view with sortable columns
+- [ ] Severity badges with colors
+- [ ] Filter by severity/rule
+- [ ] Search by message text
+- [ ] Auto-refresh via WebSocket
+- [ ] Link from main dashboard
+
+**Phase B.2.3: Alert Notifications (30 min)**
+- [ ] Toast notification when alert fires
+- [ ] Alert counter badge in nav
+- [ ] Sound notification (optional, user setting)
+
+**Testing**
+- [ ] API endpoint tests
+- [ ] WebSocket broadcast test
+- [ ] Manual browser testing
+
+### B.3 Alert Management Features (2 hours)
+
+**Goal**: Control and debug alerts
+
+#### Implementation Plan
+
+**Phase B.3.1: Alert Details View (1 hour)**
+- [ ] Click alert to see full details
+- [ ] Show full run information
+- [ ] Show rule configuration
+- [ ] Link to run URL
+- [ ] "Dismiss" button (TUI + Web)
+
+**Phase B.3.2: Rule Status (30 min)**
+- [ ] Show rule stats: fires/hour, last fired
+- [ ] Show cooldown status
+- [ ] Indicator for muted rules (future)
+
+**Phase B.3.3: Debug Mode (30 min)**
+- [ ] `--alert-debug` flag for verbose logging
+- [ ] Log all rule evaluations (not just fires)
+- [ ] Show condition check details
+
+**Testing**
+- [ ] Test alert details rendering
+- [ ] Test rule stats calculation
+- [ ] Test debug logging
+
+### Success Criteria
+- ✅ Can see last 20-50 alerts in TUI
+- ✅ Can browse alert history in web UI
+- ✅ Can identify noisy rules
+- ✅ Visual confirmation when alerts fire
+- ✅ Easy debugging of alert rules
+
+---
+
+## Option C: User Experience Enhancements
 
 ### Overview
 Add historical data tracking, trends analysis, alerting, and performance metrics to provide deeper insights into CI/CD health.
@@ -498,12 +604,292 @@ Complete the Azure DevOps provider implementation to match GitHub provider featu
 
 ---
 
-## Option 4: User Experience
+## Option C: User Experience Enhancements
 
 ### Overview
-Enhance user experience with keyboard shortcuts, theming, customization, and saved preferences.
+Enhance user experience with keyboard shortcuts, theming, customization, advanced filtering, and saved preferences. Makes ceye feel polished and professional.
 
-### 4.1 Keyboard Shortcuts (Week 1)
+**Duration**: 1 week (5 days)  
+**Status**: 📋 **PLANNED** (starts after Option B)
+
+### C.1 Keyboard Shortcuts & Navigation (Day 1 - 8 hours)
+
+**Goal**: Power-user keyboard navigation for both TUI and Web UI
+
+#### Implementation Plan
+
+**Phase C.1.1: Web UI Keyboard System (4 hours)**
+- [ ] Implement JS keyboard handler in web/script.js
+  ```javascript
+  const shortcuts = {
+      'r': refresh,              // Refresh data
+      '/': focusSearch,          // Focus search
+      'Escape': clearFilters,    // Clear filters/search
+      '1-9': switchProvider,     // Switch provider tabs
+      'f': cycleStatusFilter,    // Cycle status filter
+      'g': goToTop,              // Jump to top
+      'G': goToBottom,           // Jump to bottom
+      'j': selectNext,           // Select next run
+      'k': selectPrevious,       // Select previous run
+      'Enter': openRunDetails,   // Open selected run
+      'o': openRunInBrowser,     // Open in external browser
+      'y': copyRunURL,           // Copy URL to clipboard
+      'a': showAlerts,           // Jump to alerts page
+      't': showTrends,           // Jump to trends page
+      '?': showHelp              // Show keyboard shortcuts help
+  };
+  ```
+- [ ] Add keyboard event listener with preventDefault
+- [ ] Handle key combinations (Ctrl/Cmd modifiers)
+- [ ] Add visual feedback (highlight selected row)
+- [ ] Prevent conflicts with browser shortcuts
+
+**Phase C.1.2: Help Overlay Modal (2 hours)**
+- [ ] Create help modal HTML/CSS
+- [ ] Show on `?` key press
+- [ ] Group shortcuts by category:
+  - Navigation (g, G, j, k)
+  - Actions (r, o, y, a, t)
+  - Filtering (/, f, Escape)
+  - Provider switching (1-9)
+- [ ] Make dismissible with ESC or click outside
+- [ ] Add "View shortcuts" link to nav
+
+**Phase C.1.3: TUI Shortcuts Review (2 hours)**
+- [ ] Audit existing TUI shortcuts
+- [ ] Add missing shortcuts to match web UI
+- [ ] Ensure vim-like navigation (j/k)
+- [ ] Add 'a' for alerts panel
+- [ ] Update help text (press '?')
+- [ ] Add shortcut hints to panels
+
+**Testing**
+- [ ] Test all shortcuts in both TUI and Web
+- [ ] Test key conflicts
+- [ ] Test with different browsers
+- [ ] Accessibility testing
+
+### C.2 Theme System (Day 2 - 8 hours)
+
+**Goal**: Beautiful themes with dark/light modes
+
+#### Implementation Plan
+
+**Phase C.2.1: CSS Variables Theme Engine (3 hours)**
+- [ ] Define CSS custom properties:
+  ```css
+  :root[data-theme="dark"] {
+      --bg-primary: #1a1b26;
+      --bg-secondary: #24283b;
+      --text-primary: #a9b1d6;
+      --text-secondary: #787c99;
+      --accent-blue: #7aa2f7;
+      --accent-green: #9ece6a;
+      --accent-yellow: #e0af68;
+      --accent-red: #f7768e;
+      --border: #414868;
+      /* ... */
+  }
+  ```
+- [ ] Convert all hardcoded colors to variables
+- [ ] Create theme switcher component
+- [ ] Add theme persistence (localStorage)
+- [ ] Add smooth transition animations
+
+**Phase C.2.2: Theme Presets (3 hours)**
+- [ ] Dark (default) - Tokyo Night inspired
+- [ ] Light - Clean and bright
+- [ ] Solarized Dark
+- [ ] Solarized Light
+- [ ] Dracula - Purple/pink accents
+- [ ] Nord - Cool blues
+- [ ] Add theme selector dropdown
+- [ ] Add theme preview thumbnails
+
+**Phase C.2.3: TUI Color Schemes (2 hours)**
+- [ ] Use lipgloss adaptive colors
+- [ ] Support `COLORTERM` detection
+- [ ] Add `--theme` CLI flag
+- [ ] Respect NO_COLOR environment
+- [ ] Document terminal requirements
+
+**Testing**
+- [ ] Visual testing across themes
+- [ ] Contrast ratio testing (WCAG AA)
+- [ ] Terminal color testing
+- [ ] Theme persistence testing
+
+### C.3 Advanced Filtering (Day 3 - 8 hours)
+
+**Goal**: Powerful filtering to find exactly what you need
+
+#### Implementation Plan
+
+**Phase C.3.1: Multi-Criteria Filters (4 hours)**
+- [ ] Add filter builder UI
+  ```javascript
+  filters: {
+      providers: ['github', 'azure'],     // Multi-select
+      status: ['failed', 'in_progress'],  // Multi-select
+      repos: ['myorg/api', 'myorg/web'],  // Multi-select
+      workflows: ['CI', 'Deploy'],        // Multi-select
+      branches: ['main', 'develop'],      // Multi-select
+      timeRange: 'last-24h',              // Preset or custom
+      searchText: 'timeout',              // Full-text search
+  }
+  ```
+- [ ] Add filter pills (removable tags)
+- [ ] Add "Clear all" button
+- [ ] URL state management (shareable links)
+- [ ] Filter persistence (localStorage)
+
+**Phase C.3.2: Saved Filters (2 hours)**
+- [ ] "Save current filters" button
+- [ ] Named filter presets:
+  - "Production failures"
+  - "In progress"
+  - "Recent main branch"
+- [ ] Quick filter dropdown
+- [ ] Edit/delete saved filters
+
+**Phase C.3.3: Smart Search (2 hours)**
+- [ ] Search across multiple fields
+- [ ] Search operators:
+  - `repo:myorg/api` - Repo filter
+  - `status:failed` - Status filter
+  - `branch:main` - Branch filter
+  - `provider:github` - Provider filter
+- [ ] Search suggestions/autocomplete
+- [ ] Search history
+
+**Testing**
+- [ ] Filter combination tests
+- [ ] URL encoding/decoding tests
+- [ ] Performance with many filters
+- [ ] Filter persistence tests
+
+### C.4 Saved Views & Workspaces (Day 4 - 8 hours)
+
+**Goal**: Custom dashboard layouts and workspace management
+
+#### Implementation Plan
+
+**Phase C.4.1: Dashboard Layouts (4 hours)**
+- [ ] Implement layout engine:
+  ```javascript
+  layouts: {
+      'default': {
+          panels: ['runs', 'active', 'health', 'failures', 'trends'],
+          columns: [12, 6, 6, 6, 6], // Bootstrap-style cols
+      },
+      'compact': {
+          panels: ['runs', 'active'],
+          columns: [12, 12],
+      },
+      'analytics': {
+          panels: ['trends', 'analytics', 'runs'],
+          columns: [6, 6, 12],
+      }
+  }
+  ```
+- [ ] Add panel visibility toggles
+- [ ] Add panel resizing
+- [ ] Add layout selector dropdown
+- [ ] Save layout preferences
+
+**Phase C.4.2: Workspaces (2 hours)**
+- [ ] Workspace = filters + layout + settings
+- [ ] Create workspace UI
+- [ ] Quick switch dropdown
+- [ ] Import/export workspaces (JSON)
+
+**Phase C.4.3: Dashboard Customization (2 hours)**
+- [ ] Show/hide columns in run table
+- [ ] Configurable refresh intervals
+- [ ] Notification preferences
+- [ ] Font size adjustment
+- [ ] Compact/comfortable density
+
+**Testing**
+- [ ] Layout persistence tests
+- [ ] Workspace import/export tests
+- [ ] Multi-workspace tests
+
+### C.5 User Preferences & Settings Page (Day 5 - 8 hours)
+
+**Goal**: Centralized settings and preferences
+
+#### Implementation Plan
+
+**Phase C.5.1: Settings Page UI (4 hours)**
+- [ ] Create `/settings` page
+- [ ] Sections:
+  - **Appearance**: Theme, density, font size
+  - **Behavior**: Auto-refresh, notifications, sounds
+  - **Filters**: Default filters, saved filters
+  - **Workspaces**: Manage workspaces
+  - **Keyboard**: Customize shortcuts
+  - **Advanced**: Debug mode, API settings
+- [ ] Form validation
+- [ ] "Reset to defaults" button
+- [ ] Export/import all settings
+
+**Phase C.5.2: Preferences Backend (2 hours)**
+- [ ] Settings storage (localStorage)
+- [ ] Settings versioning/migration
+- [ ] Settings validation
+- [ ] Settings sync API (future: cloud sync)
+
+**Phase C.5.3: User Onboarding (2 hours)**
+- [ ] First-run welcome modal
+- [ ] Quick setup wizard
+- [ ] Feature tour (optional)
+- [ ] "What's new" on updates
+- [ ] Link to documentation
+
+**Testing**
+- [ ] Settings persistence tests
+- [ ] Migration tests
+- [ ] Form validation tests
+- [ ] Cross-browser testing
+
+### C.6 Polish & Quality (Throughout)
+
+**Ongoing tasks integrated into each phase:**
+
+- [ ] Add loading states everywhere
+- [ ] Add empty states with helpful messages
+- [ ] Add error states with recovery actions
+- [ ] Improve error messages (user-friendly)
+- [ ] Add tooltips for all icons/buttons
+- [ ] Add animations (subtle, not distracting)
+- [ ] Optimize performance (debounce, memoization)
+- [ ] Add accessibility labels (ARIA)
+- [ ] Test on mobile browsers
+- [ ] Add print stylesheet
+
+### Success Criteria
+
+- ✅ All shortcuts work in TUI and Web
+- ✅ 6 beautiful themes available
+- ✅ Can find any run in < 3 seconds
+- ✅ Can save and share workspace configurations
+- ✅ Settings persist across sessions
+- ✅ First-time users understand the UI immediately
+- ✅ Power users can navigate entirely with keyboard
+- ✅ WCAG AA accessibility compliance
+
+### Metrics
+
+- Keyboard shortcut usage > 30% of power users
+- < 5 clicks to any feature
+- Settings page visit within first session > 60%
+- User-created workspaces > 2 per active user
+- Theme other than default > 40% adoption
+
+---
+
+## Option 2: Enhanced Monitoring (ARCHIVED - COMPLETED)
 
 **Goal**: Comprehensive keyboard navigation for web UI
 
