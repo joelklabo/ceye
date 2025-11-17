@@ -74,14 +74,14 @@ func main() {
 	var web bool
 	var webPort int
 	rootCmd := &cobra.Command{
-		Use:     "ci-dash",
+		Use:     "ceye",
 		Short:   "CI Status Dashboard TUI",
 		Version: fmt.Sprintf("%s (%s)", Version, GitCommit),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return run(ctx, cfgPath, configDirFlag, demo, demoRuns, demoDuration, eventLogPath, notify, historyPath, webhookURL, resolveProviderStorePath(providerStoreFlag), githubOrgFlag, azureOrgFlag, azureProjectFlag, web, webPort)
 		},
 	}
-	rootCmd.SetVersionTemplate("ci-dash version {{.Version}}\n")
+	rootCmd.SetVersionTemplate("ceye version {{.Version}}\n")
 	rootCmd.PersistentFlags().StringVar(&cfgPath, "config", "", "Path to config file (defaults to ceye.yaml search paths)")
 	rootCmd.PersistentFlags().BoolVar(&demo, "demo", false, "Run with the built-in demo provider (ignores config)")
 	rootCmd.PersistentFlags().IntVar(&demoRuns, "demo-runs", 4, "Number of demo runs when --demo is set")
