@@ -26,6 +26,7 @@ import (
 
 	"github.com/joelklabo/ceye/internal/config"
 	"github.com/joelklabo/ceye/internal/core"
+	"github.com/joelklabo/ceye/internal/alerting"
 	"github.com/joelklabo/ceye/internal/providers"
 	azureprovider "github.com/joelklabo/ceye/internal/providers/azure"
 	githubprovider "github.com/joelklabo/ceye/internal/providers/github"
@@ -132,8 +133,18 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 		if demoRuns <= 0 {
 			demoRuns = 4
 		}
+		// Load config first to preserve alerting settings
+		var loadedCfg *config.Config
+		if cfgPath != "" {
+			loadedCfg, _ = config.Load(cfgPath)
+		}
+		
+		// Create demo config, but preserve alerting from loaded config
 		cfg = &config.Config{
 			Providers: []providers.ProviderConfig{{Type: "demo", Runs: demoRuns}},
+		}
+		if loadedCfg != nil {
+			cfg.Alerting = loadedCfg.Alerting
 		}
 	} else {
 		if cfgPath == "" {
@@ -231,7 +242,59 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 		store = core.NewStore()
 	}
 	
+	// Initialize alerting engine if configured
+	var alertEngine *alerting.Engine
+	if cfg != nil && cfg.Alerting != nil && cfg.Alerting.Enabled {
+		if storageBackend == nil {
+			fmt.Fprintf(os.Stderr, "warning: alerting requires storage, but storage initialization failed\n")
+		} else {
+			engine, err := config.BuildAlertEngine(cfg.Alerting, storageBackend)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "warning: failed to initialize alerting: %v\n", err)
+			} else {
+				alertEngine = engine
+				fmt.Printf("alerting: loaded %d rules with %d channels\n", 
+					len(cfg.Alerting.Rules), len(cfg.Alerting.Channels))
+			}
+		}
+	}
+	
 	eventCh := make(chan core.RunEvent)
+	
+	// Fan out events to alerting engine if configured
+	var storeEventCh chan core.RunEvent
+	if alertEngine != nil {
+		// Create separate channels for store and alerting
+		storeEventCh = make(chan core.RunEvent, 100)
+		alertEventCh := make(chan core.RunEvent, 100)
+		
+		// Start alerting engine
+		go alertEngine.Start(ctx, alertEventCh)
+		
+		// Fan out events
+		go func() {
+			for event := range eventCh {
+				// Send to store (TUI/Web UI)
+				select {
+				case storeEventCh <- event:
+				case <-ctx.Done():
+					return
+				}
+				
+				// Send to alerting engine
+				select {
+				case alertEventCh <- event:
+				case <-ctx.Done():
+					return
+				}
+			}
+			close(storeEventCh)
+			close(alertEventCh)
+		}()
+	} else {
+		// No alerting, events go directly to store
+		storeEventCh = eventCh
+	}
 
 	for _, provider := range providerInstances {
 		go func(p core.Provider) {
@@ -249,7 +312,7 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 
 	// If web mode, start HTTP server instead of TUI
 	if web {
-		return runWebServer(ctx, store, storageBackend, providerNames, providerStatus, providerHealth, eventCh, webPort, notify, webhookURL)
+		return runWebServer(ctx, store, storageBackend, providerNames, providerStatus, providerHealth, storeEventCh, webPort, notify, webhookURL)
 	}
 
 	buildInfo := fmt.Sprintf("%s (%s)", Version, GitCommit)
@@ -412,7 +475,7 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 			select {
 			case <-ctx.Done():
 				return
-			case event := <-eventCh:
+			case event := <-storeEventCh:
 				if eventLog != nil {
 					if err := writeEventLog(eventLog, event); err != nil {
 						fmt.Fprintf(os.Stderr, "log event: %v\n", err)
