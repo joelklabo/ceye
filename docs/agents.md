@@ -825,6 +825,60 @@ await page.goto(URL);
 
 **Why**: WebSocket connections establish during page load. If you inject the interceptor after `goto()`, you miss the initial snapshot.
 
+#### Migrating Playwright Tests from Static HTML to React
+
+**Problem**: After migrating from static HTML to a React SPA, 25/95 tests fail with "element not found" errors.
+
+**Root Cause**: Tests written for static HTML use specific selectors that don't exist in React components.
+
+**Critical Lesson from Test Migration (commit 0055187)**:
+
+When migrating to React:
+
+1. **Delete obsolete tests** - Tests for features that don't exist (settings page, alerts, workspace selector)
+2. **Simplify selectors** - Use text content, not specific HTML structure
+3. **Add timeouts** - React needs time to render (2-3s)
+4. **Use flexible patterns** - Match multiple states (LIVE|OFFLINE)
+5. **Remove old test dependencies** - Delete tests for old architecture (Tailwind direct tests)
+
+```typescript
+// ❌ BAD - Tests old HTML structure
+test('shows connection status', async ({ page }) => {
+  await page.goto('http://localhost:8080')
+  await page.waitForSelector('h1:has-text("ceye")')  // Specific structure
+  await expect(page.locator('#connection-status')).toBeVisible()  // Specific ID
+})
+
+// ✅ GOOD - Tests React app behavior
+test('shows connection status', async ({ page }) => {
+  await page.goto('http://localhost:8080')
+  await page.waitForTimeout(3000)  // Wait for React to render
+  
+  // Look for either connected or disconnected state
+  const status = page.locator('text=/LIVE|OFFLINE/').first()
+  await expect(status).toBeVisible({ timeout: 15000 })
+})
+```
+
+**Migration Strategy**:
+1. Run tests and identify failure patterns
+2. Check if feature still exists in React app
+3. If yes: Update selectors to match React components
+4. If no: Delete the test (feature removed)
+5. Add React-specific tests (component loading, state updates)
+
+**Key Changes**:
+- Static HTML: Immediate rendering → React: Async rendering
+- Old: Fixed structure (`#id`, `.class`) → New: Content-based (`text=/pattern/`)
+- Old: 5s timeout → New: 15s timeout (React takes longer)
+- Old: 95 tests → New: 20 tests (removed obsolete)
+
+**Files to Review**:
+- Old tests backed up in `tmp/old-tests/`
+- New tests: `e2e/react-app.spec.ts`, `e2e/dashboard-react.spec.ts`, `e2e/connection-indicator.spec.ts`
+
+**Result**: 20/22 tests passing (2 skipped for cross-browser screenshots)
+
 ### React + Vite + Go Embedding
 
 **Problem**: Need to embed a React app built with Vite into a Go binary.
