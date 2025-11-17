@@ -1,24 +1,278 @@
 # ceye Development Plan
 
-**Last Updated**: 2025-11-17 09:07 UTC  
-**Status**: Major Refactor in Progress 🚧
+**Last Updated**: 2025-11-17 10:19 UTC  
+**Status**: React Migration - Building Stunning Dashboard 🚀
 
 ## Current Status
 
-**Pivoting to Web-Only Architecture**
+**React Migration Approved - Priority #1**
 
-Based on user feedback, we're making significant changes:
-- 🔄 **Remove Terminal UI** - Focus on web interface only
-- 🔄 **Redesign UI** - Simplify and improve UX
-- 🔄 **Fix Critical Bugs** - E2E tests revealing issues
-- 🔄 **Add Activity Feed** - Real-time event stream on main page
-- 🔄 **Enhance Debugging** - Built-in telemetry dashboard
+Based on research and user approval, we're migrating to a modern React stack to achieve a stunning, production-quality dashboard that rivals Vercel, Linear, and Railway.
 
-**Total Work**: ~24 hours across 10 phases
+**New Direction**:
+- 🚀 **React + Vite + Shadcn/ui** - Modern, beautiful components
+- 🎨 **Professional Design** - Dark-first, animated, polished
+- 📦 **TypeScript** - Type-safe, excellent DX
+- ⚡ **Framer Motion** - Buttery smooth animations
+- ♿ **Accessibility-first** - ARIA compliant, keyboard nav
+
+**Total Work**: ~22 hours across 4 phases
 
 ---
 
 ## 🚧 Active Development Tasks
+
+### Phase 0: React Migration (22 hours) - **PRIORITY 0** 🔥🔥🔥
+
+**Goal**: Migrate to React + Vite + Shadcn/ui for a stunning, production-quality dashboard
+
+**Why React?**
+- ✅ Component-based architecture (vs manual DOM manipulation)
+- ✅ Modern animations (Framer Motion)
+- ✅ Type-safe (TypeScript)
+- ✅ Excellent DX (hot reload, fast builds)
+- ✅ Production-ready UI components (Shadcn/ui)
+- ✅ Industry standard stack (easy hiring, huge ecosystem)
+- ✅ Still embeddable in Go backend
+
+**Tech Stack**:
+- **Vite** - Lightning fast build tool, instant HMR
+- **React 19** - Modern UI library
+- **TypeScript** - Type safety
+- **Shadcn/ui** - Accessible components on Radix UI
+- **Tailwind CSS v3** - Utility-first styling
+- **Framer Motion** - Production-grade animations
+- **ApexCharts** - Real-time chart animations
+- **React Query (TanStack Query)** - Server state management
+- **Lucide Icons** - Modern, beautiful icons
+
+**Design Inspiration**:
+- **Vercel** - Clean, professional, modern
+- **Linear** - Minimal, functional, beautiful typography
+- **Railway** - Bold colors, clear status indicators
+
+**Color Palette**:
+```
+Dark Mode (Primary):
+- Background: #0a0a0a (deep black)
+- Surface: #18181b (elevated cards)
+- Border: #27272a (subtle dividers)
+- Text: #fafafa (high contrast)
+- Muted: #71717a (secondary text)
+
+Status Colors:
+- Success: #22c55e (green-500)
+- Error: #ef4444 (red-500)
+- Warning: #f59e0b (amber-500)
+- Info: #3b82f6 (blue-500)
+- Running: #8b5cf6 (purple-500)
+```
+
+**Project Structure**:
+```
+ceye/
+├── web/                          # NEW: React app
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── ui/              # Shadcn components
+│   │   │   ├── dashboard/
+│   │   │   ├── runs/
+│   │   │   └── providers/
+│   │   ├── hooks/
+│   │   ├── lib/
+│   │   ├── App.tsx
+│   │   └── main.tsx
+│   ├── public/
+│   ├── index.html
+│   ├── package.json
+│   ├── vite.config.ts
+│   └── tailwind.config.ts
+└── internal/server/
+    └── server.go                 # Serves embedded React build
+```
+
+---
+
+#### Phase 0.1: Foundation Setup (4 hours) - **CURRENT TASK**
+
+**Goal**: Initialize React project and verify Go embedding works
+
+**Tasks**:
+- [ ] Initialize Vite + React + TypeScript project in `/web`
+  - `npm create vite@latest web -- --template react-ts`
+- [ ] Install dependencies:
+  - `npm install -D tailwindcss postcss autoprefixer`
+  - `npm install @radix-ui/react-* (Shadcn dependencies)`
+  - `npm install framer-motion apexcharts`
+  - `npm install @tanstack/react-query`
+  - `npm install lucide-react`
+- [ ] Initialize Shadcn/ui:
+  - `npx shadcn-ui@latest init`
+  - Configure with Tailwind v3
+- [ ] Configure Vite build:
+  - Output to `dist/` folder
+  - Set base path for embedded serving
+- [ ] Update Go server:
+  - Change embed directive from `internal/server/web` to `web/dist`
+  - Update static file serving
+- [ ] Create basic App shell:
+  - Simple header + main layout
+  - Test component rendering
+- [ ] Test build & embed:
+  - `npm run build` (creates dist/)
+  - `go build` (embeds dist/)
+  - Verify Go serves React app at http://localhost:8080
+- [ ] Add npm scripts to Makefile:
+  - `make web-dev` (starts Vite dev server)
+  - `make web-build` (builds for production)
+  - `make build` (builds web + Go)
+
+**Success Criteria**:
+- ✅ Vite dev server runs (localhost:5173)
+- ✅ React app renders "Hello World"
+- ✅ Go embeds and serves React build
+- ✅ No build errors
+- ✅ Hot reload works in dev mode
+
+---
+
+#### Phase 0.2: Core Components (8 hours)
+
+**Goal**: Build main dashboard components with animations
+
+**Tasks**:
+- [ ] **Stats Cards** (2 hours)
+  - 4 cards: Running, Queued, Success, Failed
+  - Animated counters (count up/down)
+  - Pulse effect on value changes
+  - Gradient backgrounds
+  - Shadcn Card component
+  
+- [ ] **Runs Table** (3 hours)
+  - Shadcn Table component
+  - Columns: Provider, Repo, Workflow, Status, Duration, Time
+  - Sorting (click headers)
+  - Filtering (search box)
+  - Status badges with colors
+  - Row hover effects (subtle lift)
+  - Smooth entrance animations for new rows
+  - Skeleton loader during fetch
+  
+- [ ] **Provider Health Cards** (2 hours)
+  - Card per provider
+  - Health indicator with pulse when active
+  - Last update timestamp
+  - Error states with messages
+  - Hover effect with lift
+  - Status colors transition smoothly
+  
+- [ ] **Activity Feed** (1 hour)
+  - Stacked timeline design
+  - Slide-in animation for new entries
+  - Lucide icons for event types
+  - Timestamp formatting
+  - Auto-scroll behavior
+  - Clear button
+
+**Success Criteria**:
+- ✅ All components render correctly
+- ✅ Animations smooth at 60fps
+- ✅ Responsive layout
+- ✅ Accessible (keyboard nav, ARIA labels)
+
+---
+
+#### Phase 0.3: Real-Time Integration (4 hours)
+
+**Goal**: Connect React to Go WebSocket for live updates
+
+**Tasks**:
+- [ ] **WebSocket Hook** (2 hours)
+  - Custom `useWebSocket` hook
+  - Auto-reconnect on disconnect
+  - Heartbeat/ping-pong
+  - Error handling
+  - Connection status indicator
+  
+- [ ] **React Query Setup** (1 hour)
+  - Configure QueryClient
+  - Set up providers
+  - Cache configuration
+  - Optimistic updates
+  
+- [ ] **Real-Time Updates** (1 hour)
+  - WebSocket messages update React Query cache
+  - All components reactively update
+  - Smooth transitions between states
+  - Toast notifications for important events
+  - No UI flicker or jump
+
+**Success Criteria**:
+- ✅ WebSocket connects on page load
+- ✅ Real-time updates appear instantly
+- ✅ Reconnection works seamlessly
+- ✅ No memory leaks
+- ✅ Smooth, no jarring updates
+
+---
+
+#### Phase 0.4: Polish & Excellence (6 hours)
+
+**Goal**: Make it stunning and production-ready
+
+**Tasks**:
+- [ ] **Animations & Micro-interactions** (2 hours)
+  - Framer Motion on all transitions
+  - Hover effects on interactive elements
+  - Loading states (skeleton screens)
+  - Success/error animations
+  - Page transition effects
+  - Ripple effect on clicks
+  
+- [ ] **Responsive Design** (1 hour)
+  - Mobile layout (stack cards)
+  - Tablet layout (2-column grid)
+  - Desktop layout (3-column grid)
+  - Test on 320px, 768px, 1024px, 1920px
+  
+- [ ] **Accessibility** (1 hour)
+  - Keyboard navigation (Tab, Enter, Esc)
+  - Screen reader labels
+  - Focus indicators
+  - Color contrast audit (WCAG AA)
+  - Skip links
+  
+- [ ] **Performance Optimization** (1 hour)
+  - Code splitting (React.lazy)
+  - Memoization (React.memo, useMemo)
+  - Debounce WebSocket updates
+  - Virtual scrolling for large lists
+  - Bundle size analysis
+  
+- [ ] **Error Boundaries** (0.5 hour)
+  - Catch component errors
+  - Graceful fallback UI
+  - Error reporting
+  
+- [ ] **Dark Mode** (0.5 hour)
+  - Respect system preference
+  - Smooth theme transitions
+  - Persisted user choice
+
+**Success Criteria**:
+- ✅ Animations are buttery smooth (60fps)
+- ✅ Responsive on all screen sizes
+- ✅ Accessible (keyboard + screen reader)
+- ✅ Bundle size < 400KB gzipped
+- ✅ Lighthouse score > 90
+- ✅ No console errors/warnings
+- ✅ Looks stunning! 🤩
+
+**Commit**: After Phase 0.4 complete
+
+---
+
+## Previous Completed Phases
 
 ### Phase 1: Remove TUI (2 hours) - **PRIORITY 1**
 
@@ -832,26 +1086,23 @@ All 5 phases complete:
 
 | Phase | Priority | Hours | Status |
 |-------|----------|-------|--------|
-| 1. Remove TUI | P1 🔥 | 2h | ✅ Done |
-| 1.5. Remove "Web UI" Term | P1 🔥 | 0.25h | ✅ Done |
-| 2. Fix Critical Bugs | P1 🔥 | 1h | 🚧 In Progress |
-| 2.5. UI Modernization | P1.5 🔥 | 22h | ⏳ Ready |
-| 3. UI Simplification | P2 | 2h | ⏳ Blocked |
-| 4. Activity Feed | P2 | 3h | ⏳ Blocked by P2 |
-| 5. Provider Cards | P3 | 4h | ⏳ Blocked by P2 |
-| 6. Webhook Visual | P3 | 2h | ⏳ Blocked by P2 |
-| 7. Debug Dashboard | P4 | 4h | ⏳ Blocked by P2 |
-| 8. Webhook Integration | P1 🔥 | 2h | ⏳ Ready |
-| 9. E2E Tests | P4 | 3h | ⏳ Blocked by all |
-| 10. Documentation | P4 | 1h | ⏳ Blocked by all |
-| **Total** | | **46h** | |
+| **0. React Migration** | **P0 🔥🔥🔥** | **22h** | **🚧 IN PROGRESS** |
+| 0.1. Foundation Setup | P0 🔥🔥🔥 | 4h | ⏳ **NEXT UP** |
+| 0.2. Core Components | P0 🔥🔥🔥 | 8h | ⏳ Blocked by 0.1 |
+| 0.3. Real-Time Integration | P0 🔥🔥🔥 | 4h | ⏳ Blocked by 0.2 |
+| 0.4. Polish & Excellence | P0 🔥🔥🔥 | 6h | ⏳ Blocked by 0.3 |
+| 1. Remove TUI | P1 | 2h | ✅ Done |
+| 1.5. Remove "Web UI" Term | P1 | 0.25h | ✅ Done |
+| 2. Fix Critical Bugs | P1 | 1h | ✅ Done |
+| 3-10. Old Phases | P2-P4 | 22h | ❌ DEPRECATED (superseded by Phase 0) |
+| **Total** | | **22h** | |
 
 **Next Steps**:
 1. ✅ Phase 1 (Remove TUI) - DONE
 2. ✅ Phase 1.5 (Remove "Web UI" terminology) - DONE  
-3. 🚧 Phase 2 (Fix Bugs) - IN PROGRESS (1/4 tasks done)
-4. ⏳ Phase 2.5 (UI Modernization) - **NEXT UP** after Phase 2
-5. Continue building momentum!
+3. ✅ Phase 2 (Fix Bugs) - DONE
+4. 🚧 Phase 0.1 (React Foundation) - **STARTING NOW** 🚀
+5. Build the most beautiful CI/CD dashboard ever!
 
 ---
 
