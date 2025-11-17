@@ -486,7 +486,7 @@ export const ManyFailed: StoryObj<typeof StatsCards> = {
 
 **Agent**: Phoenix + Sage | **Time**: 30 minutes (estimated 1 hour)
 
-##### 0.7.3 Update Tests for Demo Mode (LOW 🟢) - 30 min
+##### 0.7.3 Update Tests for Demo Mode (LOW 🟢) - 🔄 **IN PROGRESS (Sage)** - 30 min
 **Problem**: Tests fail because demo provider doesn't generate webhooks (polling only)
 
 **Solution**: Make webhook tests conditional (check if element exists, don't fail if absent)
