@@ -147,12 +147,24 @@ func versionCmd() *cobra.Command {
 }
 
 func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRuns int, demoDuration time.Duration, eventLogPath string, notify bool, historyPath string, webhookURL string, providerStorePath string, githubOrg, azureOrg, azureProject string, web bool, webPort int, enableWebhooks bool, webhookPort int, webhookSecret string) error {
+	// Startup timing instrumentation
+	startupStart := time.Now()
+	var phaseStart time.Time
+	logPhase := func(name string) {
+		if !phaseStart.IsZero() {
+			fmt.Fprintf(os.Stderr, "   ⏱️  %s (%dms)\n", name, time.Since(phaseStart).Milliseconds())
+		}
+		phaseStart = time.Now()
+	}
+	
 	// Print version info immediately
 	exe, _ := os.Executable()
 	fmt.Fprintf(os.Stderr, "🚀 ceye %s (%s) starting...\n", Version, GitCommit)
 	fmt.Fprintf(os.Stderr, "   Build: %s\n", BuildTime)
 	fmt.Fprintf(os.Stderr, "   Binary: %s\n", exe)
 	fmt.Fprintf(os.Stderr, "\n")
+	
+	phaseStart = time.Now() // Start timing first phase
 	
 	ctx, cancel := context.WithCancel(parentCtx)
 	defer cancel()
@@ -206,11 +218,13 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 			providerHistory["missing"] = missingConfigs
 		}
 	}
+	logPhase("Config loaded")
 
 	providerStore, err := manager.New(providerStorePath)
 	if err != nil {
 		return fmt.Errorf("provider store: %w", err)
 	}
+	logPhase("Provider store initialized")
 	if configRoot != "" {
 		if list, listErr := listMissingConfigs(configRoot); listErr != nil {
 			fmt.Fprintf(os.Stderr, "missing configs: %v\n", listErr)
@@ -272,6 +286,7 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 			providerMeta[alias] = server.ProviderMeta{Logo: candidate.Config.Logo}
 		}
 	}
+	logPhase(fmt.Sprintf("Providers created (%d)", len(providerInstances)))
 	
 	// Initialize storage for historical data
 	var store *core.Store
@@ -295,6 +310,7 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 	} else {
 		store = core.NewStore()
 	}
+	logPhase("Storage initialized")
 	
 	// Initialize alerting engine if configured
 	var alertEngine *alerting.Engine
@@ -346,6 +362,7 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 		log.Printf("   GitHub: http://localhost:%d/webhooks/github", webhookPort)
 		log.Printf("   Azure:  http://localhost:%d/webhooks/azure", webhookPort)
 		log.Printf("   Expose with: ngrok http %d", webhookPort)
+		logPhase("Webhook server started")
 	}
 	
 	// Fan out events to alerting engine if configured
@@ -393,6 +410,12 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 	}
 
 	// Web mode is now the default and only mode
+	logPhase("Providers started")
+	
+	// Print total startup time
+	totalStartup := time.Since(startupStart).Milliseconds()
+	fmt.Fprintf(os.Stderr, "\n   ✅ Total startup time: %dms\n\n", totalStartup)
+	
 	return runWebServer(ctx, store, storageBackend, providerNames, providerStatus, providerHealth, providerMeta, storeEventCh, webPort, notify, webhookURL)
 }
 
