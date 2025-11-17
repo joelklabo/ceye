@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
-	"log"
 	"net/http"
 	"strconv"
 	"sync"
@@ -39,6 +38,8 @@ type Server struct {
 	version    string
 	gitCommit  string
 	buildTime  string
+	logBroadcaster *LogBroadcaster
+	logger         *CustomLogger
 }
 
 type ProviderMeta struct {
@@ -61,7 +62,16 @@ type Message struct {
 }
 
 func New(store *core.Store, providerNames []string, port int, webFS fs.FS) *Server {
-	return &Server{
+	// Create LogBroadcaster first
+	lb := NewLogBroadcaster(nil) // Temporarily pass nil for logger, will set later
+
+	// Create CustomLogger, passing the LogBroadcaster
+	logger := NewCustomLogger(lb, "server")
+
+	// Now set the logger for the LogBroadcaster
+	lb.SetLogger(logger)
+
+	s := &Server{
 		store:          store,
 		port:           port,
 		clients:        make(map[*websocket.Conn]bool),
@@ -77,7 +87,10 @@ func New(store *core.Store, providerNames []string, port int, webFS fs.FS) *Serv
 				return true
 			},
 		},
+		logBroadcaster: lb,
+		logger:         logger,
 	}
+	return s
 }
 
 // SetTrendAnalyzer sets the optional trend analyzer for analytics
@@ -106,6 +119,8 @@ func (s *Server) Start(ctx context.Context) error {
 	
 	// WebSocket endpoint
 	mux.HandleFunc("/ws", s.handleWebSocket)
+	// Log WebSocket endpoint
+	mux.HandleFunc("/debug/logs", s.handleLogWebSocket)
 	
 	// Analytics API endpoint
 	mux.HandleFunc("/api/analytics/trends", s.handleAnalyticsTrends)
@@ -131,12 +146,12 @@ func (s *Server) Start(ctx context.Context) error {
 		server.Shutdown(context.Background())
 	}()
 	
-	log.Printf("Web server starting on http://localhost:%d", s.port)
+	s.logger.Info("Web server starting on http://localhost:%d", s.port)
 	
 	// Start listening
 	err = server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
-		log.Printf("Web server error: %v", err)
+		s.logger.Error("Web server error: %v", err)
 	}
 	return err
 }
@@ -144,7 +159,7 @@ func (s *Server) Start(ctx context.Context) error {
 func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	conn, err := s.upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Printf("WebSocket upgrade failed: %v", err)
+		s.logger.Error("WebSocket upgrade failed: %v", err)
 		return
 	}
 	
@@ -182,7 +197,7 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		
 		// Handle refresh command
 		if msgType == websocket.TextMessage && string(msg) == "refresh" {
-			log.Printf("Client requested refresh, sending updated snapshot")
+			s.logger.Info("Client requested refresh, sending updated snapshot")
 			s.sendSnapshot(conn)
 		}
 	}
@@ -240,7 +255,7 @@ func (s *Server) sendSnapshot(conn *websocket.Conn) {
 	}
 	
 	if err := s.writeJSON(conn, msg); err != nil { // Changed to use s.writeJSON
-		log.Printf("Failed to send snapshot: %v", err)
+		s.logger.Error("Failed to send snapshot: %v", err)
 	}
 }
 
@@ -338,7 +353,7 @@ func (s *Server) handleAnalyticsTrends(w http.ResponseWriter, r *http.Request) {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	if err := enc.Encode(response); err != nil {
-		log.Printf("Failed to write analytics response: %v", err)
+		s.logger.Error("Failed to write analytics response: %v", err)
 	}
 }
 
@@ -440,4 +455,30 @@ func (s *Server) handleRuleStats(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"rules": stats,
 	})
+}
+
+// handleLogWebSocket handles WebSocket connections for the log stream.
+func (s *Server) handleLogWebSocket(w http.ResponseWriter, r *http.Request) {
+	conn, err := s.upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		s.logger.Error("Log WebSocket upgrade failed: %v", err)
+		return
+	}
+
+	s.logBroadcaster.AddClient(conn)
+
+	defer func() {
+		s.logBroadcaster.RemoveClient(conn)
+		conn.Close()
+	}()
+
+	// Keep the connection alive. No messages are expected from the client for logs.
+	for {
+		// This is a read-only WebSocket for the client, but we need to read to detect disconnects.
+		// We don't expect any specific messages, just check for errors.
+		_, _, err := conn.ReadMessage()
+		if err != nil {
+			break // Exit loop on error (e.g., client disconnected)
+		}
+	}
 }

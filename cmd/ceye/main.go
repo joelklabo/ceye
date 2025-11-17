@@ -161,10 +161,10 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 	
 	// Print version info immediately
 	exe, _ := os.Executable()
-	fmt.Fprintf(os.Stderr, "🚀 ceye %s (%s) starting...\n", Version, GitCommit)
-	fmt.Fprintf(os.Stderr, "   Build: %s\n", BuildTime)
-	fmt.Fprintf(os.Stderr, "   Binary: %s\n", exe)
-	fmt.Fprintf(os.Stderr, "\n")
+	srv.logger.Info("🚀 ceye %s (%s) starting...", Version, GitCommit)
+	srv.logger.Info("   Build: %s", BuildTime)
+	srv.logger.Info("   Binary: %s", exe)
+	srv.logger.Info("")
 	
 	phaseStart = time.Now() // Start timing first phase
 	
@@ -430,11 +430,18 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 	// Web mode is now the default and only mode
 	logPhase("Providers started")
 	
+	
 	// Print total startup time
 	totalStartup := time.Since(startupStart).Milliseconds()
 	fmt.Fprintf(os.Stderr, "\n   ✅ Total startup time: %dms\n\n", totalStartup)
 	
-	return runWebServer(ctx, store, storageBackend, providerNames, providerStatus, providerHealth, providerMeta, storeEventCh, webPort, notify, webhookURL)
+	srv, err := runWebServer(ctx, store, storageBackend, providerNames, providerStatus, providerHealth, providerMeta, storeEventCh, webPort, notify, webhookURL)
+	if err != nil {
+		return err
+	}
+
+	// Redirect standard log output to the server's log broadcaster
+	log.SetOutput(server.NewLogWriter(srv.logBroadcaster, "stdlog"))
 }
 
 func githubToken() string {

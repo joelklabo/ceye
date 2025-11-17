@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bug, X, Trash2, ChevronDown, ChevronRight } from 'lucide-react'
+import { Bug, X, Trash2, ChevronDown, ChevronRight, Circle } from 'lucide-react'
+import { useLogStream } from '../../hooks/useLogStream'
 
 interface WebSocketMessage {
   timestamp: Date
@@ -17,6 +18,12 @@ export function DebugPanel() {
   const [activeTab, setActiveTab] = useState<'websocket' | 'logs' | 'events'>('websocket')
   const [messages, setMessages] = useState<WebSocketMessage[]>([])
   const [expandedMessage, setExpandedMessage] = useState<number | null>(null)
+
+  // Log stream hook
+  const { logs, isConnected: logStreamConnected, clearLogs } = useLogStream({
+    enabled: isOpen && activeTab === 'logs',
+    maxEntries: 500,
+  })
 
   // Persist panel state
   useEffect(() => {
@@ -211,13 +218,75 @@ export function DebugPanel() {
               )}
 
               {activeTab === 'logs' && (
-                <div className="p-4">
-                  <div className="text-sm text-muted-foreground">
-                    Frontend console logs will appear here...
+                <div className="p-4 space-y-2">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="text-sm text-muted-foreground">
+                        {logs.length} log {logs.length === 1 ? 'entry' : 'entries'}
+                      </div>
+                      <div className="flex items-center gap-1 text-xs">
+                        <Circle
+                          className={`h-2 w-2 ${logStreamConnected ? 'fill-green-500 text-green-500' : 'fill-red-500 text-red-500'}`}
+                        />
+                        <span className={logStreamConnected ? 'text-green-500' : 'text-red-500'}>
+                          {logStreamConnected ? 'Connected' : 'Disconnected'}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={clearLogs}
+                      className="flex items-center gap-1 px-2 py-1 text-xs bg-muted hover:bg-muted/80 rounded"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                      Clear
+                    </button>
                   </div>
-                  <div className="mt-4 text-xs text-muted-foreground">
-                    Coming soon: Real-time console.log() capture
-                  </div>
+
+                  {logs.length === 0 ? (
+                    <div className="text-center py-8 text-sm text-muted-foreground">
+                      No logs yet. Backend logs will appear here in real-time...
+                    </div>
+                  ) : (
+                    <div className="space-y-1 font-mono text-xs">
+                      {logs.map((log, index) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          className={`p-2 rounded border ${
+                            log.level === 'ERROR'
+                              ? 'border-red-500/30 bg-red-500/10'
+                              : log.level === 'WARN'
+                              ? 'border-yellow-500/30 bg-yellow-500/10'
+                              : log.level === 'DEBUG'
+                              ? 'border-blue-500/30 bg-blue-500/10'
+                              : 'border-border bg-card/50'
+                          }`}
+                        >
+                          <div className="flex items-start gap-2">
+                            <span className="text-muted-foreground shrink-0">
+                              {new Date(log.timestamp).toLocaleTimeString()}
+                            </span>
+                            <span
+                              className={`font-semibold shrink-0 ${
+                                log.level === 'ERROR'
+                                  ? 'text-red-400'
+                                  : log.level === 'WARN'
+                                  ? 'text-yellow-400'
+                                  : log.level === 'DEBUG'
+                                  ? 'text-blue-400'
+                                  : 'text-green-400'
+                              }`}
+                            >
+                              {log.level}
+                            </span>
+                            <span className="text-primary shrink-0">[{log.component}]</span>
+                            <span className="text-foreground break-all">{log.message}</span>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
