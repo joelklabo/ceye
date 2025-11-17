@@ -20,6 +20,7 @@ type StorageBackend interface {
 type Store struct {
 	mu      sync.RWMutex
 	runs    map[string]Run
+	alerts  []AlertRecord // Recent alerts (last 100)
 	storage StorageBackend // Optional persistent storage
 }
 
@@ -27,6 +28,7 @@ type Store struct {
 func NewStore() *Store {
 	return &Store{
 		runs:    make(map[string]Run),
+		alerts:  make([]AlertRecord, 0, 100),
 		storage: nil,
 	}
 }
@@ -35,6 +37,7 @@ func NewStore() *Store {
 func NewStoreWithStorage(storage StorageBackend) *Store {
 	return &Store{
 		runs:    make(map[string]Run),
+		alerts:  make([]AlertRecord, 0, 100),
 		storage: storage,
 	}
 }
@@ -148,4 +151,40 @@ func statusRank(run Run) int {
 	default:
 		return 4
 	}
+}
+
+// RecordAlert adds an alert to the store's history
+func (s *Store) RecordAlert(alert AlertRecord) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	// Add to front of list
+	s.alerts = append([]AlertRecord{alert}, s.alerts...)
+
+	// Keep only last 100 alerts
+	if len(s.alerts) > 100 {
+		s.alerts = s.alerts[:100]
+	}
+}
+
+// GetRecentAlerts returns the N most recent alerts
+func (s *Store) GetRecentAlerts(limit int) []AlertRecord {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	if limit <= 0 || limit > len(s.alerts) {
+		limit = len(s.alerts)
+	}
+
+	// Return a copy to avoid race conditions
+	result := make([]AlertRecord, limit)
+	copy(result, s.alerts[:limit])
+	return result
+}
+
+// GetAlertCount returns the total number of alerts in history
+func (s *Store) GetAlertCount() int {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return len(s.alerts)
 }

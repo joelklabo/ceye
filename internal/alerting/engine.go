@@ -14,6 +14,7 @@ import (
 type Engine struct {
 	rules   []*AlertRule
 	storage *storage.Storage
+	store   *core.Store // For recording alert history
 	state   map[string]*ruleState // rule name -> state
 	mu      sync.RWMutex
 }
@@ -23,8 +24,16 @@ func NewEngine(storage *storage.Storage) *Engine {
 	return &Engine{
 		rules:   make([]*AlertRule, 0),
 		storage: storage,
+		store:   nil, // Set later via SetStore
 		state:   make(map[string]*ruleState),
 	}
+}
+
+// SetStore sets the core store for alert history
+func (e *Engine) SetStore(store *core.Store) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.store = store
 }
 
 // AddRule adds an alert rule to the engine
@@ -124,6 +133,18 @@ func (e *Engine) evaluateRun(run core.Run) {
 			Run:         run,
 			TriggeredAt: now,
 			Severity:    e.determineSeverity(rule),
+		}
+
+		// Record to store history
+		if e.store != nil {
+			e.store.RecordAlert(core.AlertRecord{
+				RuleName:    alert.RuleName,
+				Condition:   alert.Condition,
+				Message:     alert.Message,
+				Severity:    string(alert.Severity),
+				Run:         alert.Run,
+				TriggeredAt: alert.TriggeredAt,
+			})
 		}
 
 		// Send to all channels

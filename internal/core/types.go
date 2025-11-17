@@ -55,3 +55,13 @@ type ProviderHealth struct {
 	ErrorCount  int
 	LastSuccess time.Time
 }
+
+// AlertRecord represents a fired alert for display/history
+type AlertRecord struct {
+	RuleName    string
+	Condition   string
+	Message     string
+	Severity    string // "info", "warning", "critical"
+	Run         Run
+	TriggeredAt time.Time
+}

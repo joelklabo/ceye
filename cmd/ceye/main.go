@@ -253,6 +253,7 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 				fmt.Fprintf(os.Stderr, "warning: failed to initialize alerting: %v\n", err)
 			} else {
 				alertEngine = engine
+				alertEngine.SetStore(store) // Connect store for alert history
 				fmt.Printf("alerting: loaded %d rules with %d channels\n", 
 					len(cfg.Alerting.Rules), len(cfg.Alerting.Channels))
 			}
