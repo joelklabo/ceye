@@ -69,8 +69,8 @@ File: `e2e/screenshots/generate-marketing.spec.ts`
 - [✅] **Animations** (2h) - Loading states, micro-interactions, page transitions (Commit: 939f320)
 - [✅] **Responsive** (1h) - Mobile, tablet, desktop layouts (Commit: 9557169)
 - [✅] **Accessibility** (1h) - Keyboard nav, ARIA labels, focus indicators (Commit: 1fbb980)
-- [🚧] **Performance** (1h) - Code splitting, memoization, virtual scrolling
-- [ ] **Error Handling** (1h) - Error boundaries, fallback UI, retry logic
+- [✅] **Performance** (1h) - Code splitting, memoization, virtual scrolling (Commit: 91358ba)
+- [🚧] **Error Handling** (1h) - Error boundaries, fallback UI, retry logic
 - [ ] **Dark/Light Mode** (1h) - Theme toggle, system preference
 
 **Success Criteria**:
@@ -78,6 +78,44 @@ File: `e2e/screenshots/generate-marketing.spec.ts`
 - [ ] WCAG AA compliant
 - [ ] Works on 320px to 4K
 - [ ] <100ms interaction latency
+
+#### Phase 0.5: Provider Branding - **NOT STARTED** 🎨
+**Goal**: Add visual provider branding with SVG logos
+
+**Approach**: Hybrid (built-in + custom logos)
+- Built-in: GitHub, Azure DevOps, GitLab, AWS
+- Custom: Support logo paths in config
+- Fallback: Generic icon or monogram
+
+**Tasks** (3-4 hours):
+- [ ] **ProviderIcon Component** (30m) - Logo resolution, loading states, error handling
+- [ ] **Built-in Logos** (1h) - GitHub, Azure, GitLab, AWS, Generic fallback SVG components
+- [ ] **Config Support** (30m) - Add `logo` field to provider schema, pass to frontend
+- [ ] **Integration** (30m) - Add to Provider Cards, Activity Feed
+- [ ] **Tests** (30m) - Test built-in, custom path, external URL, fallback
+
+**Display Locations**:
+1. Provider Cards - 24px logo + name (primary)
+2. Activity Feed - 16px logo on items (secondary)
+3. Skip table rows (too busy)
+
+**Config Example**:
+```yaml
+providers:
+  - type: github
+    display_name: "GitHub Prod"
+    # Uses built-in logo
+  
+  - type: jenkins  
+    display_name: "Jenkins"
+    logo: "/logos/jenkins.svg"
+```
+
+**Success Criteria**:
+- [ ] All built-in providers have logos
+- [ ] Custom logo paths work
+- [ ] Fallback graceful
+- [ ] No performance impact
 
 ---
 

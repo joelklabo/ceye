@@ -9,7 +9,7 @@ import { Circle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 function App() {
-  const { runs, stats, providers, isConnected, isLoading, lastUpdate } = useDashboard()
+  const { runs, stats, providers, isConnected, isLoading, lastUpdate, error } = useDashboard()
 
   // For activity feed, we'll generate from runs for now
   // In the future, this could be its own WebSocket stream
@@ -56,6 +56,13 @@ function App() {
         </div>
       </header>
       <main className="container mx-auto p-8 space-y-8">
+        {error && !isConnected && (
+          <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4">
+            <p className="text-red-400 text-sm">
+              Connection error: {error}. Retrying...
+            </p>
+          </div>
+        )}
         {isLoading ? (
           <>
             {/* Loading skeletons */}

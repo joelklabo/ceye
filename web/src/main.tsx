@@ -3,11 +3,14 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 import { DashboardProvider } from './contexts/DashboardContext'
+import { ErrorBoundary } from './components/ErrorBoundary'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <DashboardProvider>
-      <App />
-    </DashboardProvider>
+    <ErrorBoundary>
+      <DashboardProvider>
+        <App />
+      </DashboardProvider>
+    </ErrorBoundary>
   </StrictMode>,
 )
