@@ -1,7 +1,7 @@
 # ceye Development Plan
 
-**Last Updated**: 2025-11-17 18:50 UTC  
-**Status**: Phase 0.7 Critical Issues - 🟢 **9 of 13 COMPLETE**
+**Last Updated**: 2025-11-17 18:53 UTC  
+**Status**: Phase 0.7 Critical Issues - 🟢 **9 of 19 COMPLETE**
 
 ## Current Status
 
@@ -1131,7 +1131,270 @@ type WebhookEvent struct {
 - [ ] Can see event timeline (TODO: Events tab)
 - [x] Helps debug issues 10x faster ✅
 
-#### 9. Build Failure Notification Use Case (LOW 🟢) - 1-2 hours
+#### 9. Fix Activity Feed Duration Display (HIGH 🟡) - 30 minutes
+**Problem**: Duration in Activity Feed always shows "0s" - not calculating correctly
+
+**Root Cause**: Need to investigate:
+- Is duration field populated in backend?
+- Is it being calculated from StartedAt/UpdatedAt?
+- Is formatting correct?
+
+**Steps**:
+1. [ ] Check backend Run struct - verify duration field
+2. [ ] Check if duration is calculated in provider
+3. [ ] Check ActivityFeed.tsx formatting
+4. [ ] Fix calculation/display
+5. [ ] Test with real runs
+6. [ ] Commit + push
+
+**Success Criteria**:
+- [ ] Duration shows actual run time (e.g., "2m 34s", "45s")
+- [ ] Works for in-progress runs (shows elapsed time)
+- [ ] Works for completed runs (shows total duration)
+- [ ] Format is human-readable
+
+#### 10. Enhanced Debug Panel - Unified Log Stream (HIGH 🟡) - 3-4 hours
+**Problem**: No way to see backend logs in UI, have to switch between terminal and browser
+
+**Vision**: One place to see EVERYTHING happening in the system
+- Backend Go logs (color-coded by level)
+- Frontend console.log() messages
+- WebSocket frames (sent/received)
+- Webhook deliveries (incoming HTTP requests)
+- Provider polling cycles
+- Store updates
+- All timestamped, searchable, filterable
+
+**Implementation**:
+1. [ ] Backend: Add `/debug/logs` WebSocket endpoint
+2. [ ] Backend: Stream log lines to connected clients
+3. [ ] Backend: Include log level, component, message
+4. [ ] Frontend: Add "Logs" tab to Debug Panel
+5. [ ] Frontend: Merge backend + console logs in single stream
+6. [ ] Add filters: level (debug/info/warn/error), component, search
+7. [ ] Add auto-scroll toggle + clear button
+8. [ ] Add export to file
+9. [ ] Write tests
+10. [ ] Commit + push
+
+**Log Sources**:
+- ✅ Backend logs: `2025/11/17 08:43:53 github: poll cycle #1 starting`
+- ✅ Frontend logs: `console.log('[DEBUG] Received message:', data)`
+- ✅ WebSocket: `→ SENT: {"type":"ping"}` / `← RECV: {"Type":"snapshot"}`
+- ✅ Webhooks: `🪝 GitHub webhook received: workflow_run (ID: abc123)`
+- ✅ Providers: `github: 4 runs fetched in 234ms`
+- ✅ Store: `Store: merged 4 runs (2 new, 2 updated)`
+
+**UI Design**:
+```
+[Logs Tab]
+[🔍 Search...] [Level: All ▾] [Component: All ▾] [Clear] [Export] [Auto-scroll ☑]
+
+← 18:43:53.123 [INFO ] [github  ] poll cycle #1 starting (4 repos)
+→ 18:43:53.456 [DEBUG] [ws      ] SENT: {"type":"ping"}
+← 18:43:53.789 [INFO ] [github  ] 4 runs fetched in 234ms
+← 18:43:54.012 [DEBUG] [store   ] merged 4 runs (2 new, 2 updated)
+← 18:43:54.234 [INFO ] [ws      ] RECV: {"Type":"snapshot","Runs":[...]}
+← 18:43:54.567 [DEBUG] [frontend] Received snapshot with 4 runs
+🪝 18:44:12.890 [INFO ] [webhook ] GitHub: workflow_run (abc123)
+⚠️ 18:44:30.123 [WARN ] [github  ] Rate limit: 58/60 remaining
+```
+
+**Success Criteria**:
+- [ ] Can see backend logs in browser
+- [ ] Can see frontend console in same stream
+- [ ] Can see WebSocket traffic
+- [ ] Can see webhook deliveries
+- [ ] Can filter by level/component
+- [ ] Can search full history
+- [ ] Auto-scrolls to new messages
+- [ ] Can export to file for sharing
+
+#### 11. Debug Panel - Event Timeline Visualization (MEDIUM 🟡) - 4-5 hours
+**Problem**: Hard to understand event flow and timing relationships
+
+**Vision**: Visual timeline showing all system events with timing and relationships
+
+**Features**:
+- Horizontal timeline (last 5 minutes visible)
+- Lanes for: Polling, Webhooks, WebSocket, UI Updates, Errors
+- Click event to see details
+- Zoom in/out
+- Highlight correlated events (poll → store update → UI update)
+- Show gaps (missed polls, slow responses)
+
+**Timeline Events**:
+- 📊 Poll Start/End (with duration bar)
+- 🪝 Webhook Received (instant marker)
+- 📡 WebSocket Send/Receive (arrows)
+- 🎨 UI Update (flash)
+- ❌ Errors (red marker)
+- ⏱️ Health Check (periodic markers)
+
+**UI Design**:
+```
+[Events Tab]
+[Zoom: - 5min +] [Follow: ☑]
+
+18:43:00                    18:44:00                    18:45:00
+├─────────────────────────────┼─────────────────────────────┤
+Poll:     [═══════]                    [═══════]
+Webhook:           🪝                            🪝
+WebSocket: ←→  ←→  ←→  ←→  ←→  ←→  ←→  ←→  ←→  ←→
+UI:        ✓   ✓      ✓      ✓   ✓      ✓      ✓
+Errors:                       ❌
+```
+
+**Interactions**:
+- Click event → Show full details in side panel
+- Hover event → Show tooltip with summary
+- Click + drag → Select time range, show stats
+- Right-click event → Copy details, export
+
+**Success Criteria**:
+- [ ] Shows all major system events
+- [ ] Visual representation of timing
+- [ ] Can identify bottlenecks
+- [ ] Can correlate related events
+- [ ] Helps debug timing issues
+
+#### 12. Debug Panel - State Inspector (MEDIUM 🟡) - 2-3 hours
+**Problem**: Can't easily see current Store state or DashboardContext
+
+**Features**:
+- View all runs in Store (raw JSON)
+- View DashboardContext state
+- View provider health
+- Compare: WebSocket message vs current state
+- Export state to JSON file
+- Refresh button
+
+**UI Design**:
+```
+[State Tab]
+[Refresh] [Export JSON] [Compare Mode: Off ▾]
+
+Store State:
+├─ Total Runs: 42
+├─ By Provider:
+│  ├─ github: 38 runs
+│  └─ azure: 4 runs
+└─ By Status:
+   ├─ success: 30
+   ├─ failure: 8
+   ├─ in_progress: 4
+   └─ queued: 0
+
+[View Raw JSON ▾]
+{
+  "runs": [ ... ],
+  "lastUpdate": "2025-11-17T18:43:54Z"
+}
+
+DashboardContext:
+├─ connectionStatus: "connected"
+├─ lastMessage: "2025-11-17T18:43:54Z"
+└─ messageCount: 247
+```
+
+**Success Criteria**:
+- [ ] Can view Store state
+- [ ] Can view Context state
+- [ ] Can export to JSON
+- [ ] Can compare message vs state
+- [ ] Helps debug state issues
+
+#### 13. Debug Panel - Performance Profiler (LOW 🟢) - 3-4 hours
+**Problem**: Need to identify performance bottlenecks and memory leaks
+
+**Features**:
+- Component render time tracking
+- WebSocket message processing time
+- Store update latency
+- Memory usage over time
+- FPS tracker
+- Network request timing
+
+**Metrics Tracked**:
+- Message processing: `ws_receive → store_update → ui_render`
+- Component renders: `App: 2ms, RunsTable: 15ms (⚠️ slow!)`
+- Memory: `Heap: 45MB / 100MB, Trend: ↗️ +2MB/min (⚠️ leak?)`
+- FPS: `60fps ✅` or `45fps ⚠️ (dropping)`
+
+**UI Design**:
+```
+[Performance Tab]
+
+Message Processing Latency:
+├─ p50: 12ms ✅
+├─ p95: 45ms ✅
+└─ p99: 120ms ⚠️
+
+Component Render Times:
+├─ App: 2ms ✅
+├─ RunsTable: 15ms ⚠️
+├─ ActivityFeed: 5ms ✅
+└─ ProviderCards: 3ms ✅
+
+Memory Usage:
+[Graph showing heap over time]
+Current: 45MB
+Peak: 67MB (18:42:15)
+Trend: ↗️ +2MB/min ⚠️ Possible leak
+
+FPS: 60 ✅
+```
+
+**Success Criteria**:
+- [ ] Tracks key performance metrics
+- [ ] Identifies slow components
+- [ ] Detects memory leaks
+- [ ] Helps optimize performance
+
+#### 14. Debug Panel - Webhook Simulator (LOW 🟢) - 2-3 hours
+**Problem**: Hard to test webhook handling without triggering real CI runs
+
+**Features**:
+- Send fake webhook payloads
+- Pre-set templates (success, failure, in_progress)
+- Custom JSON editor
+- Replay captured webhooks
+- Test error scenarios (malformed, invalid signature)
+
+**UI Design**:
+```
+[Webhook Simulator Tab]
+
+[Template: workflow_run (success) ▾]
+[Custom JSON ▾]
+
+{
+  "action": "completed",
+  "workflow_run": {
+    "id": 123456,
+    "status": "completed",
+    "conclusion": "success",
+    ...
+  }
+}
+
+[Test Signature ☐] [Secret: ••••••••]
+[Send to: http://localhost:9090/webhooks/github ▾]
+
+[Send Webhook]
+
+Response:
+✅ 200 OK (45ms)
+```
+
+**Success Criteria**:
+- [ ] Can send test webhooks
+- [ ] Can use templates
+- [ ] Can edit JSON
+- [ ] Can test error cases
+- [ ] Helps test webhook handling
+
+#### 15. Build Failure Notification Use Case (LOW 🟢) - 1-2 hours
 **Problem**: Need to design for external tool sending build failure signals
 
 **Requirements**:
@@ -1153,7 +1416,7 @@ type WebhookEvent struct {
 - [ ] Tests verify end-to-end flow
 - [ ] API documented
 
-**Total Estimated Time**: 20-30 hours  
+**Total Estimated Time**: 35-50 hours  
 **Priority Order**: 
 0. ✅ **Webhook vs Polling Validation (CRITICAL)** - **COMPLETE** (edfc9fb)
 0.5. ✅ **Webhook Integration Testing (CRITICAL)** - **COMPLETE** (940a953) 🎉
@@ -1167,7 +1430,13 @@ type WebhookEvent struct {
 6. 🔄 Fix UI Flicker (LOW)
 7. ✅ GitHub Logo Investigation (LOW) - **COMPLETE** (07adf02)
 8. ✅ Developer Debugging Dashboard (LOW) - **COMPLETE** (7f5986f)
-9. 🔄 Build Failure Notifications (LOW)
+9. 🔄 Fix Activity Feed Duration (HIGH) - **NEW**
+10. 🔄 Enhanced Debug Panel - Unified Log Stream (HIGH) - **NEW** 🔥
+11. 🔄 Debug Panel - Event Timeline (MEDIUM) - **NEW** 🎨
+12. 🔄 Debug Panel - State Inspector (MEDIUM) - **NEW** 🔍
+13. 🔄 Debug Panel - Performance Profiler (LOW) - **NEW** ⚡
+14. 🔄 Debug Panel - Webhook Simulator (LOW) - **NEW** 🪝
+15. 🔄 Build Failure Notifications (LOW)
 
 ---
 
