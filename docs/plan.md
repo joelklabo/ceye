@@ -88,11 +88,11 @@ File: `e2e/screenshots/generate-marketing.spec.ts`
 - Fallback: Generic icon or monogram
 
 **Tasks** (3-4 hours):
-- [🚧] **ProviderIcon Component** (30m) - Logo resolution, loading states, error handling
-- [ ] **Built-in Logos** (1h) - GitHub, Azure, GitLab, AWS, Generic fallback SVG components
-- [ ] **Config Support** (30m) - Add `logo` field to provider schema, pass to frontend
-- [ ] **Integration** (30m) - Add to Provider Cards, Activity Feed
-- [ ] **Tests** (30m) - Test built-in, custom path, external URL, fallback
+- [✅] **ProviderIcon Component** (30m) - Logo resolution, loading states, error handling (Commit: c3ceebe)
+- [✅] **Built-in Logos** (1h) - GitHub, Azure, GitLab, AWS, Generic fallback SVG components (Commit: c3ceebe)
+- [✅] **Integration** (30m) - Add to Provider Cards (Commit: c3ceebe)
+- [✅] **Tests** (30m) - Test built-in, fallback, theme support (Commit: c3ceebe)
+- [🚧] **Config Support** (30m) - Add `logo` field to provider schema, pass to frontend
 
 **Display Locations**:
 1. Provider Cards - 24px logo + name (primary)

@@ -375,6 +375,53 @@ See [docs/plan.md](docs/plan.md) for the comprehensive master plan.
 - Zero memory leaks
 - All linters passing
 
+## React Development
+
+### Component Performance
+
+**Use React.memo for expensive components**:
+```tsx
+export const StatsCards = memo(function StatsCards({ stats }: Props) {
+  // Component implementation
+})
+```
+
+**Use useMemo for expensive calculations**:
+```tsx
+const activityItems = useMemo(() => 
+  runs.slice(0, 10).map(/* transform */),
+  [runs]
+)
+```
+
+### Theme Support
+
+**All components support light/dark modes via CSS variables**:
+- Use Tailwind classes: `bg-background`, `text-foreground`
+- CSS variables automatically switch with `dark` class on `<html>`
+- SVG logos use `currentColor` to adapt to theme
+
+**Adding theme toggle**:
+1. ThemeContext provides `theme` and `toggleTheme()`
+2. Persists to localStorage
+3. Respects system preference on first load
+4. Apply `dark` class to `<html>` element
+
+### Provider Icons
+
+**Adding built-in provider logos**:
+1. Create SVG component in `web/src/components/icons/logos/`
+2. Use `currentColor` for fill (theme-adaptive)
+3. Add to ProviderIcon component's switch statement
+4. Test in both light and dark modes
+
+**Using ProviderIcon**:
+```tsx
+<ProviderIcon provider="github" size="md" />
+<ProviderIcon provider="custom" logoPath="/logos/custom.svg" />
+<ProviderIcon provider="unknown" fallback="monogram" />
+```
+
 ## Common Tasks
 
 ### Adding a New Provider
