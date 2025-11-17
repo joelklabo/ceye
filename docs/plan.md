@@ -1,32 +1,175 @@
 # ceye Development Plan
 
-**Last Updated**: 2025-11-17 14:00 UTC  
-**Status**: Phase 0.6 Complete - Dashboard Production Ready! ✅
+**Last Updated**: 2025-11-17 14:10 UTC  
+**Status**: Phase 0.7 Critical Issues - 🔴 **CRITICAL BUGS FOUND**
 
 ## Current Status
 
-**React Migration**: ALL phases complete ✅  
-**Test Suite**: Migrated to React - 23/25 passing ✅  
-**UI Polish**: ALL issues fixed ✅  
-**Status**: Production ready!
+**React Migration**: Complete ✅  
+**Test Suite**: 23/25 passing ✅  
+**Status**: 🔴 **OFFLINE - WebSocket not connecting!**
 
-The React dashboard is fully functional, polished, and performant with real-time WebSocket updates, comprehensive test coverage, and no critical issues.
+The React dashboard is NOT working - WebSocket connection is failing and the app shows "OFFLINE" status with no activity feed updates.
 
 **Stack**:
 - React 19 + Vite + TypeScript
 - Tailwind CSS v3 + Framer Motion
-- Real-time WebSocket integration
-- 20 Playwright integration tests (100% passing, 2 skipped)
+- Real-time WebSocket integration (BROKEN)
+- 23 Playwright integration tests passing
 
-**All Known Issues Resolved**: ✅
-- ✅ Table flicker fixed (memoized rows, layout animations)
-- ✅ Connection indicator with live pulse and glow
-- ✅ Workflow names work correctly (GitHub API limitation)
-- ✅ Provider icons with colored fallbacks
+**🚨 CRITICAL ISSUES IDENTIFIED**:
+- 🔴 WebSocket connection failing ("Max reconnection attempts reached")
+- 🔴 App shows "OFFLINE" status constantly
+- 🔴 No activity feed updates
+- 🔴 Orphaned code: `/internal/server/web/` not used but still in repo
+- 🟡 UI flicker on updates (needs investigation)
+- 🟡 GitHub logo may not be correct (needs clarification)
+- 🟡 Build failure notification use case needs design
 
 ---
 
 ## 🚧 Active Tasks
+
+### Phase 0.7: Critical Bug Fixes & Cleanup - 🔴 **IN PROGRESS**
+
+**Goal**: Fix broken WebSocket connection and clean up codebase
+
+**Priority**: CRITICAL - App is completely offline!
+
+**Tasks** (5-8 hours):
+
+#### 1. WebSocket Connection Fix (CRITICAL 🔴) - 2-3 hours
+**Problem**: 
+- Connection error: "Max reconnection attempts reached. Retrying..."
+- App shows "OFFLINE" constantly
+- No activity feed updates
+- WebSocket endpoint not responding
+
+**Root Causes to Investigate**:
+- [ ] Is WebSocket endpoint `/ws` being served?
+- [ ] Is server broadcasting initial state on connect?
+- [ ] Are there CORS issues?
+- [ ] Is reconnection logic broken?
+- [ ] Are there race conditions in useWebSocket hook?
+
+**Steps**:
+1. [ ] Write test that proves WebSocket connects
+2. [ ] Debug server WebSocket handler
+3. [ ] Debug client WebSocket hook
+4. [ ] Fix connection issues
+5. [ ] Verify tests pass
+6. [ ] Commit + push
+
+**Success Criteria**:
+- [ ] WebSocket connects on page load
+- [ ] Connection indicator shows "LIVE"
+- [ ] Activity feed receives updates
+- [ ] No "Max reconnection attempts" errors
+- [ ] Integration tests pass
+
+#### 2. Remove Orphaned Code (HIGH 🟡) - 30 minutes
+**Problem**: Duplicate implementations causing confusion
+- `/internal/server/web/` - Old vanilla JS (NOT USED)
+- `/web/src/` - New React (ACTIVE)
+- Server serves from `/web/dist/` (React build)
+
+**Steps**:
+1. [ ] Verify `/internal/server/web/` not referenced in Go code
+2. [ ] Delete `/internal/server/web/` directory
+3. [ ] Update any stale documentation
+4. [ ] Commit + push
+
+**Success Criteria**:
+- [ ] Only one web implementation exists
+- [ ] All tests still pass
+- [ ] Build succeeds
+
+#### 3. Fix UI Flicker (HIGH 🟡) - 1-2 hours
+**Problem**: Extreme flicker during WebSocket updates
+- Component re-renders on every message
+- No memoization
+- Animations re-trigger unnecessarily
+
+**Steps**:
+1. [ ] Write test that captures flicker (video recording)
+2. [ ] Identify which components re-render
+3. [ ] Add React.memo() where needed
+4. [ ] Use layout animations instead of mount animations
+5. [ ] Verify smooth updates
+6. [ ] Commit + push
+
+**Success Criteria**:
+- [ ] No visible flicker on updates
+- [ ] 60fps smooth animations
+- [ ] Test proves improvement
+
+#### 4. GitHub Logo Investigation (MEDIUM 🟢) - 30 minutes
+**Problem**: User says GitHub icon "doesn't look right"
+- Screenshot shows circular GitHub mark (octocat)
+- Need to clarify: mark vs full logo?
+
+**Steps**:
+1. [ ] Research what logo users expect (circular mark? wordmark? full logo?)
+2. [ ] Find correct SVG
+3. [ ] Update GitHubLogo.tsx if needed
+4. [ ] Verify in browser
+5. [ ] Commit + push
+
+**Success Criteria**:
+- [ ] Logo looks correct
+- [ ] User approves design
+
+#### 5. Developer Debugging Dashboard (LOW 🟢) - 2-3 hours
+**Problem**: No easy way to debug issues during development
+
+**Top 5 Debugging Tools Needed**:
+1. **Frontend Console Logs** - Real-time client logs visible in UI
+2. **Server Logs** - Live server logs with filtering
+3. **WebSocket Inspector** - Message viewer, connection status, ping/pong
+4. **Event Timeline** - Visual timeline of all events
+5. **Provider Status Dashboard** - Detailed provider health, API calls, rate limits
+
+**Steps**:
+1. [ ] Design debugging panel UI (collapsible sidebar)
+2. [ ] Implement log streaming endpoint
+3. [ ] Create debug components
+4. [ ] Add WebSocket message viewer
+5. [ ] Test with real debugging scenarios
+6. [ ] Commit + push
+
+**Success Criteria**:
+- [ ] Can view frontend console from UI
+- [ ] Can view server logs in real-time
+- [ ] Can inspect WebSocket messages
+- [ ] Can see event timeline
+- [ ] Helps debug issues 10x faster
+
+#### 6. Build Failure Notification Use Case (LOW 🟢) - 1-2 hours
+**Problem**: Need to design for external tool sending build failure signals
+
+**Requirements**:
+- External tool will send signal when build fails
+- UI should show immediate visual feedback
+- Need robust testing strategy
+
+**Steps**:
+1. [ ] Research notification patterns (toast, banner, alert)
+2. [ ] Design API endpoint for external notifications
+3. [ ] Create notification UI component
+4. [ ] Write integration tests
+5. [ ] Document API for external tools
+6. [ ] Commit + push
+
+**Success Criteria**:
+- [ ] External tool can POST build failure
+- [ ] UI shows immediate feedback
+- [ ] Tests verify end-to-end flow
+- [ ] API documented
+
+**Total Estimated Time**: 8-13 hours  
+**Priority Order**: 1 (WebSocket) → 2 (Cleanup) → 3 (Flicker) → 4 (Logo) → 5 (Debug Dashboard) → 6 (Notifications)
+
+---
 
 ### Phase 0.6: UI Polish & Bug Fixes - ✅ **COMPLETE**
 
