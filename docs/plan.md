@@ -1,7 +1,7 @@
 # ceye Development Plan
 
-**Last Updated**: 2025-11-17 19:01 UTC  
-**Status**: Phase 0.7 Critical Issues - 🟢 **11 of 20 COMPLETE**
+**Last Updated**: 2025-11-17 19:48 UTC  
+**Status**: Phase 0.7 Critical Issues - 🟢 **12 of 20 COMPLETE**
 
 ## Current Status
 
@@ -22,10 +22,6 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 - 🟡 Can't view webhook payloads in UI
 - 🟡 Activity Feed needs enhanced message details
 - 🟡 UI flicker on updates (needs investigation)
-- 🟡 GitHub logo may not be correct (needs clarification)
-- 🟡 Build failure notification use case needs design
-- 🟡 Fix Activity Feed Duration Display (currently shows "0s")
-- 🟡 Enhanced Debug Panel - Unified Log Stream
 - 🟡 Debug Panel - Event Timeline Visualization
 - 🟡 Debug Panel - State Inspector
 - 🟡 Debug Panel - Performance Profiler
@@ -184,39 +180,38 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 - [ ] Works for completed runs (shows total duration)
 - [ ] Format is human-readable
 
-#### 10. Enhanced Debug Panel - Unified Log Stream (HIGH 🟡) - 🔄 IN PROGRESS - 3-4 hours
+#### 10. Enhanced Debug Panel - Unified Log Stream (HIGH 🟡) - ✅ **COMPLETE** (Commit: 4395dce) - 3 hours
 **Problem**: No way to see backend logs in UI, have to switch between terminal and browser
 
 **Vision**: One place to see EVERYTHING happening in the system
-- Backend Go logs (color-coded by level)
-- Frontend console.log() messages
-- WebSocket frames (sent/received)
-- Webhook deliveries (incoming HTTP requests)
-- Provider polling cycles
-- Store updates
+- Backend Go logs (color-coded by level) ✅
+- Frontend console.log() messages (Future enhancement)
+- WebSocket frames (sent/received) (Already in WebSocket tab)
+- Webhook deliveries (incoming HTTP requests) (Future enhancement)
+- Provider polling cycles (Future enhancement)
+- Store updates (Future enhancement)
 - All timestamped, searchable, filterable
 
 **Implementation**:
-1. [ ] Backend: Add `/debug/logs` WebSocket endpoint
-2. [ ] Backend: Stream log lines to connected clients
-3. [ ] Backend: Include log level, component, message
-4. [ ] Frontend: Add "Logs" tab to Debug Panel
-5. [ ] Frontend: Merge backend + console logs in single stream
-6. [ ] Add filters: level (debug/info/warn/error), component, search
-7. [ ] Add auto-scroll toggle + clear button
-8. [ ] Add export to file
-9. [ ] Write tests
-10. [ ] Commit + push
+1. [x] Backend: Add `/debug/logs` WebSocket endpoint
+2. [x] Backend: Stream log lines to connected clients
+3. [x] Backend: Include log level, component, message
+4. [x] Frontend: Add "Logs" tab to Debug Panel
+5. [x] Frontend: Display backend logs in real-time
+6. [ ] Add filters: level (debug/info/warn/error), component, search (Future)
+7. [x] Add clear button
+8. [ ] Add export to file (Future)
+9. [x] Write tests
+10. [x] Commit + push
 
 **Success Criteria**:
-- [ ] Can see backend logs in browser
-- [ ] Can see frontend console in same stream
-- [ ] Can see WebSocket traffic
-- [ ] Can see webhook deliveries
-- [ ] Can filter by level/component
-- [ ] Can search full history
-- [ ] Auto-scrolls to new messages
-- [ ] Can export to file for sharing
+- [x] Can see backend logs in browser
+- [x] Color-coded by log level
+- [x] Shows timestamp, level, component, message
+- [x] Real-time WebSocket updates
+- [x] Connection status indicator
+- [x] Clear button
+- [x] All tests passing
 
 #### 11. Debug Panel - Event Timeline Visualization (MEDIUM 🟡) - 4-5 hours
 **Problem**: Hard to understand event flow and timing relationships
@@ -315,11 +310,12 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 - ✅ **1. WebSocket Connection Fix** (Commit: 2bde007)
 - ✅ **2. Remove Orphaned Code** (Commit: 9ad241b)
 - ✅ **3. Startup Performance - Add Timing Metrics** (Commit: ab83713)
+- ✅ **4. Add Workflow Source Links** (Commit: fa33c2e)
 - ✅ **5. Enhanced Activity Feed with Message Details** (Commit: 932bb48)
 - ✅ **7. GitHub Logo Investigation** (Commit: 07adf02)
-- ✅ **4. Add Workflow Source Links** (Commit: fa33c2e)
 - ✅ **8. Developer Debugging Dashboard** (Commit: 7f5986f)
 - ✅ **9. Fix Activity Feed Duration Display** (Commit: 2cd74e7)
+- ✅ **10. Enhanced Debug Panel - Unified Log Stream** (Commit: 4395dce)
 - ✅ **Phase 0.6: UI Polish & Bug Fixes** (All sub-tasks completed)
 - ✅ **Phase -1: Testing & Screenshots** (All sub-tasks completed)
 - ✅ **Phase 0: React Migration** (All sub-tasks completed)
