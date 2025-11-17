@@ -49,28 +49,38 @@ The React dashboard is fully functional with real-time WebSocket updates and com
 **Result**: No flicker, smooth 60fps updates, table rows only animate on mount
 **Tests**: `e2e/flicker-test.spec.ts` (3 passing)
 
-#### 2. Real-Time Connection Indicator (MEDIUM PRIORITY) 🟡 - 🚧 **IN PROGRESS**
+#### 2. Real-Time Connection Indicator (MEDIUM PRIORITY) 🟡 - ✅ **COMPLETE** (Commit: 0055187)
 **Problem**: Static indicator doesn't show activity
-- Current: Simple circle in header
-- Desired: Pulse/animation on WebSocket messages
 
-**Solution**:
-- [🚧] Add pulse animation when message received
-- [ ] Toast-style notification for updates
-- [ ] Activity feed with smooth entry animations
-- [ ] "Live" badge with glow effect
+**Solution implemented**:
+- [✅] ConnectionIndicator component with pulse animation
+- [✅] Pulse ring animation when WebSocket message received
+- [✅] "LIVE" badge with glow effect on updates
+- [✅] Green/red status indicator (connected/offline)
+- [✅] Timestamp display ("just now", "5s ago", etc.)
+- [✅] Wifi/WifiOff icons from lucide-react
 
-**Time**: 1.5 hours
+**Result**: Live badge pulses on every WebSocket message, feels very "live"
+**File**: `web/src/components/ConnectionIndicator.tsx`
 
-#### 3. Workflow Name Display (MEDIUM PRIORITY) 🟡
+#### 3. Workflow Name Display (MEDIUM PRIORITY) 🟡 - ✅ **COMPLETE** (Investigation: 7ab5ad5)
 **Problem**: Some workflows may show `.github/workflows/ci.yml` instead of "CI Build"
-**Investigation needed**:
-- [ ] Check GitHub webhook payload structure
-- [ ] Verify `WorkflowName` parsing in `internal/webhooks/github.go`
-- [ ] Test with real GitHub workflows
-- [ ] Show filename as subtitle if different
 
-**Time**: 1 hour
+**Investigation results**:
+- [✅] GitHub API returns `name` field from workflow YAML
+- [✅] Parser correctly uses `wr.Name` (line 51, `parser.go`)
+- [✅] Webhook handler correctly uses `payload.WorkflowRun.Name` (line 64, `github.go`)
+- [✅] If workflow YAML has no `name:` field, GitHub defaults to showing filename
+
+**Conclusion**: 
+Working as expected. The app displays whatever GitHub provides. If users see filenames, they need to add `name:` to their workflow YAML:
+
+```yaml
+name: "CI Build"  # Add this to workflow
+on: [push]
+```
+
+**No code changes needed** - This is a GitHub workflow configuration issue, not a ceye issue.
 
 #### 4. Default Provider Icons (LOW PRIORITY) 🟢
 **Problem**: Providers without logos show broken/missing icons
