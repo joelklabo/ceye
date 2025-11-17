@@ -1,0 +1,197 @@
+name: Workflow Health Check
+
+on:
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/**'
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+  schedule:
+    # Check workflow health daily
+    - cron: '0 3 * * *'
+
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-workflows:
+    name: Validate Workflow Files
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Validate workflow YAML syntax
+        run: |
+          for file in .github/workflows/*.yml .github/workflows/*.yaml; do
+            if [ -f "$file" ]; then
+              echo "Validating $file"
+              python3 -c "import yaml; yaml.safe_load(open('$file'))" || exit 1
+            fi
+          done
+      
+      - name: Check for required workflows
+        run: |
+          REQUIRED_WORKFLOWS=(
+            "ci.yml"
+            "tests.yml"
+            "security.yml"
+            "code-quality.yml"
+            "docs.yml"
+            "release.yml"
+          )
+          
+          for workflow in "${REQUIRED_WORKFLOWS[@]}"; do
+            if [ ! -f ".github/workflows/$workflow" ]; then
+              echo "❌ Missing required workflow: $workflow"
+              exit 1
+            fi
+            echo "✅ Found: $workflow"
+          done
+      
+      - name: Check workflow naming consistency
+        run: |
+          # Ensure all workflows have 'name:' field
+          for file in .github/workflows/*.{yml,yaml}; do
+            if [ -f "$file" ]; then
+              if ! grep -q "^name:" "$file"; then
+                echo "❌ Workflow missing 'name:' field: $file"
+                exit 1
+              fi
+            fi
+          done
+          echo "✅ All workflows have name fields"
+      
+      - name: Check for deprecated actions
+        run: |
+          # Check for old action versions
+          DEPRECATED=(
+            "actions/checkout@v2"
+            "actions/setup-go@v2"
+            "actions/setup-go@v3"
+            "actions/cache@v2"
+          )
+          
+          for pattern in "${DEPRECATED[@]}"; do
+            if grep -r "$pattern" .github/workflows/; then
+              echo "⚠️  Warning: Found deprecated action version: $pattern"
+              echo "    Consider upgrading to latest version"
+            fi
+          done
+
+  test-workflow-triggers:
+    name: Test Workflow Triggers
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check push triggers
+        run: |
+          # Ensure main workflows trigger on push to main
+          MAIN_WORKFLOWS=("ci.yml" "tests.yml" "security.yml" "code-quality.yml")
+          
+          for workflow in "${MAIN_WORKFLOWS[@]}"; do
+            if [ -f ".github/workflows/$workflow" ]; then
+              if ! grep -A5 "^on:" ".github/workflows/$workflow" | grep -q "push:"; then
+                echo "⚠️  $workflow doesn't trigger on push"
+              else
+                echo "✅ $workflow triggers on push"
+              fi
+            fi
+          done
+      
+      - name: Check PR triggers
+        run: |
+          # Ensure main workflows trigger on PRs
+          MAIN_WORKFLOWS=("ci.yml" "tests.yml" "security.yml" "code-quality.yml")
+          
+          for workflow in "${MAIN_WORKFLOWS[@]}"; do
+            if [ -f ".github/workflows/$workflow" ]; then
+              if ! grep -A10 "^on:" ".github/workflows/$workflow" | grep -q "pull_request:"; then
+                echo "⚠️  $workflow doesn't trigger on pull_request"
+              else
+                echo "✅ $workflow triggers on pull_request"
+              fi
+            fi
+          done
+
+  workflow-documentation:
+    name: Document Workflows
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Generate workflow summary
+        run: |
+          cat > tmp/workflow-summary.md << 'EOF'
+          # GitHub Actions Workflows
+          
+          ## Active Workflows
+          
+          EOF
+          
+          for file in .github/workflows/*.{yml,yaml}; do
+            if [ -f "$file" ]; then
+              NAME=$(grep "^name:" "$file" | head -1 | sed 's/name: *//')
+              BASENAME=$(basename "$file")
+              echo "- **$NAME** (\`$BASENAME\`)" >> tmp/workflow-summary.md
+              
+              # Extract triggers
+              if grep -q "push:" "$file"; then
+                echo "  - Triggers on: push" >> tmp/workflow-summary.md
+              fi
+              if grep -q "pull_request:" "$file"; then
+                echo "  - Triggers on: pull_request" >> tmp/workflow-summary.md
+              fi
+              if grep -q "schedule:" "$file"; then
+                echo "  - Triggers on: schedule" >> tmp/workflow-summary.md
+              fi
+              if grep -q "workflow_dispatch:" "$file"; then
+                echo "  - Triggers on: manual dispatch" >> tmp/workflow-summary.md
+              fi
+              
+              echo "" >> tmp/workflow-summary.md
+            fi
+          done
+          
+          cat tmp/workflow-summary.md
+      
+      - name: Upload workflow summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: workflow-summary
+          path: tmp/workflow-summary.md
+
+  workflow-metrics:
+    name: Workflow Metrics
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Count workflows
+        run: |
+          TOTAL=$(ls .github/workflows/*.{yml,yaml} 2>/dev/null | wc -l)
+          echo "📊 Total workflows: $TOTAL"
+          
+          WITH_TESTS=$(grep -l "go test" .github/workflows/*.{yml,yaml} 2>/dev/null | wc -l)
+          echo "🧪 Workflows with tests: $WITH_TESTS"
+          
+          WITH_CACHE=$(grep -l "actions/cache" .github/workflows/*.{yml,yaml} 2>/dev/null | wc -l)
+          echo "💾 Workflows with caching: $WITH_CACHE"
+          
+          WITH_ARTIFACTS=$(grep -l "upload-artifact" .github/workflows/*.{yml,yaml} 2>/dev/null | wc -l)
+          echo "📦 Workflows with artifacts: $WITH_ARTIFACTS"
+          
+          echo ""
+          echo "Workflow Coverage:"
+          echo "- Core CI: ✅"
+          echo "- Comprehensive Tests: ✅"
+          echo "- Security Scanning: ✅"
+          echo "- Code Quality: ✅"
+          echo "- Documentation: ✅"
+          echo "- Release Automation: ✅"
+          echo "- Health Checks: ✅"

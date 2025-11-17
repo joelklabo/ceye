@@ -1,13 +1,19 @@
 name: Snapshot Demo
 
 on:
+on:
   push:
     branches: [main]
   pull_request:
 
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   snapshot:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
       - name: Set up Go
@@ -15,7 +21,13 @@ jobs:
         with:
           go-version: "1.25"
       - name: Install tmux
-        run: sudo apt-get update && sudo apt-get install -y tmux
+        run: |
+          if ! command -v tmux &> /dev/null; then
+            echo "tmux not found, installing..."
+            brew install tmux
+          else
+            echo "tmux already installed"
+          fi
       - name: Run tests
         run: make test
       - name: Capture demo snapshot

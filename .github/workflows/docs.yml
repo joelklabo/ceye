@@ -1,0 +1,160 @@
+name: Documentation
+
+on:
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-docs:
+    name: Validate Documentation
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check for broken links
+        uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          use-quiet-mode: 'yes'
+          config-file: '.github/markdown-link-check-config.json'
+          folder-path: 'docs/'
+      
+      - name: Validate README
+        run: |
+          if [ ! -f "README.md" ]; then
+            echo "❌ README.md not found"
+            exit 1
+          fi
+          if [ ! -s "README.md" ]; then
+            echo "❌ README.md is empty"
+            exit 1
+          fi
+          echo "✅ README.md exists and is not empty"
+      
+      - name: Check documentation structure
+        run: |
+          REQUIRED_FILES=(
+            "docs/plan.md"
+            "docs/README.md"
+            "docs/references/testing-guide.md"
+            "docs/references/agents.md"
+          )
+          
+          for file in "${REQUIRED_FILES[@]}"; do
+            if [ ! -f "$file" ]; then
+              echo "❌ Required doc file missing: $file"
+              exit 1
+            fi
+          done
+          echo "✅ All required documentation files present"
+      
+      - name: Validate symlinks
+        run: |
+          SYMLINKS=(
+            "README.md:docs/readme.md"
+            "AGENTS.md:docs/agents.md"
+            "CLAUDE.md:docs/agents.md"
+            ".github/copilot-instructions.md:docs/agents.md"
+          )
+          
+          for link in "${SYMLINKS[@]}"; do
+            SRC="${link%%:*}"
+            TARGET="${link##*:}"
+            if [ ! -L "$SRC" ]; then
+              echo "❌ $SRC is not a symlink"
+              exit 1
+            fi
+            ACTUAL_TARGET=$(readlink "$SRC")
+            if [[ "$ACTUAL_TARGET" != *"$TARGET" ]]; then
+              echo "❌ $SRC points to $ACTUAL_TARGET, expected $TARGET"
+              exit 1
+            fi
+          done
+          echo "✅ All symlinks valid"
+
+  generate-api-docs:
+    name: Generate API Documentation
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: Install godoc
+        run: go install golang.org/x/tools/cmd/godoc@latest
+      
+      - name: Generate documentation
+        run: |
+          mkdir -p tmp/docs
+          godoc -html github.com/joelklabo/ceye/internal/core > tmp/docs/core.html
+          godoc -html github.com/joelklabo/ceye/internal/providers > tmp/docs/providers.html
+          godoc -html github.com/joelklabo/ceye/internal/alerting > tmp/docs/alerting.html
+      
+      - name: Upload API docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-documentation
+          path: tmp/docs/
+
+  spell-check:
+    name: Spell Check
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check spelling
+        uses: crate-ci/typos@master
+        with:
+          files: '*.md docs/*.md docs/references/*.md'
+
+  update-ui-snapshot:
+    name: Update UI Demo Snapshot
+    runs-on: self-hosted
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: Install tmux
+        run: |
+          if ! command -v tmux &> /dev/null; then
+            echo "tmux not found, installing..."
+            brew install tmux
+          else
+            echo "tmux already installed"
+          fi
+      
+      - name: Capture TUI snapshot
+        run: make snapshot SNAPSHOT_SECONDS=5
+      
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet docs/ui-demo.txt; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Commit updated snapshot
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/ui-demo.txt
+          git commit -m "docs: update UI demo snapshot [skip ci]"
+          git push

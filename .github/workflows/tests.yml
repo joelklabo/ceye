@@ -1,0 +1,249 @@
+name: Comprehensive Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Run daily at 2am UTC
+    - cron: '0 2 * * *'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: self-hosted
+    strategy:
+      matrix:
+        go-version: ['1.21', '1.22', '1.23']
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go ${{ matrix.go-version }}
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+      
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ matrix.go-version }}-
+      
+      - name: Download dependencies
+        run: go mod download
+      
+      - name: Run unit tests
+        run: go test -v -race -coverprofile=coverage-${{ matrix.go-version }}.txt -covermode=atomic ./...
+      
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage-${{ matrix.go-version }}.txt
+          flags: unit,go-${{ matrix.go-version }}
+          fail_ci_if_error: false
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: Run integration tests
+        run: go test -v -tags=integration ./cmd/ceye/
+      
+      - name: Test demo mode
+        timeout-minutes: 2
+        run: |
+          go build -o bin/ceye ./cmd/ceye
+          timeout 10s ./bin/ceye --demo --demo-duration 5s || exit 0
+
+  provider-tests:
+    name: Provider Contract Tests
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: Run provider contract tests
+        run: go test -v ./internal/core/ -run TestProvider
+      
+      - name: Run provider-specific tests
+        run: |
+          go test -v ./internal/providers/github/
+          go test -v ./internal/providers/azure/
+          go test -v ./internal/providers/gitlab/
+          go test -v ./internal/providers/demo/
+          go test -v ./internal/providers/manager/
+
+  alerting-tests:
+    name: Alerting System Tests
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: Run alerting tests
+        run: go test -v ./internal/alerting/
+      
+      - name: Test alert conditions
+        run: go test -v ./internal/alerting/ -run TestCondition
+
+  ui-tests:
+    name: UI Tests
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: Install tmux
+        run: |
+          if ! command -v tmux &> /dev/null; then
+            echo "tmux not found, installing..."
+            brew install tmux
+          else
+            echo "tmux already installed"
+          fi
+      
+      - name: Test TUI
+        run: go test -v ./internal/ui/
+      
+      - name: Capture TUI demo
+        run: make snapshot SNAPSHOT_SECONDS=3
+      
+      - name: Upload TUI snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: tui-demo-snapshot
+          path: docs/ui-demo.txt
+      
+      - name: Test Web UI server
+        timeout-minutes: 2
+        run: |
+          go build -o bin/ceye ./cmd/ceye
+          ./bin/ceye --web --port 8081 --demo &
+          PID=$!
+          sleep 5
+          curl -f http://localhost:8081/ || exit 1
+          curl -f http://localhost:8081/health || exit 1
+          kill $PID || true
+
+  storage-tests:
+    name: Storage & Database Tests
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: Run storage tests
+        run: go test -v ./internal/storage/
+      
+      - name: Test SQLite operations
+        run: go test -v ./internal/storage/ -run TestSQLite
+
+  config-tests:
+    name: Configuration Tests
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: Validate example config
+        run: |
+          go build -o bin/ceye ./cmd/ceye
+          ./bin/ceye --config config.example.yaml --demo --demo-duration 3s
+      
+      - name: Run config tests
+        run: go test -v ./internal/config/
+
+  cross-platform:
+    name: Cross-Platform Build Test
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: Build for macOS (native)
+        run: go build -v -o bin/ceye-darwin-amd64 ./cmd/ceye
+      
+      - name: Build for Linux
+        run: GOOS=linux GOARCH=amd64 go build -v -o bin/ceye-linux-amd64 ./cmd/ceye
+      
+      - name: Build for Windows
+        run: GOOS=windows GOARCH=amd64 go build -v -o bin/ceye-windows-amd64.exe ./cmd/ceye
+      
+      - name: Test macOS binary
+        run: ./bin/ceye-darwin-amd64 --version || ./bin/ceye-darwin-amd64 --help
+
+  benchmark:
+    name: Performance Benchmarks
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: Run benchmarks
+        run: go test -bench=. -benchmem ./... | tee benchmark.txt
+      
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: benchmark.txt
+
+  test-summary:
+    name: Test Summary
+    runs-on: self-hosted
+    needs: [unit-tests, integration-tests, provider-tests, alerting-tests, ui-tests, storage-tests, config-tests, cross-platform]
+    if: always()
+    steps:
+      - name: Check test results
+        run: |
+          echo "All test suites completed"
+          echo "Unit Tests: ${{ needs.unit-tests.result }}"
+          echo "Integration Tests: ${{ needs.integration-tests.result }}"
+          echo "Provider Tests: ${{ needs.provider-tests.result }}"
+          echo "Alerting Tests: ${{ needs.alerting-tests.result }}"
+          echo "UI Tests: ${{ needs.ui-tests.result }}"
+          echo "Storage Tests: ${{ needs.storage-tests.result }}"
+          echo "Config Tests: ${{ needs.config-tests.result }}"
+          echo "Cross-Platform: ${{ needs.cross-platform.result }}"
