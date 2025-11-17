@@ -89,7 +89,7 @@ func newKeyMap() keyMap {
 		Search:        key.NewBinding(key.WithKeys("/"), key.WithHelp("/", "search")),
 		Palette:       key.NewBinding(key.WithKeys("p"), key.WithHelp("p", "provider palette")),
 		ProviderStore: key.NewBinding(key.WithKeys("P"), key.WithHelp("P", "show provider store")),
-		Refresh:       key.NewBinding(key.WithKeys("r"), key.WithHelp("r", "refresh")),
+		Refresh:       key.NewBinding(key.WithKeys("r"), key.WithHelp("r", "refresh providers")),
 		Open:          key.NewBinding(key.WithKeys("enter", "o"), key.WithHelp("enter/o", "open run")),
 		Focus:         key.NewBinding(key.WithKeys("v"), key.WithHelp("v", "toggle focus view")),
 		Sort:          key.NewBinding(key.WithKeys("t"), key.WithHelp("t", "cycle sort")),
@@ -482,6 +482,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "r":
 				if m.Refresh != nil {
 					m.Refresh()
+					m.flashMessage = "♻️  Refreshing providers..."
+					return m, tea.Tick(3*time.Second, func(t time.Time) tea.Msg {
+						return flashExpiredMsg{}
+					})
 				}
 				return m, nil
 			case "f":

@@ -151,10 +151,17 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	// Send initial snapshot
 	s.sendSnapshot(conn)
 	
-	// Keep connection alive
+	// Keep connection alive and handle client messages
 	for {
-		if _, _, err := conn.ReadMessage(); err != nil {
+		msgType, msg, err := conn.ReadMessage()
+		if err != nil {
 			break
+		}
+		
+		// Handle refresh command
+		if msgType == websocket.TextMessage && string(msg) == "refresh" {
+			log.Printf("Client requested refresh, sending updated snapshot")
+			s.sendSnapshot(conn)
 		}
 	}
 }
