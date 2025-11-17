@@ -48,13 +48,13 @@ The React dashboard is fully functional with real-time WebSocket updates and com
 **Result**: No flicker, smooth 60fps updates, table rows only animate on mount
 **Tests**: `e2e/flicker-test.spec.ts` (3 passing)
 
-#### 2. Real-Time Connection Indicator (MEDIUM PRIORITY) 🟡
+#### 2. Real-Time Connection Indicator (MEDIUM PRIORITY) 🟡 - 🚧 **IN PROGRESS**
 **Problem**: Static indicator doesn't show activity
 - Current: Simple circle in header
 - Desired: Pulse/animation on WebSocket messages
 
 **Solution**:
-- [ ] Add pulse animation when message received
+- [🚧] Add pulse animation when message received
 - [ ] Toast-style notification for updates
 - [ ] Activity feed with smooth entry animations
 - [ ] "Live" badge with glow effect
