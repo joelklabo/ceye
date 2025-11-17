@@ -378,10 +378,23 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 		storeEventCh = eventCh
 	}
 
+	log.Printf("About to start %d providers (webhooks=%v)", len(providerInstances), enableWebhooks)
 	for _, provider := range providerInstances {
 		go func(p core.Provider) {
+			providerName := p.Name()
+			log.Printf("Starting provider: %s (webhooks=%v)", providerName, enableWebhooks)
+			
+			// Skip GitHub polling if webhooks are enabled (webhooks will provide updates)
+			// Provider name might be "github" or "github-1", "github-2", etc.
+			if enableWebhooks && strings.HasPrefix(providerName, "github") {
+				log.Printf("%s: skipping polling - webhooks enabled", providerName)
+				// Keep provider alive but don't poll
+				<-ctx.Done()
+				return
+			}
+			
 			if err := p.Start(ctx, eventCh); err != nil && ctx.Err() == nil {
-				fmt.Fprintf(os.Stderr, "provider %s exited with error: %v\n", p.Name(), err)
+				fmt.Fprintf(os.Stderr, "provider %s exited with error: %v\n", providerName, err)
 			}
 		}(provider)
 	}
