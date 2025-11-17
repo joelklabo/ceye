@@ -1,7 +1,7 @@
 # ceye Development Plan
 
-**Last Updated**: 2025-11-17 11:44 UTC  
-**Status**: React Dashboard Complete - Adding Screenshots 📸
+**Last Updated**: 2025-11-17 11:53 UTC  
+**Status**: React Dashboard + Tests Complete - Ready for Polish 🎨
 
 ## Current Status
 
@@ -19,60 +19,27 @@ The React dashboard is fully functional with real-time WebSocket updates and com
 
 ## 🚧 Active Tasks
 
-### Phase -1: Testing & Screenshots - **IN PROGRESS** 🔥
+### Phase -1: Testing & Screenshots - ✅ **COMPLETE**
 
 #### Phase -1.1: Integration Tests - ✅ **COMPLETE** (Commit: 221c45b)
 - 22/22 tests passing in ~8 seconds
 - Tests: Dashboard loading, Stats Cards, Runs Table, Provider Cards, Activity Feed, Real-time updates
 - File: `e2e/dashboard.spec.ts`
 
-#### Phase -1.2: Marketing Screenshots - **IN PROGRESS** 🚧
-**Goal**: Generate professional screenshots for README
+#### Phase -1.2: Marketing Screenshots - ✅ **COMPLETE** (Commit: 4e9fc80)
 
-**Screenshots Needed**:
-1. **Hero** - Full dashboard (1920x1080, dark mode)
-2. **Components** - Stats cards, runs table, provider cards, activity feed
-3. **Features** - Real-time updates, sorting/filtering
-4. **Cross-platform** - Chrome, Firefox, Safari, mobile
+**Result**: 7 professional screenshots generated and README updated
 
-**Script Location**: `e2e/screenshots/generate-marketing.spec.ts`
+Screenshots captured:
+- hero-dashboard.png (97KB) - Full dashboard at 1920x1080
+- stats-cards.png (63KB) - Real-time counters
+- runs-table.png (137KB) - Sortable table
+- provider-cards.png (7.1KB) - Health indicators
+- activity-feed.png (2.7KB) - Timeline view
+- mobile-view.png (260KB) - iPhone 14 Pro
+- cross-browser/chrome.png (208KB)
 
-**Automated Process**:
-```bash
-# 1. Start server with live data
-./bin/ceye --port 8080
-
-# 2. Generate screenshots
-npx playwright test e2e/screenshots/
-
-# 3. Optimize images
-# (auto-compress to 80% quality)
-
-# 4. Update README
-# (insert screenshots in markdown)
-```
-
-**Output**:
-```
-docs/screenshots/
-├── hero-dashboard.png
-├── stats-cards.png
-├── runs-table.png
-├── provider-cards.png
-├── activity-feed.png
-├── mobile-view.png
-└── cross-browser/
-    ├── chrome.png
-    ├── firefox.png
-    └── safari.png
-```
-
-**Success Criteria**:
-- [ ] All screenshots captured at 4K resolution
-- [ ] Consistent dark mode styling
-- [ ] No loading/placeholder states visible
-- [ ] README updated with images
-- [ ] Images optimized (<500KB each)
+File: `e2e/screenshots/generate-marketing.spec.ts`
 
 ---
 
