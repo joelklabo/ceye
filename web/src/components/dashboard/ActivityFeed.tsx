@@ -7,6 +7,14 @@ interface ActivityItem {
   type: 'success' | 'failure' | 'started' | 'queued'
   message: string
   timestamp: Date
+  // Rich data
+  duration?: number  // Duration in seconds
+  commitSHA?: string
+  commitMessage?: string
+  branch?: string
+  repo?: string
+  conclusion?: string
+  url?: string
 }
 
 interface ActivityFeedProps {
@@ -35,6 +43,20 @@ function formatTime(date: Date): string {
     minute: '2-digit',
     second: '2-digit',
   })
+}
+
+function formatDuration(seconds: number): string {
+  if (seconds < 60) {
+    return `${Math.round(seconds)}s`
+  }
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = Math.round(seconds % 60)
+  if (minutes < 60) {
+    return `${minutes}m ${remainingSeconds}s`
+  }
+  const hours = Math.floor(minutes / 60)
+  const remainingMinutes = minutes % 60
+  return `${hours}h ${remainingMinutes}m`
 }
 
 export function ActivityFeed({ items, maxItems = 10 }: ActivityFeedProps) {
@@ -79,7 +101,38 @@ export function ActivityFeed({ items, maxItems = 10 }: ActivityFeedProps) {
                     >
                       <div className="mt-0.5">{getIcon(item.type)}</div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm">{item.message}</p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-medium">{item.message}</p>
+                          {item.url && (
+                            <a
+                              href={item.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-primary hover:underline"
+                            >
+                              →
+                            </a>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-muted-foreground">
+                          {item.duration !== undefined && (
+                            <span>Duration: {formatDuration(item.duration)}</span>
+                          )}
+                          {item.commitSHA && (
+                            <span>•</span>
+                          )}
+                          {item.commitSHA && (
+                            <span className="font-mono">{item.commitSHA.substring(0, 7)}</span>
+                          )}
+                          {item.commitMessage && (
+                            <span>•</span>
+                          )}
+                          {item.commitMessage && (
+                            <span className="italic truncate max-w-xs">
+                              "{item.commitMessage.split('\n')[0]}"
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-muted-foreground mt-1">
                           {formatTime(item.timestamp)}
                         </p>

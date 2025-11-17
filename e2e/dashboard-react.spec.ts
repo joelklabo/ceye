@@ -76,7 +76,8 @@ test.describe('Dashboard - React App', () => {
     await expect(providerHealthTitle).toBeVisible();
 
     // Find the refresh button which is next to the title inside the CardHeader.
-    const refreshButton = page.locator('button:has(svg[data-lucide="refresh-cw"])').first();
+    // Try a more generic locator for the refresh button
+    const refreshButton = page.locator('[data-testid="refresh-button-debug"]').first();
     await expect(refreshButton).toBeVisible();
   })
 })

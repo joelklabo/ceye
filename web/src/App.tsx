@@ -25,6 +25,14 @@ function App() {
       : 'queued' as const,
     message: `${run.WorkflowName} • ${run.Repo}/${run.Branch}`,
     timestamp: new Date(run.UpdatedAt),
+    // Rich data
+    duration: run.Duration / 1_000_000_000, // Convert nanoseconds to seconds
+    commitSHA: run.CommitSHA,
+    commitMessage: undefined, // Not available in Run type yet
+    branch: run.Branch,
+    repo: run.Repo,
+    conclusion: run.Conclusion,
+    url: run.URL,
   })), [runs])
 
   return (
@@ -82,7 +90,10 @@ function App() {
                 <RunsTable runs={runs} />
               </div>
               <div className="space-y-8">
-                <ProviderCards providers={providers} meta={meta} />
+                <ProviderCards 
+                  providers={providers} 
+                  meta={meta}
+                />
                 <ActivityFeed items={activityItems} />
               </div>
             </div>
