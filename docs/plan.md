@@ -142,12 +142,12 @@ ceye/
 
 ---
 
-#### Phase 0.2: Core Components (8 hours)
+#### Phase 0.2: Core Components (8 hours) - **IN PROGRESS** 🚧
 
 **Goal**: Build main dashboard components with animations
 
 **Tasks**:
-- [ ] **Stats Cards** (2 hours)
+- [🚧] **Stats Cards** (2 hours)
   - 4 cards: Running, Queued, Success, Failed
   - Animated counters (count up/down)
   - Pulse effect on value changes
