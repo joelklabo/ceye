@@ -213,15 +213,21 @@ Run `npx playwright test e2e/websocket-critical.spec.ts` to verify tests 9-10 no
 **Phase 4: WebSocket Updates** (30 min)
 
 **Success Criteria**:
-- [x] Provider cards full-width
-- [x] Refresh button in header works
-- [ ] Webhook flash animation on receipt
-- [x] Can view last webhook payload
-- [x] Message count accurate
-- [x] Matches Activity feed styling
+- [ ] Provider cards full-width (NOT DONE - still using Card component with p-6 padding)
+- [x] Refresh button in header works (DONE - shows RefreshCw icon)
+- [ ] Webhook flash animation on receipt (NOT DONE)
+- [x] Can view last webhook payload (DONE - expandable JSON viewer in f12a2f0)
+- [x] Message count accurate (DONE - shows `{health.MessageCount} messages received`)
+- [x] Last webhook event type shown (DONE - shows `Last webhook: {event_type}`)
+- [ ] Matches Activity feed styling (NOT DONE - width diff 12.5%, padding mismatch)
 
 **Time**: 3-4 hours
-**Progress**: 5/6 complete (Commit: f12a2f0)
+**Progress**: 4/7 complete
+
+**Note**: Webhook metadata display (Phases 3-4) already implemented in commits a8370d7, f12a2f0. Remaining work:
+1. Fix layout to match Activity Feed (use plain divs, p-4 padding instead of Card/p-6)
+2. Add webhook flash animation
+3. Adjust tests for demo mode (see docs/agents.md - "Learnings from Task 0.7")
 
 #### 4. Add Workflow Source Links (HIGH 🟡) - ✅ **COMPLETE** (Commit: fa33c2e) - 1 hour
 **Problem**: No way to open workflow run at source (GitHub/Azure DevOps)
