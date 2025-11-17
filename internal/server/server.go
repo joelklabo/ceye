@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"embed"
 	"encoding/json"
 	"fmt"
 	"io/fs"
@@ -16,8 +15,8 @@ import (
 	"github.com/joelklabo/ceye/internal/core"
 )
 
-//go:embed web
-var webAssets embed.FS
+// Web assets are now embedded from the root level web.go file
+// Remove the embed directive here
 
 type Server struct {
 	store          *core.Store
@@ -27,6 +26,7 @@ type Server struct {
 	upgrader       websocket.Upgrader
 	trendAnalyzer  interface{} // *storage.TrendAnalyzer (optional)
 	alertEngine    interface{} // *alerting.Engine (optional)
+	webFS          fs.FS       // Embedded web assets
 	
 	providerStatus map[string]string
 	providerHealth map[string]core.ProviderHealth
@@ -52,7 +52,7 @@ type Message struct {
 	BuildTime  string                         `json:"build_time,omitempty"`
 }
 
-func New(store *core.Store, providerNames []string, port int) *Server {
+func New(store *core.Store, providerNames []string, port int, webFS fs.FS) *Server {
 	return &Server{
 		store:          store,
 		port:           port,
@@ -61,6 +61,7 @@ func New(store *core.Store, providerNames []string, port int) *Server {
 		providerStatus: make(map[string]string),
 		providerHealth: make(map[string]core.ProviderHealth),
 		trendAnalyzer:  nil,
+		webFS:          webFS,
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				return true
@@ -87,7 +88,7 @@ func (s *Server) SetVersion(version, gitCommit, buildTime string) {
 }
 
 func (s *Server) getWebFS() (fs.FS, error) {
-	return fs.Sub(webAssets, "web")
+	return s.webFS, nil
 }
 
 func (s *Server) Start(ctx context.Context) error {

@@ -93,12 +93,12 @@ ceye/
 
 ---
 
-#### Phase 0.1: Foundation Setup (4 hours) - **CURRENT TASK**
+#### Phase 0.1: Foundation Setup (4 hours) - **IN PROGRESS** 🚧
 
 **Goal**: Initialize React project and verify Go embedding works
 
 **Tasks**:
-- [ ] Initialize Vite + React + TypeScript project in `/web`
+- [🚧] Initialize Vite + React + TypeScript project in `/web`
   - `npm create vite@latest web -- --template react-ts`
 - [ ] Install dependencies:
   - `npm install -D tailwindcss postcss autoprefixer`

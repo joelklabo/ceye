@@ -988,7 +988,13 @@ func writeEventLog(w io.Writer, event core.RunEvent) error {
 }
 
 func runWebServer(ctx context.Context, store *core.Store, storageBackend *storage.Storage, providerNames []string, providerStatus map[string]string, providerHealth map[string]core.ProviderHealth, eventCh chan core.RunEvent, port int, notify bool, webhookURL string) error {
-	srv := server.New(store, providerNames, port)
+	// Get embedded web assets
+	webFS, err := GetWebFS()
+	if err != nil {
+		return fmt.Errorf("failed to get web assets: %w", err)
+	}
+	
+	srv := server.New(store, providerNames, port, webFS)
 	
 	// Set version information
 	srv.SetVersion(Version, GitCommit, BuildTime)

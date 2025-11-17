@@ -5,9 +5,30 @@ COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 BUILD_TIME ?= $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 LDFLAGS := -X 'main.Version=$(VERSION)' -X 'main.GitCommit=$(COMMIT)' -X 'main.BuildTime=$(BUILD_TIME)'
 
-.PHONY: build run test fmt clean demo snapshot install build-and-serve e2e-test
+.PHONY: build run test fmt clean demo snapshot install build-and-serve e2e-test web-dev web-build web-install
 
-build:
+# Web development server (React)
+web-dev:
+	@echo "🚀 Starting Vite dev server..."
+	@cd web && npm run dev
+
+# Build web assets (React)
+web-build:
+	@echo "🎨 Building React app..."
+	@cd web && npm run build
+	@echo "📦 Copying dist to cmd/ceye/web..."
+	@rm -rf cmd/ceye/web
+	@mkdir -p cmd/ceye/web
+	@cp -r web/dist cmd/ceye/web/
+	@echo "✅ Web build complete"
+
+# Install web dependencies
+web-install:
+	@echo "📦 Installing web dependencies..."
+	@cd web && npm install
+	@echo "✅ Web dependencies installed"
+
+build: web-build
 	@echo "🔨 Building ceye..."
 	@mkdir -p $$(dirname $(BINARY))
 	$(GO) build -ldflags "$(LDFLAGS)" -o $(BINARY) ./cmd/ceye
