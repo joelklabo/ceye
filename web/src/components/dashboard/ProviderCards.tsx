@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { Circle } from 'lucide-react'
 import type { ProviderHealth } from '@/types'
 import { cn } from '@/lib/utils'
+import { ProviderIcon } from '@/components/icons/ProviderIcon'
 
 interface ProviderCardsProps {
   providers: Record<string, ProviderHealth>
@@ -52,11 +53,14 @@ export function ProviderCards({ providers }: ProviderCardsProps) {
               className="rounded-lg border border-border bg-card p-4 hover:shadow-lg transition-shadow"
             >
               <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h3 className="font-medium capitalize">{name}</h3>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Last update: {formatTime(lastUpdate)}
-                  </p>
+                <div className="flex items-center gap-3">
+                  <ProviderIcon provider={name} size="md" />
+                  <div>
+                    <h3 className="font-medium capitalize">{name}</h3>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Last update: {formatTime(lastUpdate)}
+                    </p>
+                  </div>
                 </div>
                 <motion.div
                   animate={{
