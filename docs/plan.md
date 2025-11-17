@@ -208,7 +208,7 @@ Tests are looking for wrong elements or have flaky selectors:
   
 - [x] Commit: "test: Fix Provider Health UI test selectors" (236abdc)
 
-**Phase 4: Fix React Dashboard Refresh Button Test** (45 minutes)
+**Phase 4: Fix React Dashboard Refresh Button Test** (45 minutes) - 🔄 **IN PROGRESS (Zenith)**
 - [ ] **Test 7** - Option A: Add data-testid="provider-refresh-button"
   - OR Option B: Simplify selector to find RefreshCw icon by className
   - Update test to use new selector
@@ -472,17 +472,19 @@ export const ManyFailed: StoryObj<typeof StatsCards> = {
 
 **Agent**: Phoenix | **Time**: 30 minutes (estimated 1-2 hours)
 
-##### 0.7.2 Add Webhook Flash Animation (MEDIUM 🟡) - 🔄 **IN PROGRESS (Phoenix)** - 1 hour
+##### 0.7.2 Add Webhook Flash Animation (MEDIUM 🟡) - ✅ **COMPLETE** (Commit: 3a7c253) - 30 min
 **Goal**: Visual feedback when webhook arrives (border flash/pulse)
 
-**Implementation**:
-- Track last webhook received_at timestamp per provider
-- Trigger border color animation on change
-- Use Framer Motion for smooth transitions
+**Implementation** (COMPLETED):
+- ✅ Track last webhook received_at timestamp per provider (useRef)
+- ✅ Trigger border color animation on change (useEffect)
+- ✅ Use Framer Motion for smooth transitions (0.8s flash)
+- ✅ Animation: border → primary → border
 
-**Files**:
-- `web/src/components/dashboard/ProviderCards.tsx` - Add animation logic
-- `e2e/provider-health-ui.spec.ts:84` - Unskip and fix "flash when webhook received" test
+**Test Results**:
+- ✅ Test 84 (flash animation capability): **PASSES**
+
+**Agent**: Phoenix + Sage | **Time**: 30 minutes (estimated 1 hour)
 
 ##### 0.7.3 Update Tests for Demo Mode (LOW 🟢) - 30 min
 **Problem**: Tests fail because demo provider doesn't generate webhooks (polling only)
