@@ -9,7 +9,7 @@
 
 Based on user feedback, we're making significant changes:
 - 🔄 **Remove Terminal UI** - Focus on web interface only
-- 🔄 **Redesign Web UI** - Simplify and improve UX
+- 🔄 **Redesign UI** - Simplify and improve UX
 - 🔄 **Fix Critical Bugs** - E2E tests revealing issues
 - 🔄 **Add Activity Feed** - Real-time event stream on main page
 - 🔄 **Enhance Debugging** - Built-in telemetry dashboard
@@ -24,7 +24,9 @@ Based on user feedback, we're making significant changes:
 
 **Goal**: Remove terminal UI completely and focus on web-only
 
-**Commit**: fd035ee
+**Commits**: 
+- fd035ee - Package deletion and code cleanup
+- 142f9e9 - Documentation updates
 
 **Tasks**:
 - [✅] Delete `internal/ui/` package entirely
@@ -48,6 +50,26 @@ Based on user feedback, we're making significant changes:
 - ✅ Binary size: 20MB
 - ✅ All tests pass
 - ✅ Documentation updated
+
+---
+
+### Phase 1.5: Remove "Web UI" Terminology (15 minutes) - **PRIORITY 1**
+
+**Goal**: Remove "Web UI" references - it's just the UI now
+
+Since there's no longer a terminal UI, we shouldn't call it "Web UI" anymore. It's just the interface.
+
+**Tasks**:
+- [✅] Update `docs/agents.md`: "Web UI" → "UI" or "dashboard"
+- [✅] Update `docs/readme.md`: "Web UI" → "dashboard" or remove qualifier
+- [✅] Update `cmd/ceye/main.go`: Command description "Web UI" → "Dashboard"
+- [✅] Search codebase for remaining "Web UI" / "web ui" references
+- [✅] Update any remaining user-facing strings
+
+**Success Criteria**: ✅ COMPLETE
+- ✅ No "Web UI" terminology remains
+- Just "dashboard" or "UI" or "interface"
+- Clearer, simpler language
 
 ---
 
@@ -94,7 +116,7 @@ Based on user feedback, we're making significant changes:
 
 ### Phase 3: UI Simplification (2 hours) - **PRIORITY 2**
 
-**Goal**: Simplify web UI based on user feedback
+**Goal**: Simplify UI based on user feedback
 
 **Remove** (no longer needed):
 - [ ] Theme selector (lock to dark mode only)
@@ -314,7 +336,7 @@ Based on user feedback, we're making significant changes:
 
 ### Phase 7: Debugging Dashboard (4 hours) - **PRIORITY 4**
 
-**Goal**: Make web UI a powerful debugging tool for development
+**Goal**: Make dashboard a powerful debugging tool for development
 
 **Features**:
 
@@ -495,13 +517,13 @@ Based on user feedback, we're making significant changes:
 2. **`docs/agents.md`**
    - Remove all TUI sections
    - Remove TUI testing guide
-   - Add web UI testing guide
+   - Add UI testing guide
    - Add debugging guide
    - Update quick reference
 
 3. **`docs/readme.md`**
    - Remove TUI screenshots
-   - Add new web UI screenshots
+   - Add new dashboard screenshots
    - Update quick start (web-only)
    - Add webhook setup guide
    - Add debugging section
@@ -539,7 +561,7 @@ Based on user feedback, we're making significant changes:
 
 ### Core Features (100%)
 - TUI with Bubble Tea
-- Web UI with WebSocket
+- Dashboard with WebSocket
 - Provider abstraction
 - Real-time updates
 - SafeProvider wrapper

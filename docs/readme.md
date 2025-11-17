@@ -24,7 +24,7 @@
 ## ✨ Features
 
 ### 🎯 Core Capabilities
-- **Web UI**: Modern web interface with real-time WebSocket updates
+- **Real-time Dashboard**: Modern interface with live WebSocket updates
 - **Real-time Updates**: Live status changes across all providers
 - **Multi-Provider**: GitHub Actions, Azure DevOps, GitLab CI, and Demo mode
 - **Historical Data**: SQLite storage with trends and analytics
@@ -41,14 +41,14 @@
 - **4 Alert Conditions**: workflow_failed, high_failure_rate, duration_spike, build_queued_too_long
 - **3 Notification Channels**: Slack webhooks, generic webhooks, logging
 - **Smart Cooldowns**: Prevent alert spam
-- **Alert History**: Track all alerts in web UI
+- **Alert History**: Track all alerts in dashboard
 - **Rule Statistics**: Monitor alert fires per hour
 
 ## 📸 Screenshots
 
 ## 📸 Screenshots
 
-### Web UI
+### Dashboard
 
 Modern, responsive web interface accessible from any browser:
 
@@ -85,7 +85,7 @@ Modern, responsive web interface accessible from any browser:
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Web UI Features:**
+**Dashboard Features:**
 - 🎨 **4 Beautiful Themes** (Dark, Light, Solarized, Dracula)
 - 🔌 **Real-time WebSocket Updates** - No page refresh needed
 - 🏷️ **Multi-select Filtering** - Filter by provider, status, repo
@@ -114,7 +114,7 @@ sudo cp bin/ceye /usr/local/bin/
 ### Try it Out (No Config Required)
 
 ```bash
-# Web UI with demo data (default mode)
+# Dashboard with demo data (default mode)
 ceye --demo --port 8080
 
 # Then open http://localhost:8080 in your browser
@@ -122,9 +122,9 @@ ceye --demo --port 8080
 
 ## 📖 Usage
 
-### Web UI
+### Dashboard
 
-The web UI is the default and only mode. It provides a modern, real-time dashboard accessible from any browser.
+ceye provides a modern, real-time dashboard accessible from any browser.
 
 ```bash
 # Basic usage
@@ -140,7 +140,7 @@ ceye --demo --port 8080
 ceye --webhooks --webhook-port 9090 --port 8080
 ```
 
-**Web UI Features:**
+**Features:**
 - Real-time WebSocket updates
 - Provider and status filtering  
 - Search across all runs
@@ -170,7 +170,7 @@ ceye --web --host 0.0.0.0 --port 8080
 ceye --web --storage /var/lib/ceye/ceye.db
 ```
 
-**Accessing the Web UI:**
+**Accessing the Dashboard:**
 
 1. Open http://localhost:8080 in your browser
 2. Click the theme selector (top right) to choose your theme
@@ -178,7 +178,7 @@ ceye --web --storage /var/lib/ceye/ceye.db
 4. Click "Workspace" to save your current filters
 5. Click the settings icon (⚙) to configure preferences
 
-**Web UI Keyboard Shortcuts:**
+**Dashboard Keyboard Shortcuts:**
 - `r` - Refresh data
 - `/` - Focus search box
 - `Esc` - Clear filters
@@ -188,7 +188,7 @@ ceye --web --storage /var/lib/ceye/ceye.db
 
 **WebSocket API:**
 
-The web UI connects via WebSocket for real-time updates:
+The dashboard connects via WebSocket for real-time updates:
 
 ```javascript
 const ws = new WebSocket('ws://localhost:8080/ws');
@@ -434,7 +434,7 @@ export CEYE_CONFIG="/path/to/ceye.yaml"
 
 ```
 ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│  Providers  │───▶│    Store    │───▶│   Web UI    │
+│  Providers  │───▶│    Store    │───▶│  Dashboard  │
 │ (GitHub,    │    │ (Normalized │    │ (WebSocket) │
 │  Azure, etc)│    │    Runs)    │    │             │
 └─────────────┘    └─────────────┘    └─────────────┘
@@ -767,7 +767,7 @@ ceye/
 │   ├── alerting/       # Alert engine
 │   ├── storage/        # Historical storage (SQLite)
 │   ├── server/         # Web server + WebSocket
-│   │   └── web/        # Web UI assets
+│   │   └── web/        # UI assets
 ├── docs/               # Documentation
 └── .github/
     └── workflows/      # CI/CD workflows
@@ -790,7 +790,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 ## 🙏 Acknowledgments
 
 - [Gorilla WebSocket](https://github.com/gorilla/websocket) - WebSocket support
-- [Chart.js](https://www.chartjs.org/) - Web UI charts
+- [Chart.js](https://www.chartjs.org/) - Dashboard charts
 - [Cobra](https://github.com/spf13/cobra) - CLI framework
 
 ## 📚 Documentation
@@ -798,7 +798,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 - [Development Plan](docs/plan.md)
 - [Testing Guide](docs/references/testing-guide.md)
 - [Webhook Guide](docs/references/webhook-guide.md)
-- [Web UI Architecture](docs/references/web-ui-architecture.md)
+- [UI Architecture](docs/references/web-ui-architecture.md)
 
 ## 🆘 Support
 

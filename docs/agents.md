@@ -10,7 +10,7 @@
 
 ### Key Features
 
-- **Web UI**: Modern web interface with real-time WebSocket updates
+- **Real-time Dashboard**: Modern interface with live WebSocket updates
 - **Multi-provider**: GitHub, Azure DevOps, GitLab, with extensible provider system
 - **Real-time**: Live updates via event channels and WebSocket
 - **Resilient**: SafeProvider wrapper with panic recovery and validation
@@ -32,8 +32,8 @@ ceye/
 │   │   ├── gitlab/        # GitLab CI provider
 │   │   ├── demo/          # Demo provider for testing
 │   │   └── manager/       # Provider lifecycle management
-│   ├── server/            # HTTP/WebSocket server for web UI
-├── web/                   # Static web UI assets
+│   ├── server/            # HTTP/WebSocket server
+├── web/                   # Static UI assets
 └── docs/                  # Documentation
     ├── agents.md          # This file (SOURCE OF TRUTH)
     │                      # Symlinked from: /AGENTS.md, /CLAUDE.md, /.github/copilot-instructions.md
@@ -50,7 +50,7 @@ ceye/
 ### Data Flow
 
 ```
-Provider → RunEvent → Store → Web UI
+Provider → RunEvent → Store → UI
    ↓
 SafeProvider (panic recovery, validation)
    ↓
@@ -148,14 +148,14 @@ type RunEvent struct {
 ### ✅ Completed Features (Phases 1-5)
 
 **Phase 1: Core Dashboard**
-- Web UI with real-time updates
+- Dashboard with real-time updates
 - Provider abstraction layer
 - Real-time event streaming
 - Store with normalized Run data
 - Adaptive polling (fast when active, slow when idle)
 - Workspace scanning and config auto-discovery
 
-**Phase 2: Web UI**
+**Phase 2: Dashboard UI**
 - HTTP server with WebSocket support
 - Static HTML/CSS/JS frontend
 - Real-time updates via WebSocket
@@ -234,7 +234,7 @@ ci-dash --config path/to/ceye.yaml --port 8080
 
 ## UI Testing Strategy
 
-### Web UI Testing
+### Dashboard Testing
 
 1. **Start web server**
 ```bash
@@ -619,7 +619,7 @@ go test ./...
 # Run locally with demo
 ./bin/ci-dash --demo --port 8080
 
-# Run web UI
+# Run dashboard
 ./bin/ci-dash --port 8080
 
 # Install globally
@@ -687,7 +687,7 @@ docs/
 ## Summary
 
 ceye is a production-ready CI/CD monitoring dashboard with:
-- Web UI with real-time WebSocket updates
+- Real-time interface with WebSocket updates
 - Multi-provider support (GitHub, Azure, GitLab)
 - Real-time event streaming
 - Comprehensive testing (140+ tests)

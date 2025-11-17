@@ -81,7 +81,7 @@ func main() {
 	var webhookSecret string
 	rootCmd := &cobra.Command{
 		Use:     "ceye",
-		Short:   "CI Status Dashboard Web UI",
+		Short:   "CI Status Dashboard",
 		Version: fmt.Sprintf("%s (%s)", Version, GitCommit),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return run(ctx, cfgPath, configDirFlag, demo, demoRuns, demoDuration, eventLogPath, notify, historyPath, webhookURL, resolveProviderStorePath(providerStoreFlag), githubOrgFlag, azureOrgFlag, azureProjectFlag, web, webPort, enableWebhooks, webhookPort, webhookSecret)
@@ -355,7 +355,7 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 		// Fan out events
 		go func() {
 			for event := range eventCh {
-				// Send to store (TUI/Web UI)
+				// Send to store (UI)
 				select {
 				case storeEventCh <- event:
 				case <-ctx.Done():

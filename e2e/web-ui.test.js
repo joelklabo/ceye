@@ -27,7 +27,7 @@ const captureConsoleLogs = (page) => {
   });
 };
 
-test.describe('ceye Web UI', () => {
+test.describe('ceye Dashboard', () => {
   test.beforeEach(async ({ page }) => {
     consoleLogs.length = 0; // Clear logs
     captureConsoleLogs(page);
