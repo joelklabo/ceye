@@ -102,7 +102,7 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 - [ ] Works for both completed and in-progress runs
 - [ ] Ready for Azure DevOps URLs
 
-#### 6. Fix UI Flicker (LOW 🟢) - ⏸️ **NOT STARTED** - 1-2 hours
+#### 6. Fix UI Flicker (LOW 🟢) - 🔄 **IN PROGRESS** - 1-2 hours
 **Problem**: Possible flicker during WebSocket updates
 - Component re-renders on every message
 - No memoization
