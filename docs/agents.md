@@ -60,32 +60,52 @@ Manager (lifecycle, health tracking)
 
 ## ⚠️ CRITICAL: Temporary Files
 
-**ALWAYS use `tmp/` directory for temporary files**
+**ALWAYS use `tmp/` directory for ALL temporary files, logs, working documents, test outputs, debug files, session notes, etc.**
 
 ```
 tmp/                    # Gitignored, safe for any temporary work
 ├── .gitkeep           # Explains the folder purpose
 ├── *.log              # Log files from testing
-├── *.md               # Working notes, test results
-├── *.txt              # Debug output, snapshots
+├── *.md               # Working notes, test results, session summaries
+├── *.txt              # Debug output, snapshots, captures
 ├── *.pid              # Process IDs
+├── *.yaml             # Test configurations
 └── ...                # Any temporary file
 
 DO:
-✅ Write all logs to tmp/
-✅ Put test outputs in tmp/
+✅ Write ALL logs to tmp/
+✅ Put ALL test outputs in tmp/
 ✅ Use tmp/ for debugging files
 ✅ Store session notes in tmp/
 ✅ Save temporary scripts in tmp/
+✅ Put captured output in tmp/
+✅ Use tmp/ for any file you might delete later
 
 DO NOT:
-❌ Write to /tmp/ (permission issues)
-❌ Create temp files in project root
-❌ Put temp files in docs/
-❌ Commit anything from tmp/ to git
+❌ Write to /tmp/ (permission issues, wrong location)
+❌ Create temp files in project root (clutters workspace)
+❌ Put temp files in docs/ (only permanent docs there)
+❌ Use system temp dirs (we have our own)
+❌ Commit anything from tmp/ to git (all ignored)
 ```
 
-**Why**: Avoids permission errors, keeps project organized, all temp files in one place.
+**Why**: Keeps project organized, avoids permission errors, clear separation of permanent vs temporary files, easy cleanup.
+
+**Examples**:
+```bash
+# Good - all in tmp/
+cd /Users/honk/code/ceye
+go build 2>&1 | tee tmp/build-output.txt
+./bin/ceye --demo 2>&1 > tmp/demo-test.log
+cat > tmp/session-notes.md << 'EOF'
+...
+EOF
+
+# Bad - wrong locations
+go build 2>&1 | tee /tmp/build.txt     # Wrong dir
+./bin/ceye > test.log                  # Clutters root
+cat > notes.md                         # Not temp location
+```
 
 ### Key Abstractions
 
