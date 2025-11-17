@@ -999,27 +999,8 @@ func runWebServer(ctx context.Context, store *core.Store, storageBackend *storag
 		srv.SetTrendAnalyzer(trendAnalyzer)
 	}
 	
-	// Start web server in background
-	serverErr := make(chan error, 1)
-	go func() {
-		serverErr <- srv.Start(ctx)
-	}()
-	
-	// Check if server started successfully
-	select {
-	case err := <-serverErr:
-		// Server failed immediately (port in use, etc)
-		return fmt.Errorf("web server failed to start: %w", err)
-	case <-time.After(200 * time.Millisecond):
-		// Server started successfully
-		log.Printf("✓ Web server ready at http://localhost:%d", port)
-	}
-	
-	// Open browser
-	time.Sleep(400 * time.Millisecond)
-	openURL(fmt.Sprintf("http://localhost:%d", port))
-	
-	// Process events and broadcast to connected clients
+	// Start event processor FIRST (before web server)
+	// This ensures events are being merged into store before clients connect
 	go func() {
 		for {
 			select {
@@ -1056,6 +1037,29 @@ func runWebServer(ctx context.Context, store *core.Store, storageBackend *storag
 			}
 		}
 	}()
+	
+	// Give event processor a moment to start
+	time.Sleep(50 * time.Millisecond)
+	
+	// Now start web server (clients will get populated store)
+	serverErr := make(chan error, 1)
+	go func() {
+		serverErr <- srv.Start(ctx)
+	}()
+	
+	// Check if server started successfully
+	select {
+	case err := <-serverErr:
+		// Server failed immediately (port in use, etc)
+		return fmt.Errorf("web server failed to start: %w", err)
+	case <-time.After(200 * time.Millisecond):
+		// Server started successfully
+		log.Printf("✓ Web server ready at http://localhost:%d", port)
+	}
+	
+	// Open browser
+	time.Sleep(400 * time.Millisecond)
+	openURL(fmt.Sprintf("http://localhost:%d", port))
 	
 	select {
 	case err := <-serverErr:

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ceye</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔍 ceye</h1>
+            <div class="controls">
+                <a href="/alerts.html" class="nav-link" id="alertsLink">
+                    🔔 Alerts <span id="alertBadge" class="alert-badge"></span>
+                </a>
+                <a href="/settings.html" class="nav-link">⚙️ Settings</a>
+                <select id="themeSelector" class="theme-selector" title="Change theme">
+                    <option value="dark">🌙 Dark</option>
+                    <option value="light">☀️ Light</option>
+                    <option value="solarized-dark">🔆 Solarized Dark</option>
+                    <option value="dracula">🧛 Dracula</option>
+                </select>
+                <button id="refreshBtn">↻ Refresh</button>
+                <input type="text" id="searchBox" placeholder="Search runs...">
+                <button onclick="showKeyboardHelp()" class="btn-help" title="Keyboard shortcuts (?)">⌨️</button>
+            </div>
+        </header>
+
+        <!-- Activity Monitor -->
+        <div class="activity-monitor">
+            <div class="activity-header">
+                <span id="connectionStatus" class="connection-indicator">● Connecting...</span>
+                <span id="lastUpdate" class="last-update">No updates yet</span>
+                <button onclick="toggleActivityLog()" class="btn-activity">Activity <span id="activityToggle">▼</span></button>
+            </div>
+            <div id="activityLog" class="activity-log" style="display: none;">
+                <div class="activity-item muted">Waiting for updates...</div>
+            </div>
+        </div>
+
+        <!-- Filter Pills -->
+        <div id="filterPills" class="filter-pills-container"></div>
+
+        <!-- Quick Filters & Workspaces -->
+        <div class="quick-filters">
+            <button onclick="addProviderFilter()" class="btn-filter">+ Provider</button>
+            <button onclick="addStatusFilter()" class="btn-filter">+ Status</button>
+            <span class="workspace-controls">
+                <select id="workspaceSelector" onchange="if(this.value) loadWorkspace(this.value); this.value='';" class="workspace-selector">
+                    <option value="">Select Workspace...</option>
+                </select>
+                <button onclick="saveCurrentAsWorkspace()" class="btn-workspace" title="Save current filters as workspace">💾 Save</button>
+            </span>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-label">Running</div>
+                <div class="stat-value" id="runningCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Queued</div>
+                <div class="stat-value" id="queuedCount">0</div>
+            </div>
+            <div class="stat-card success">
+                <div class="stat-label">Success</div>
+                <div class="stat-value" id="successCount">0</div>
+            </div>
+            <div class="stat-card failed">
+                <div class="stat-label">Failed</div>
+                <div class="stat-value" id="failedCount">0</div>
+            </div>
+        </div>
+
+        <div class="panels">
+            <div class="panel">
+                <h2>Active Runs</h2>
+                <div id="runsTable" class="table-container"></div>
+            </div>
+
+            <div class="panel">
+                <h2>Provider Health</h2>
+                <div id="providerHealth" class="health-container"></div>
+            </div>
+        </div>
+
+        <footer>
+            <span id="versionInfo"></span>
+        </footer>
+    </div>
+
+    <!-- Keyboard Help Modal -->
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⌨️ Keyboard Shortcuts</h2>
+                <button class="modal-close" onclick="closeHelpModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="shortcuts-section">
+                    <h3>Navigation</h3>
+                    <div class="shortcut-list">
+                        <div class="shortcut-item">
+                            <kbd>/</kbd>
+                            <span>Focus search box</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>Esc</kbd>
+                            <span>Clear filters / blur search</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>a</kbd>
+                            <span>Go to Alerts page</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="shortcuts-section">
+                    <h3>Actions</h3>
+                    <div class="shortcut-list">
+                        <div class="shortcut-item">
+                            <kbd>r</kbd>
+                            <span>Refresh data</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>?</kbd>
+                            <span>Show this help</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="shortcuts-section">
+                    <h3>Filters</h3>
+                    <div class="shortcut-list">
+                        <div class="shortcut-item">
+                            <span class="shortcut-hint">Use dropdown menus or search box to filter</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

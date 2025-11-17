@@ -104,7 +104,7 @@ Since there's no longer a terminal UI, we shouldn't call it "Web UI" anymore. It
 
 **Tasks**:
 - [✅] Fix activity log JavaScript error (add null checks)
-- [ ] Fix WebSocket initial broadcast (send snapshot on connect)
+- [🚧] Fix WebSocket initial broadcast (send snapshot on connect)
 - [ ] Fix timer update mechanism (call on every message)
 - [ ] Fix provider cards rendering (verify HTML/CSS/JS alignment)
 - [ ] Run E2E tests: `npx playwright test`
