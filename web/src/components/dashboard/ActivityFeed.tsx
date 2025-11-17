@@ -64,10 +64,10 @@ function ActivityItemRow({ item, index }: ActivityItemRowProps) {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-muted-foreground">
-            {item.duration !== undefined && (
+            {item.duration !== undefined && item.duration > 0 && (
               <span>Duration: {formatDuration(item.duration)}</span>
             )}
-            {item.commitSHA && (
+            {item.duration !== undefined && item.duration > 0 && item.commitSHA && (
               <span>•</span>
             )}
             {item.commitSHA && (
