@@ -3,6 +3,7 @@ import { StatsCards } from '@/components/dashboard/StatsCards'
 import { RunsTable } from '@/components/dashboard/RunsTable'
 import { ProviderCards } from '@/components/dashboard/ProviderCards'
 import { ActivityFeed } from '@/components/dashboard/ActivityFeed'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { useDashboard } from '@/contexts/DashboardContext'
 import { SkeletonCard, SkeletonTable } from '@/components/ui/Skeleton'
 import { Circle } from 'lucide-react'
@@ -37,21 +38,24 @@ function App() {
               CI/CD Monitoring Dashboard
             </p>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <Circle
-              className={cn(
-                'h-2 w-2',
-                isConnected ? 'fill-green-400 text-green-400' : 'fill-red-400 text-red-400'
-              )}
-            />
-            <span className="text-muted-foreground">
-              {isConnected ? 'Connected' : 'Disconnected'}
-            </span>
-            {lastUpdate && (
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-sm">
+              <Circle
+                className={cn(
+                  'h-2 w-2',
+                  isConnected ? 'fill-green-400 text-green-400' : 'fill-red-400 text-red-400'
+                )}
+              />
               <span className="text-muted-foreground">
-                • {lastUpdate.toLocaleTimeString()}
+                {isConnected ? 'Connected' : 'Disconnected'}
               </span>
-            )}
+              {lastUpdate && (
+                <span className="text-muted-foreground">
+                  • {lastUpdate.toLocaleTimeString()}
+                </span>
+              )}
+            </div>
+            <ThemeToggle />
           </div>
         </div>
       </header>

@@ -4,6 +4,31 @@
 
 @layer base {
   :root {
+    /* Light mode colors */
+    --background: 0 0% 100%; /* white */
+    --foreground: 0 0% 9%; /* near black */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96%; /* light gray */
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%; /* medium gray */
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%; /* red */
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 90%; /* light border */
+    --input: 0 0% 90%;
+    --ring: 0 0% 20%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* Dark mode colors */
     --background: 0 0% 4%; /* #0a0a0a */
     --foreground: 0 0% 98%; /* #fafafa */
     --card: 0 0% 9%; /* #18181b */
@@ -23,7 +48,6 @@
     --border: 0 0% 15%;
     --input: 0 0% 15%;
     --ring: 0 0% 83%;
-    --radius: 0.5rem;
   }
 }
 

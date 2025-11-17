@@ -70,8 +70,8 @@ File: `e2e/screenshots/generate-marketing.spec.ts`
 - [✅] **Responsive** (1h) - Mobile, tablet, desktop layouts (Commit: 9557169)
 - [✅] **Accessibility** (1h) - Keyboard nav, ARIA labels, focus indicators (Commit: 1fbb980)
 - [✅] **Performance** (1h) - Code splitting, memoization, virtual scrolling (Commit: 91358ba)
-- [🚧] **Error Handling** (1h) - Error boundaries, fallback UI, retry logic
-- [ ] **Dark/Light Mode** (1h) - Theme toggle, system preference
+- [✅] **Error Handling** (1h) - Error boundaries, fallback UI, retry logic (Commit: 8f14834)
+- [🚧] **Dark/Light Mode** (1h) - Theme toggle, system preference
 
 **Success Criteria**:
 - [ ] Lighthouse score >95
