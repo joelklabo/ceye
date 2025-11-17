@@ -10,21 +10,21 @@
 [![Release](https://img.shields.io/github/v/release/joelklabo/ceye)](https://github.com/joelklabo/ceye/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**ceye** (CI Eye) is a production-ready CI/CD monitoring dashboard that aggregates workflow runs from multiple CI providers into a unified, real-time view. Choose between a beautiful terminal UI or a modern web interface.
+**ceye** (CI Eye) is a production-ready CI/CD monitoring dashboard that aggregates workflow runs from multiple CI providers into a unified, real-time web interface.
 
 **Why ceye?**
 - 🎯 **One Dashboard, All Pipelines** - Stop context-switching between GitHub Actions, Azure DevOps, and GitLab
 - ⚡ **Real-Time Updates** - See build status changes as they happen
 - 🔔 **Smart Alerts** - Get notified when critical builds fail or queues back up
 - 📊 **Historical Trends** - Track success rates and build times over weeks
-- 🎨 **Beautiful UI** - Clean terminal interface or modern web dashboard
+- 🎨 **Beautiful UI** - Modern web dashboard with real-time updates
 - 🔌 **Extensible** - Simple Provider interface for adding new CI systems
 - 🛡️ **Production Ready** - 175+ tests, panic recovery, graceful degradation
 
 ## ✨ Features
 
 ### 🎯 Core Capabilities
-- **Dual UI**: Terminal (Bubble Tea) and Web (WebSocket) interfaces
+- **Web UI**: Modern web interface with real-time WebSocket updates
 - **Real-time Updates**: Live status changes across all providers
 - **Multi-Provider**: GitHub Actions, Azure DevOps, GitLab CI, and Demo mode
 - **Historical Data**: SQLite storage with trends and analytics
@@ -32,110 +32,21 @@
 - **Professional UX**: Themes, keyboard shortcuts, workspaces, and more
 
 ### 🎨 User Experience
-- **4 Beautiful Themes**: Dark, Light, Solarized Dark, Dracula
-- **6 Keyboard Shortcuts**: Navigate faster with `r`, `/`, `Esc`, `a`, `d`, `?`
-- **Advanced Filtering**: Multi-select providers, statuses, and search
-- **Workspaces**: Save and quickly switch between filter presets
-- **Settings Page**: Centralized preferences with import/export
+- **Dark Theme**: Clean, professional dark mode interface
+- **Advanced Filtering**: Filter by provider, status, and search
+- **Real-time Updates**: Instant WebSocket updates as builds complete
+- **Responsive Design**: Works on desktop, tablet, and mobile
 
 ### 🔔 Alerting
 - **4 Alert Conditions**: workflow_failed, high_failure_rate, duration_spike, build_queued_too_long
 - **3 Notification Channels**: Slack webhooks, generic webhooks, logging
 - **Smart Cooldowns**: Prevent alert spam
-- **Alert History**: Track all alerts in TUI and web UI
+- **Alert History**: Track all alerts in web UI
 - **Rule Statistics**: Monitor alert fires per hour
 
 ## 📸 Screenshots
 
-### Terminal UI - Main Dashboard
-
-The terminal UI provides a comprehensive, real-time view of all your CI/CD pipelines:
-
-```
-┌───────────────────┐                                                                                                                                                                    
- │ Providers         │                                                                                                                                                                    
- │  Demo-1 healthy   │                                                                                                                                                                    
- │  GitHub healthy   │                                                                                                                                                                    
- │  Azure healthy    │                                                                                                                                                                    
- └───────────────────┘                                                                                                                                                                    
- 
- Runs (12 showing, 3 providers)                                         ┌─────────────────────────────────┐
- ┌────────────────────────────────────────────────────────────────────┐│ Selection                       │
- │  Provider  Repository          Workflow          Status    Branch  ││ Provider: github                │
- │ ────────────────────────────────────────────────────────────────── ││ Repository: myorg/api           │
- │  github    myorg/api           Build & Test      ✓ OK      main    ││ Workflow: Build & Test          │
- │  github    myorg/api           Deploy Production ▸ run     main    ││ Status: success                 │
- │  github    myorg/web           Frontend Build    ✓ OK      main    ││ Branch: main                    │
- │  azure     MyProject           Integration Test  ✗ fail    develop ││ Commit: abc1234                 │
- │  demo      example/service-1   Build             … queue   main    ││ Duration: 2m 15s                │
- │  demo      example/service-2   Deploy            ✓ OK      release ││ Updated: 2 minutes ago          │
- └────────────────────────────────────────────────────────────────────┘└─────────────────────────────────┘
-                                                                         
-                                                                        ┌───────────────────────────┐
-                                                                        │ Running Now (2)           │
-                                                                        │ ▸ myorg/api Deploy 1m 30s │
-                                                                        │ … example/service-1 0s    │
-                                                                        └───────────────────────────┘
- 
- ┌──────────────────────────────────────────┐    ┌────────────────────────────┐
- │ Provider Health                          │    │ Success Rates (24h)        │
- │ ✓ all: healthy                           │    │ myorg/api:        95% ✓    │
- │ ✓ github: healthy (12 runs)              │    │ myorg/web:       100% ✓    │
- │ ✓ azure: healthy (5 runs)                │    │ MyProject:        60% ⚠    │
- │ ✓ demo: healthy (4 runs)                 │    │ Overall:          85% ✓    │
- └──────────────────────────────────────────┘    └────────────────────────────┘
- 
- ╭───────────────────────────────────────────╮    ┌────────────────────────────┐
- │ Trends (Last 7 Days)                      │    │ Recent Activity            │
- │                                           │    │ 14:23 — Build completed ✓  │
- │ Success Rate:      87%  (↑ +3% vs week)  │    │ 14:20 — Deploy started ▸   │
- │ Avg Duration:      3.5m (↓ -15s vs week) │    │ 14:15 — Test failed ✗      │
- │ Builds/Day:        142  (→ stable)       │    │ 14:10 — Refreshed (github) │
- │ Failure Rate:      13%  (↓ -2% vs week)  │    └────────────────────────────┘
- ╰───────────────────────────────────────────╯
- 
- tab: cycle providers • f: status filter • t: sort • y: copy URL • v: focus • r: refresh • ?: help
-```
-
-**Key Features:**
-- **Real-time status updates** with visual indicators (✓ ✗ ▸ …)
-- **Multi-panel layout** showing runs, health, trends, and activity
-- **Detailed selection panel** with full run information
-- **Provider health monitoring** with run counts
-- **Success rate tracking** per repository
-- **7-day trend analysis** with percentage changes
-- **Keyboard shortcuts** for fast navigation
-
-### Terminal UI - Alert View
-
-Monitor and manage alerts in real-time:
-
-```
- ┌──────────────────────────────────────────────────────────────────┐
- │ Active Alerts (3)                                                │
- ├──────────────────────────────────────────────────────────────────┤
- │ 🔴 CRITICAL  Production Deploy Failed                            │
- │              myorg/api - Deploy Production (main)                │
- │              2 minutes ago                                       │
- │                                                                  │
- │ 🟠 WARNING   High Failure Rate                                   │
- │              myorg/api - 3 failures in last hour (50%)           │
- │              5 minutes ago                                       │
- │                                                                  │
- │ 🟡 WARNING   Build Queue Backed Up                               │
- │              Azure - 5 builds queued > 10 minutes                │
- │              12 minutes ago                                      │
- └──────────────────────────────────────────────────────────────────┘
- 
- ┌──────────────────────────────────────────────────────────────────┐
- │ Alert Rules (4 active)                                           │
- ├──────────────────────────────────────────────────────────────────┤
- │ Production Failures      [workflow_failed]      5 fires/hour     │
- │ High Failure Rate        [high_failure_rate]    2 fires/hour     │
- │ Slow Builds             [duration_spike]        0 fires/hour     │
- │ Queue Backup            [build_queued_too_long] 1 fire/hour      │
- └──────────────────────────────────────────────────────────────────┘
-```
+## 📸 Screenshots
 
 ### Web UI
 
@@ -203,70 +114,39 @@ sudo cp bin/ceye /usr/local/bin/
 ### Try it Out (No Config Required)
 
 ```bash
-# Terminal UI with demo data
-ceye --demo
-
-# Web UI with demo data
-ceye --web --port 8080 --demo
+# Web UI with demo data (default mode)
+ceye --demo --port 8080
 
 # Then open http://localhost:8080 in your browser
 ```
 
 ## 📖 Usage
 
-### Terminal UI
+### Web UI
+
+The web UI is the default and only mode. It provides a modern, real-time dashboard accessible from any browser.
 
 ```bash
-# Basic usage - uses default config (./ceye.yaml or ~/.config/ceye/ceye.yaml)
-ceye
+# Basic usage
+ceye --port 8080
 
-# With specific config file
-ceye --config /path/to/ceye.yaml
+# With specific config
+ceye --config /path/to/ceye.yaml --port 8080
 
-# Demo mode - no credentials needed, generates fake data
-ceye --demo --demo-duration 5m
+# Demo mode (no credentials needed)
+ceye --demo --port 8080
 
-# Demo with specific number of runs
-ceye --demo --demo-runs 10
-
-# Enable verbose logging
-ceye --log-level debug
-
-# Log events to file for debugging
-ceye --log-events /tmp/ceye-events.jsonl
+# Webhook support (for push-based updates)
+ceye --webhooks --webhook-port 9090 --port 8080
 ```
 
-**Keyboard Shortcuts**:
-- `r` - Refresh data from all providers
-- `tab` - Cycle through provider filter (All → GitHub → Azure → ...)
-- `f` - Cycle status filter (All → Running → Failed → Success → Queued)
-- `t` - Cycle sort order (Updated → Duration → Status → Name)
-- `y` - Copy selected run URL to clipboard
-- `c` - Copy run summary to clipboard
-- `v` - Toggle focus view (hide side panels)
-- `H` - Toggle high contrast mode
-- `A` - Toggle alerts panel
-- `P` - Show provider details and stats
-- `?` - Toggle help panel
-- `q` / `Ctrl+C` - Quit
-- `↑/↓` or `j/k` - Navigate runs
-- `/` - Search runs
-- `Esc` - Clear search/filter
-
-**Example Session:**
-
-```bash
-# Start with GitHub repos
-ceye --config my-github.yaml
-
-# In the UI:
-# 1. Press 'tab' to filter to just GitHub provider
-# 2. Press 'f' to show only failed runs
-# 3. Press '↓' to select a failed run
-# 4. Press 'y' to copy the URL
-# 5. Press 'A' to check for alerts
-# 6. Press 'r' to refresh data
-```
+**Web UI Features:**
+- Real-time WebSocket updates
+- Provider and status filtering  
+- Search across all runs
+- Detailed run information
+- Provider health monitoring
+- Responsive design
 
 ### Web UI
 
@@ -554,8 +434,8 @@ export CEYE_CONFIG="/path/to/ceye.yaml"
 
 ```
 ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│  Providers  │───▶│    Store    │───▶│     UIs     │
-│ (GitHub,    │    │ (Normalized │    │ (TUI, Web)  │
+│  Providers  │───▶│    Store    │───▶│   Web UI    │
+│ (GitHub,    │    │ (Normalized │    │ (WebSocket) │
 │  Azure, etc)│    │    Runs)    │    │             │
 └─────────────┘    └─────────────┘    └─────────────┘
        │                  │                   │
@@ -577,8 +457,7 @@ export CEYE_CONFIG="/path/to/ceye.yaml"
 - **SafeProvider**: Wraps providers with panic recovery
 - **Store**: Thread-safe state management
 - **Alert Engine**: Rule evaluation and notifications
-- **TUI**: Bubble Tea terminal interface
-- **Web Server**: HTTP + WebSocket server
+- **Web Server**: HTTP + WebSocket server for real-time UI
 - **Historical Storage**: SQLite for trends
 
 ### Data Flow
@@ -889,7 +768,6 @@ ceye/
 │   ├── storage/        # Historical storage (SQLite)
 │   ├── server/         # Web server + WebSocket
 │   │   └── web/        # Web UI assets
-│   └── ui/             # Terminal UI (Bubble Tea)
 ├── docs/               # Documentation
 └── .github/
     └── workflows/      # CI/CD workflows
@@ -911,10 +789,9 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## 🙏 Acknowledgments
 
-- [Bubble Tea](https://github.com/charmbracelet/bubbletea) - TUI framework
-- [Lipgloss](https://github.com/charmbracelet/lipgloss) - Terminal styling
 - [Gorilla WebSocket](https://github.com/gorilla/websocket) - WebSocket support
 - [Chart.js](https://www.chartjs.org/) - Web UI charts
+- [Cobra](https://github.com/spf13/cobra) - CLI framework
 
 ## 📚 Documentation
 

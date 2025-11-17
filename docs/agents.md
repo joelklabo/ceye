@@ -6,11 +6,11 @@
 
 ## Project Overview
 
-**ceye** (CI Eye) is a terminal and web-based CI/CD monitoring dashboard that aggregates workflow runs from multiple CI providers (GitHub Actions, Azure DevOps, GitLab CI) into a unified, real-time view.
+**ceye** (CI Eye) is a web-based CI/CD monitoring dashboard that aggregates workflow runs from multiple CI providers (GitHub Actions, Azure DevOps, GitLab CI) into a unified, real-time view.
 
 ### Key Features
 
-- **Dual UI**: Terminal UI (Bubble Tea) and Web UI (WebSocket)
+- **Web UI**: Modern web interface with real-time WebSocket updates
 - **Multi-provider**: GitHub, Azure DevOps, GitLab, with extensible provider system
 - **Real-time**: Live updates via event channels and WebSocket
 - **Resilient**: SafeProvider wrapper with panic recovery and validation
@@ -33,7 +33,6 @@ ceye/
 │   │   ├── demo/          # Demo provider for testing
 │   │   └── manager/       # Provider lifecycle management
 │   ├── server/            # HTTP/WebSocket server for web UI
-│   └── ui/                # Terminal UI (Bubble Tea)
 ├── web/                   # Static web UI assets
 └── docs/                  # Documentation
     ├── agents.md          # This file (SOURCE OF TRUTH)
@@ -51,7 +50,7 @@ ceye/
 ### Data Flow
 
 ```
-Provider → RunEvent → Store → UI (TUI/Web)
+Provider → RunEvent → Store → Web UI
    ↓
 SafeProvider (panic recovery, validation)
    ↓
@@ -149,7 +148,7 @@ type RunEvent struct {
 ### ✅ Completed Features (Phases 1-5)
 
 **Phase 1: Core Dashboard**
-- TUI with Bubble Tea
+- Web UI with real-time updates
 - Provider abstraction layer
 - Real-time event streaming
 - Store with normalized Run data
@@ -223,62 +222,23 @@ go test -cover ./...
 ### Running the Dashboard
 
 ```bash
-# TUI mode (default)
-ci-dash
-
-# Web mode
-ci-dash --web --port 8080
+# Web mode (default and only mode)
+ci-dash --port 8080
 
 # Demo mode
-ci-dash --demo --demo-duration 5m
+ci-dash --demo --demo-duration 5m --port 8080
 
 # With config
-ci-dash --config path/to/ceye.yaml
+ci-dash --config path/to/ceye.yaml --port 8080
 ```
 
 ## UI Testing Strategy
-
-### Terminal UI Testing
-
-**Always verify TUI changes yourself before completing the task.**
-
-1. **Build the binary**
-```bash
-cd /Users/honk/code/ceye
-go build -o bin/ci-dash ./cmd/ci-dash
-```
-
-2. **Start in tmux** (allows capture without user interaction)
-```bash
-tmux kill-session -t ci-dash-live 2>/dev/null
-tmux new-session -d -s ci-dash-live "cd /Users/honk/code/ceye && ./bin/ci-dash"
-sleep 3
-```
-
-3. **Capture and verify output**
-```bash
-tmux capture-pane -t ci-dash-live -p | head -50
-```
-
-4. **Test with demo mode**
-```bash
-./bin/ci-dash --demo --demo-duration 5s 2>&1 | cat
-```
-
-### Common UI Issues to Check
-
-- Text overflow and truncation
-- Column alignment in tables
-- Status indicators (✓ ✗ ▸ …)
-- Width calculation with ANSI codes
-- Terminal size compatibility (80x24 and wider)
-- Border rendering and panel alignment
 
 ### Web UI Testing
 
 1. **Start web server**
 ```bash
-./bin/ci-dash --web --port 8080
+./bin/ci-dash --port 8080
 ```
 
 2. **Open browser**
@@ -455,7 +415,6 @@ See [docs/plan.md](docs/plan.md) for the comprehensive master plan.
 - `internal/core/store.go` - Run store
 - `internal/providers/safe.go` - SafeProvider wrapper
 - `internal/server/server.go` - Web server
-- `internal/ui/model.go` - TUI model
 
 ### Configuration
 - `ceye.yaml` - Main config file
@@ -626,21 +585,6 @@ go test -race ./...
 go test -v -count=1 ./...
 ```
 
-### TUI Not Rendering Correctly
-
-```bash
-# Check in tmux
-tmux new-session -d -s test "./bin/ci-dash --demo"
-sleep 2
-tmux capture-pane -t test -p
-
-# Check terminal size
-echo $COLUMNS $LINES
-
-# Test with different sizes
-COLUMNS=80 LINES=24 ./bin/ci-dash --demo --demo-duration 5s
-```
-
 ### Provider Not Fetching Data
 
 - Check authentication (tokens set?)
@@ -672,11 +616,11 @@ COLUMNS=80 LINES=24 ./bin/ci-dash --demo --demo-duration 5s
 go build -o bin/ci-dash ./cmd/ci-dash
 go test ./...
 
-# Run locally
-./bin/ci-dash --demo
+# Run locally with demo
+./bin/ci-dash --demo --port 8080
 
 # Run web UI
-./bin/ci-dash --web --port 8080
+./bin/ci-dash --port 8080
 
 # Install globally
 sudo cp bin/ci-dash /usr/local/bin/
@@ -743,13 +687,13 @@ docs/
 ## Summary
 
 ceye is a production-ready CI/CD monitoring dashboard with:
-- Dual UI (terminal + web)
-- Multi-provider support
-- Real-time updates
+- Web UI with real-time WebSocket updates
+- Multi-provider support (GitHub, Azure, GitLab)
+- Real-time event streaming
 - Comprehensive testing (140+ tests)
-- Clear development plan (15+ weeks mapped out)
+- Clear development plan
 
-**Current priority**: Complete Azure DevOps provider (Option 3 in plan.md)
+**Current priority**: Remove TUI and fix critical bugs (see plan.md)
 
 **Key principle**: Providers are agents. The Provider interface is the agent interface. Everything flows through events.
 

@@ -24,6 +24,8 @@ Based on user feedback, we're making significant changes:
 
 **Goal**: Remove terminal UI completely and focus on web-only
 
+**Commit**: fd035ee
+
 **Tasks**:
 - [✅] Delete `internal/ui/` package entirely
 - [✅] Remove Bubble Tea dependencies (`go.mod`, `go.sum`)
@@ -36,16 +38,16 @@ Based on user feedback, we're making significant changes:
   - Make `--web` the default mode
   - Keep webhook and demo flags
 - [✅] Remove TUI tests from test suite (no separate TUI tests existed)
-- [ ] Update `docs/agents.md` (remove all TUI sections)
-- [ ] Update `docs/readme.md` (remove TUI examples)
+- [✅] Update `docs/agents.md` (remove all TUI sections)
+- [✅] Update `docs/readme.md` (remove TUI examples)
 - [✅] Run `go mod tidy` to clean dependencies
 - [✅] Verify: `make build && make test` passes
 
-**Success Criteria**: 
-- No TUI code remains
-- Binary size reduced
-- All tests pass
-- Documentation updated
+**Success Criteria**: ✅ COMPLETE
+- ✅ No TUI code remains
+- ✅ Binary size: 20MB
+- ✅ All tests pass
+- ✅ Documentation updated
 
 ---
 
@@ -585,7 +587,7 @@ All 5 phases complete:
 
 | Phase | Priority | Hours | Status |
 |-------|----------|-------|--------|
-| 1. Remove TUI | P1 🔥 | 2h | ⏳ Ready |
+| 1. Remove TUI | P1 🔥 | 2h | ✅ Done |
 | 2. Fix Critical Bugs | P1 🔥 | 1h | ⏳ Ready |
 | 3. UI Simplification | P2 | 2h | ⏳ Blocked by P1 |
 | 4. Activity Feed | P2 | 3h | ⏳ Blocked by P2 |
