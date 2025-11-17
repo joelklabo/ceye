@@ -67,103 +67,103 @@
                   - img [ref=e97]
               - cell "Link" [ref=e100]
           - rowgroup [ref=e101]:
-            - row "github ceye .github/workflows/snapshot.yml failure - 1m ago" [ref=e102]:
+            - row "github ceye .github/workflows/release.yml failure - 4m ago" [ref=e102]:
               - cell "github" [ref=e103]
               - cell "ceye" [ref=e104]:
                 - link "ceye" [ref=e105] [cursor=pointer]:
-                  - /url: https://github.com/joelklabo/ceye/actions/runs/19445319755
-              - cell ".github/workflows/snapshot.yml" [ref=e106]
+                  - /url: https://github.com/joelklabo/ceye/actions/runs/19445773591
+              - cell ".github/workflows/release.yml" [ref=e106]
               - cell "failure" [ref=e107]:
                 - generic [ref=e108]: failure
               - cell "-" [ref=e109]
-              - cell "1m ago" [ref=e110]
+              - cell "4m ago" [ref=e110]
               - cell [ref=e111]:
                 - link "View on GitHub" [ref=e112] [cursor=pointer]:
-                  - /url: https://github.com/joelklabo/ceye/actions/runs/19445319755
+                  - /url: https://github.com/joelklabo/ceye/actions/runs/19445773591
                   - img [ref=e113]
-            - row "github ceye .github/workflows/docs.yml failure - 1m ago" [ref=e117]:
+            - row "github ceye .github/workflows/snapshot.yml failure - 4m ago" [ref=e117]:
               - cell "github" [ref=e118]
               - cell "ceye" [ref=e119]:
                 - link "ceye" [ref=e120] [cursor=pointer]:
-                  - /url: https://github.com/joelklabo/ceye/actions/runs/19445319022
-              - cell ".github/workflows/docs.yml" [ref=e121]
+                  - /url: https://github.com/joelklabo/ceye/actions/runs/19445773464
+              - cell ".github/workflows/snapshot.yml" [ref=e121]
               - cell "failure" [ref=e122]:
                 - generic [ref=e123]: failure
               - cell "-" [ref=e124]
-              - cell "1m ago" [ref=e125]
+              - cell "4m ago" [ref=e125]
               - cell [ref=e126]:
                 - link "View on GitHub" [ref=e127] [cursor=pointer]:
-                  - /url: https://github.com/joelklabo/ceye/actions/runs/19445319022
+                  - /url: https://github.com/joelklabo/ceye/actions/runs/19445773464
                   - img [ref=e128]
-            - row "github ceye .github/workflows/snapshot.yml failure - 3m ago" [ref=e132]:
+            - row "github ceye .github/workflows/snapshot.yml failure - 5m ago" [ref=e132]:
               - cell "github" [ref=e133]
               - cell "ceye" [ref=e134]:
                 - link "ceye" [ref=e135] [cursor=pointer]:
-                  - /url: https://github.com/joelklabo/ceye/actions/runs/19445256135
+                  - /url: https://github.com/joelklabo/ceye/actions/runs/19445746859
               - cell ".github/workflows/snapshot.yml" [ref=e136]
               - cell "failure" [ref=e137]:
                 - generic [ref=e138]: failure
               - cell "-" [ref=e139]
-              - cell "3m ago" [ref=e140]
+              - cell "5m ago" [ref=e140]
               - cell [ref=e141]:
                 - link "View on GitHub" [ref=e142] [cursor=pointer]:
-                  - /url: https://github.com/joelklabo/ceye/actions/runs/19445256135
+                  - /url: https://github.com/joelklabo/ceye/actions/runs/19445746859
                   - img [ref=e143]
-            - row "github ceye .github/workflows/release.yml failure - 3m ago" [ref=e147]:
+            - row "github ceye .github/workflows/docs.yml failure - 5m ago" [ref=e147]:
               - cell "github" [ref=e148]
               - cell "ceye" [ref=e149]:
                 - link "ceye" [ref=e150] [cursor=pointer]:
-                  - /url: https://github.com/joelklabo/ceye/actions/runs/19445255933
-              - cell ".github/workflows/release.yml" [ref=e151]
+                  - /url: https://github.com/joelklabo/ceye/actions/runs/19445746243
+              - cell ".github/workflows/docs.yml" [ref=e151]
               - cell "failure" [ref=e152]:
                 - generic [ref=e153]: failure
               - cell "-" [ref=e154]
-              - cell "3m ago" [ref=e155]
+              - cell "5m ago" [ref=e155]
               - cell [ref=e156]:
                 - link "View on GitHub" [ref=e157] [cursor=pointer]:
-                  - /url: https://github.com/joelklabo/ceye/actions/runs/19445255933
+                  - /url: https://github.com/joelklabo/ceye/actions/runs/19445746243
                   - img [ref=e158]
-            - row "github ceye ⚡️ CI - Build & Test cancelled 4m 49s 5m ago" [ref=e162]:
+            - row "github ceye 🧪 Tests - Full Matrix Suite cancelled 8m 24s 6m ago" [ref=e162]:
               - cell "github" [ref=e163]
               - cell "ceye" [ref=e164]:
                 - link "ceye" [ref=e165] [cursor=pointer]:
-                  - /url: https://github.com/joelklabo/ceye/actions/runs/19445068444
-              - cell "⚡️ CI - Build & Test" [ref=e166]
+                  - /url: https://github.com/joelklabo/ceye/actions/runs/19445504078
+              - cell "🧪 Tests - Full Matrix Suite" [ref=e166]
               - cell "cancelled" [ref=e167]:
                 - generic [ref=e168]: cancelled
-              - cell "4m 49s" [ref=e169]
-              - cell "5m ago" [ref=e170]
+              - cell "8m 24s" [ref=e169]
+              - cell "6m ago" [ref=e170]
               - cell [ref=e171]:
                 - link "View on GitHub" [ref=e172] [cursor=pointer]:
-                  - /url: https://github.com/joelklabo/ceye/actions/runs/19445068444
+                  - /url: https://github.com/joelklabo/ceye/actions/runs/19445504078
                   - img [ref=e173]
-            - row "github ceye .github/workflows/snapshot.yml failure - 5m ago" [ref=e177]:
+            - row "github ceye .github/workflows/security.yml failure - 6m ago" [ref=e177]:
               - cell "github" [ref=e178]
               - cell "ceye" [ref=e179]:
                 - link "ceye" [ref=e180] [cursor=pointer]:
-                  - /url: https://github.com/joelklabo/ceye/actions/runs/19445189159
-              - cell ".github/workflows/snapshot.yml" [ref=e181]
+                  - /url: https://github.com/joelklabo/ceye/actions/runs/19445727003
+              - cell ".github/workflows/security.yml" [ref=e181]
               - cell "failure" [ref=e182]:
                 - generic [ref=e183]: failure
               - cell "-" [ref=e184]
-              - cell "5m ago" [ref=e185]
+              - cell "6m ago" [ref=e185]
               - cell [ref=e186]:
                 - link "View on GitHub" [ref=e187] [cursor=pointer]:
-                  - /url: https://github.com/joelklabo/ceye/actions/runs/19445189159
+                  - /url: https://github.com/joelklabo/ceye/actions/runs/19445727003
                   - img [ref=e188]
-            - row "github ceye .github/workflows/security.yml failure - 5m ago" [ref=e192]:
+            - row "github ceye .github/workflows/snapshot.yml failure - 6m ago" [ref=e192]:
               - cell "github" [ref=e193]
               - cell "ceye" [ref=e194]:
                 - link "ceye" [ref=e195] [cursor=pointer]:
-                  - /url: https://github.com/joelklabo/ceye/actions/runs/19445188065
-              - cell ".github/workflows/security.yml" [ref=e196]
+                  - /url: https://github.com/joelklabo/ceye/actions/runs/19445726859
+              - cell ".github/workflows/snapshot.yml" [ref=e196]
               - cell "failure" [ref=e197]:
                 - generic [ref=e198]: failure
               - cell "-" [ref=e199]
-              - cell "5m ago" [ref=e200]
+              - cell "6m ago" [ref=e200]
               - cell [ref=e201]:
                 - link "View on GitHub" [ref=e202] [cursor=pointer]:
-                  - /url: https://github.com/joelklabo/ceye/actions/runs/19445188065
+                  - /url: https://github.com/joelklabo/ceye/actions/runs/19445726859
                   - img [ref=e203]
             - row "github SwiftTOON Coverage Badge skipped 1s 20h ago" [ref=e207]:
               - cell "github" [ref=e208]
@@ -221,7 +221,7 @@
                 - link "View on GitHub" [ref=e262] [cursor=pointer]:
                   - /url: https://github.com/joelklabo/SwiftTOON/actions/runs/19415034266
                   - img [ref=e263]
-            - row "github SwiftTOON Coverage Badge skipped - 20h ago" [ref=e267]:
+            - row "github SwiftTOON Coverage Badge skipped - 21h ago" [ref=e267]:
               - cell "github" [ref=e268]
               - cell "SwiftTOON" [ref=e269]:
                 - link "SwiftTOON" [ref=e270] [cursor=pointer]:
@@ -230,12 +230,12 @@
               - cell "skipped" [ref=e272]:
                 - generic [ref=e273]: skipped
               - cell "-" [ref=e274]
-              - cell "20h ago" [ref=e275]
+              - cell "21h ago" [ref=e275]
               - cell [ref=e276]:
                 - link "View on GitHub" [ref=e277] [cursor=pointer]:
                   - /url: https://github.com/joelklabo/SwiftTOON/actions/runs/19414914895
                   - img [ref=e278]
-            - row "github SwiftTOON CI failure 30s 20h ago" [ref=e282]:
+            - row "github SwiftTOON CI failure 30s 21h ago" [ref=e282]:
               - cell "github" [ref=e283]
               - cell "SwiftTOON" [ref=e284]:
                 - link "SwiftTOON" [ref=e285] [cursor=pointer]:
@@ -244,7 +244,7 @@
               - cell "failure" [ref=e287]:
                 - generic [ref=e288]: failure
               - cell "30s" [ref=e289]
-              - cell "20h ago" [ref=e290]
+              - cell "21h ago" [ref=e290]
               - cell [ref=e291]:
                 - link "View on GitHub" [ref=e292] [cursor=pointer]:
                   - /url: https://github.com/joelklabo/SwiftTOON/actions/runs/19414905068
@@ -419,156 +419,156 @@
                   - img [ref=e473]
       - generic [ref=e477]:
         - generic [ref=e478]:
-          - generic [ref=e480]:
-            - heading "Provider Health" [level=3] [ref=e481]
-            - button [ref=e482] [cursor=pointer]:
-              - img [ref=e484]
-          - generic [ref=e491]:
-            - generic [ref=e492]:
-              - generic [ref=e493]:
-                - img "GitHub" [ref=e494]
-                - generic [ref=e496]:
-                  - heading "github" [level=3] [ref=e497]
-                  - paragraph [ref=e498]: "Last update: just now"
-              - img [ref=e500]
-            - generic [ref=e502]: ✓ Healthy
-        - generic [ref=e503]:
-          - generic [ref=e504]:
-            - heading "Activity" [level=2] [ref=e505]
-            - button "Collapse" [ref=e506] [cursor=pointer]
-          - generic [ref=e509]:
-            - generic [ref=e511] [cursor=pointer]:
-              - img [ref=e513]
-              - generic [ref=e517]:
-                - generic [ref=e518]:
-                  - paragraph [ref=e519]: .github/workflows/snapshot.yml • ceye/main
-                  - generic [ref=e520]:
-                    - link "View on GitHub" [ref=e521]:
-                      - /url: https://github.com/joelklabo/ceye/actions/runs/19445319755
-                      - img [ref=e522]
-                    - img [ref=e526]
-                - generic [ref=e529]: "20e5016"
-                - paragraph [ref=e530]: 01:34:51 PM
-            - generic [ref=e532] [cursor=pointer]:
-              - img [ref=e534]
-              - generic [ref=e538]:
-                - generic [ref=e539]:
-                  - paragraph [ref=e540]: .github/workflows/docs.yml • ceye/main
-                  - generic [ref=e541]:
-                    - link "View on GitHub" [ref=e542]:
-                      - /url: https://github.com/joelklabo/ceye/actions/runs/19445319022
-                      - img [ref=e543]
-                    - img [ref=e547]
-                - generic [ref=e550]: "20e5016"
-                - paragraph [ref=e551]: 01:34:50 PM
-            - generic [ref=e553] [cursor=pointer]:
-              - img [ref=e555]
-              - generic [ref=e559]:
-                - generic [ref=e560]:
-                  - paragraph [ref=e561]: .github/workflows/snapshot.yml • ceye/main
-                  - generic [ref=e562]:
-                    - link "View on GitHub" [ref=e563]:
-                      - /url: https://github.com/joelklabo/ceye/actions/runs/19445256135
-                      - img [ref=e564]
-                    - img [ref=e568]
-                - generic [ref=e571]: d5dfc4e
-                - paragraph [ref=e572]: 01:32:40 PM
-            - generic [ref=e574] [cursor=pointer]:
-              - img [ref=e576]
-              - generic [ref=e580]:
-                - generic [ref=e581]:
-                  - paragraph [ref=e582]: .github/workflows/release.yml • ceye/main
-                  - generic [ref=e583]:
-                    - link "View on GitHub" [ref=e584]:
-                      - /url: https://github.com/joelklabo/ceye/actions/runs/19445255933
-                      - img [ref=e585]
-                    - img [ref=e589]
-                - generic [ref=e592]: d5dfc4e
-                - paragraph [ref=e593]: 01:32:39 PM
-            - generic [ref=e595] [cursor=pointer]:
-              - img [ref=e597]
-              - generic [ref=e600]:
-                - generic [ref=e601]:
-                  - paragraph [ref=e602]: ⚡️ CI - Build & Test • ceye/main
-                  - generic [ref=e603]:
-                    - link "View on GitHub" [ref=e604]:
-                      - /url: https://github.com/joelklabo/ceye/actions/runs/19445068444
-                      - img [ref=e605]
-                    - img [ref=e609]
-                - generic [ref=e611]:
-                  - generic [ref=e612]: "Duration: 4m 49s"
-                  - generic [ref=e613]: •
-                  - generic [ref=e614]: 583f727
-                - paragraph [ref=e615]: 01:30:12 PM
-            - generic [ref=e617] [cursor=pointer]:
-              - img [ref=e619]
-              - generic [ref=e623]:
-                - generic [ref=e624]:
-                  - paragraph [ref=e625]: .github/workflows/snapshot.yml • ceye/main
-                  - generic [ref=e626]:
-                    - link "View on GitHub" [ref=e627]:
-                      - /url: https://github.com/joelklabo/ceye/actions/runs/19445189159
-                      - img [ref=e628]
-                    - img [ref=e632]
-                - generic [ref=e635]: 77c0b87
-                - paragraph [ref=e636]: 01:30:09 PM
-            - generic [ref=e638] [cursor=pointer]:
-              - img [ref=e640]
-              - generic [ref=e644]:
-                - generic [ref=e645]:
-                  - paragraph [ref=e646]: .github/workflows/security.yml • ceye/main
-                  - generic [ref=e647]:
-                    - link "View on GitHub" [ref=e648]:
-                      - /url: https://github.com/joelklabo/ceye/actions/runs/19445188065
-                      - img [ref=e649]
-                    - img [ref=e653]
-                - generic [ref=e656]: 77c0b87
-                - paragraph [ref=e657]: 01:30:07 PM
-            - generic [ref=e659] [cursor=pointer]:
-              - img [ref=e661]
-              - generic [ref=e664]:
-                - generic [ref=e665]:
-                  - paragraph [ref=e666]: Coverage Badge • SwiftTOON/main
-                  - generic [ref=e667]:
-                    - link "View on GitHub" [ref=e668]:
+          - generic [ref=e479]:
+            - heading "Provider Health" [level=2] [ref=e480]
+            - button [ref=e481] [cursor=pointer]:
+              - img [ref=e482]
+          - generic [ref=e489]:
+            - generic [ref=e490]:
+              - generic [ref=e491]:
+                - img "GitHub" [ref=e492]
+                - generic [ref=e494]:
+                  - heading "github" [level=3] [ref=e495]
+                  - paragraph [ref=e496]: "Last update: just now"
+              - img [ref=e498]
+            - generic [ref=e500]: ✓ Healthy
+        - generic [ref=e501]:
+          - generic [ref=e502]:
+            - heading "Activity" [level=2] [ref=e503]
+            - button "Collapse" [ref=e504] [cursor=pointer]
+          - generic [ref=e507]:
+            - generic [ref=e509] [cursor=pointer]:
+              - img [ref=e511]
+              - generic [ref=e515]:
+                - generic [ref=e516]:
+                  - paragraph [ref=e517]: .github/workflows/snapshot.yml • ceye/main
+                  - generic [ref=e518]:
+                    - link "View on GitHub" [ref=e519]:
+                      - /url: https://github.com/joelklabo/ceye/actions/runs/19445773464
+                      - img [ref=e520]
+                    - img [ref=e524]
+                - generic [ref=e527]: b2c9c8a
+                - paragraph [ref=e528]: 01:51:24 PM
+            - generic [ref=e530] [cursor=pointer]:
+              - img [ref=e532]
+              - generic [ref=e536]:
+                - generic [ref=e537]:
+                  - paragraph [ref=e538]: .github/workflows/release.yml • ceye/main
+                  - generic [ref=e539]:
+                    - link "View on GitHub" [ref=e540]:
+                      - /url: https://github.com/joelklabo/ceye/actions/runs/19445773591
+                      - img [ref=e541]
+                    - img [ref=e545]
+                - generic [ref=e548]: b2c9c8a
+                - paragraph [ref=e549]: 01:51:24 PM
+            - generic [ref=e551] [cursor=pointer]:
+              - img [ref=e553]
+              - generic [ref=e557]:
+                - generic [ref=e558]:
+                  - paragraph [ref=e559]: .github/workflows/snapshot.yml • ceye/main
+                  - generic [ref=e560]:
+                    - link "View on GitHub" [ref=e561]:
+                      - /url: https://github.com/joelklabo/ceye/actions/runs/19445746859
+                      - img [ref=e562]
+                    - img [ref=e566]
+                - generic [ref=e569]: a66b9bc
+                - paragraph [ref=e570]: 01:50:27 PM
+            - generic [ref=e572] [cursor=pointer]:
+              - img [ref=e574]
+              - generic [ref=e578]:
+                - generic [ref=e579]:
+                  - paragraph [ref=e580]: .github/workflows/docs.yml • ceye/main
+                  - generic [ref=e581]:
+                    - link "View on GitHub" [ref=e582]:
+                      - /url: https://github.com/joelklabo/ceye/actions/runs/19445746243
+                      - img [ref=e583]
+                    - img [ref=e587]
+                - generic [ref=e590]: a66b9bc
+                - paragraph [ref=e591]: 01:50:25 PM
+            - generic [ref=e593] [cursor=pointer]:
+              - img [ref=e595]
+              - generic [ref=e598]:
+                - generic [ref=e599]:
+                  - paragraph [ref=e600]: 🧪 Tests - Full Matrix Suite • ceye/main
+                  - generic [ref=e601]:
+                    - link "View on GitHub" [ref=e602]:
+                      - /url: https://github.com/joelklabo/ceye/actions/runs/19445504078
+                      - img [ref=e603]
+                    - img [ref=e607]
+                - generic [ref=e609]:
+                  - generic [ref=e610]: "Duration: 8m 24s"
+                  - generic [ref=e611]: •
+                  - generic [ref=e612]: e829098
+                - paragraph [ref=e613]: 01:49:43 PM
+            - generic [ref=e615] [cursor=pointer]:
+              - img [ref=e617]
+              - generic [ref=e621]:
+                - generic [ref=e622]:
+                  - paragraph [ref=e623]: .github/workflows/snapshot.yml • ceye/main
+                  - generic [ref=e624]:
+                    - link "View on GitHub" [ref=e625]:
+                      - /url: https://github.com/joelklabo/ceye/actions/runs/19445726859
+                      - img [ref=e626]
+                    - img [ref=e630]
+                - generic [ref=e633]: "2732053"
+                - paragraph [ref=e634]: 01:49:39 PM
+            - generic [ref=e636] [cursor=pointer]:
+              - img [ref=e638]
+              - generic [ref=e642]:
+                - generic [ref=e643]:
+                  - paragraph [ref=e644]: .github/workflows/security.yml • ceye/main
+                  - generic [ref=e645]:
+                    - link "View on GitHub" [ref=e646]:
+                      - /url: https://github.com/joelklabo/ceye/actions/runs/19445727003
+                      - img [ref=e647]
+                    - img [ref=e651]
+                - generic [ref=e654]: "2732053"
+                - paragraph [ref=e655]: 01:49:39 PM
+            - generic [ref=e657] [cursor=pointer]:
+              - img [ref=e659]
+              - generic [ref=e662]:
+                - generic [ref=e663]:
+                  - paragraph [ref=e664]: Coverage Badge • SwiftTOON/main
+                  - generic [ref=e665]:
+                    - link "View on GitHub" [ref=e666]:
                       - /url: https://github.com/joelklabo/SwiftTOON/actions/runs/19415058159
-                      - img [ref=e669]
-                    - img [ref=e673]
-                - generic [ref=e675]:
-                  - generic [ref=e676]: "Duration: 1s"
-                  - generic [ref=e677]: •
-                  - generic [ref=e678]: 7be24af
-                - paragraph [ref=e679]: 04:58:45 PM
-            - generic [ref=e681] [cursor=pointer]:
-              - img [ref=e683]
-              - generic [ref=e687]:
-                - generic [ref=e688]:
-                  - paragraph [ref=e689]: CI • SwiftTOON/main
-                  - generic [ref=e690]:
-                    - link "View on GitHub" [ref=e691]:
+                      - img [ref=e667]
+                    - img [ref=e671]
+                - generic [ref=e673]:
+                  - generic [ref=e674]: "Duration: 1s"
+                  - generic [ref=e675]: •
+                  - generic [ref=e676]: 7be24af
+                - paragraph [ref=e677]: 04:58:45 PM
+            - generic [ref=e679] [cursor=pointer]:
+              - img [ref=e681]
+              - generic [ref=e685]:
+                - generic [ref=e686]:
+                  - paragraph [ref=e687]: CI • SwiftTOON/main
+                  - generic [ref=e688]:
+                    - link "View on GitHub" [ref=e689]:
                       - /url: https://github.com/joelklabo/SwiftTOON/actions/runs/19415051501
-                      - img [ref=e692]
-                    - img [ref=e696]
-                - generic [ref=e698]:
-                  - generic [ref=e699]: "Duration: 27s"
-                  - generic [ref=e700]: •
-                  - generic [ref=e701]: 7be24af
-                - paragraph [ref=e702]: 04:58:42 PM
-            - generic [ref=e704] [cursor=pointer]:
-              - img [ref=e706]
-              - generic [ref=e709]:
-                - generic [ref=e710]:
-                  - paragraph [ref=e711]: Coverage Badge • SwiftTOON/main
-                  - generic [ref=e712]:
-                    - link "View on GitHub" [ref=e713]:
+                      - img [ref=e690]
+                    - img [ref=e694]
+                - generic [ref=e696]:
+                  - generic [ref=e697]: "Duration: 27s"
+                  - generic [ref=e698]: •
+                  - generic [ref=e699]: 7be24af
+                - paragraph [ref=e700]: 04:58:42 PM
+            - generic [ref=e702] [cursor=pointer]:
+              - img [ref=e704]
+              - generic [ref=e707]:
+                - generic [ref=e708]:
+                  - paragraph [ref=e709]: Coverage Badge • SwiftTOON/main
+                  - generic [ref=e710]:
+                    - link "View on GitHub" [ref=e711]:
                       - /url: https://github.com/joelklabo/SwiftTOON/actions/runs/19415044056
-                      - img [ref=e714]
-                    - img [ref=e718]
-                - generic [ref=e720]:
-                  - generic [ref=e721]: "Duration: 1s"
-                  - generic [ref=e722]: •
-                  - generic [ref=e723]: 4f3cf25
-                - paragraph [ref=e724]: 04:57:46 PM
-  - button "Debug Panel" [ref=e725] [cursor=pointer]:
-    - img [ref=e726]
+                      - img [ref=e712]
+                    - img [ref=e716]
+                - generic [ref=e718]:
+                  - generic [ref=e719]: "Duration: 1s"
+                  - generic [ref=e720]: •
+                  - generic [ref=e721]: 4f3cf25
+                - paragraph [ref=e722]: 04:57:46 PM
+  - button "Debug Panel" [ref=e723] [cursor=pointer]:
+    - img [ref=e724]
 ```

@@ -147,7 +147,7 @@ const ActivityItemRow = React.memo(function ActivityItemRow({ item, index }: Act
       </AnimatePresence>
     </motion.div>
   )
-}
+})
 
 interface ActivityFeedProps {
   items: ActivityItem[]
@@ -196,7 +196,7 @@ export function ActivityFeed({ items, maxItems = 10 }: ActivityFeedProps) {
   const displayItems = items.slice(0, maxItems)
 
   return (
-    <div className="rounded-lg border border-border bg-card" data-testid="activity-feed">
+    <div className="rounded-lg border border-border bg-card" data-testid="activity-feed" data-testid-section="activity-section">
       <div className="flex items-center justify-between border-b border-border p-4">
         <h2 className="text-lg font-semibold">Activity</h2>
         <button

@@ -13,7 +13,7 @@ test.describe('Provider Health UI', () => {
     await expect(providerSection).toBeVisible()
 
     // Provider cards should be in a vertical stack, not grid
-    const providerCards = page.locator('[class*="space-y"]')
+    const providerCards = page.locator('[data-testid="provider-cards"]')
     await expect(providerCards).toBeVisible()
 
     // Should NOT have grid layout classes
@@ -31,11 +31,11 @@ test.describe('Provider Health UI', () => {
   })
 
   test('should display provider with health indicator', async ({ page }) => {
-    // Wait for at least one provider card
-    await page.waitForSelector('text=github', { timeout: 10000 })
+    // Wait for at least one provider card (demo mode uses "demo" provider)
+    await page.waitForSelector('text=demo', { timeout: 10000 })
 
     // Should show provider name
-    const providerName = page.locator('text=github').first()
+    const providerName = page.locator('text=demo').first()
     await expect(providerName).toBeVisible()
 
     // Should show health status (green circle)
@@ -106,8 +106,8 @@ test.describe('Provider Health UI', () => {
 
   test('should match Activity feed width', async ({ page }) => {
     // Both Provider Health and Activity should have similar widths
-    const providerSection = page.locator('text=Provider Health').locator('..')
-    const activitySection = page.locator('text=Activity').locator('..')
+    const providerSection = page.locator('[data-testid="provider-health-section"]')
+    const activitySection = page.locator('[data-testid="activity-feed"]')
 
     await expect(providerSection).toBeVisible()
     await expect(activitySection).toBeVisible()

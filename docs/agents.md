@@ -1545,11 +1545,12 @@ logger.Error("Failed to connect: %v", err)
 
 **Lesson**: Structure logs from the start - ad-hoc string formatting makes logs hard to parse later.
 
-## 🚨 CRITICAL: TypeScript Build Failure (2025-11-17)
+## 🚨 CRITICAL: TypeScript Build Failure (2025-11-17) - ✅ RESOLVED
 
 **Date**: 2025-11-17 21:34 UTC  
-**Agent**: Nova  
-**Status**: UNRESOLVED - BLOCKS ALL DEVELOPMENT
+**Agent**: Nova (discovered), Phoenix (fixed)  
+**Fixed**: 2025-11-17 21:54 UTC  
+**Status**: ✅ RESOLVED
 
 ### Problem
 
@@ -1592,12 +1593,50 @@ src/components/dashboard/ActivityFeed.tsx(152,11): error TS1005: ',' expected.
 4. Check if tsconfig.node.json has conflicts
 5. As last resort, revert tsconfig files to working state
 
-### Impact
+### Root Cause
 
-- **BLOCKS**: All web development (can't rebuild React app)
-- **BLOCKS**: Task 0.7.1 (full-width layout fix)
-- **BLOCKS**: Any UI changes
-- **Workaround**: Use existing bin/ceye binary for testing (no web changes possible)
+**Missing closing parenthesis for React.memo wrapper!**
+
+Line 25 of ActivityFeed.tsx had:
+```tsx
+const ActivityItemRow = React.memo(function ActivityItemRow(...) {
+```
+
+But line 150 only had:
+```tsx
+}  // ❌ Missing closing ) for React.memo
+```
+
+Should be:
+```tsx
+})  // ✅ Correct - closes both function and React.memo
+```
+
+### Why TypeScript Errors Were Confusing
+
+1. **`tsc --noEmit` passed**: TypeScript could parse the file in isolation
+2. **`tsc -b` failed**: Project build mode showed cryptic errors at line 152 (the NEXT declaration after the unclosed function)
+3. **Changing to `tsc` (without `-b`)**: Revealed the real error via Vite/esbuild: "Expected ')' but found 'interface'"
+
+### The Fix
+
+1. Changed `package.json` build script from `tsc -b` to `tsc` (removed project mode)
+2. Fixed line 150: `}` → `})`
+3. Build now succeeds! ✅
+
+### Impact (Before Fix)
+
+- **BLOCKED**: All web development (couldn't rebuild React app)
+- **BLOCKED**: Task 0.7.1 (full-width layout fix)
+- **BLOCKED**: Any UI changes
+
+### Lesson Learned
+
+When `tsc -b` gives syntax errors but `tsc --noEmit` passes:
+1. Try removing `-b` flag to get better error messages from Vite/esbuild
+2. Look for missing closing parentheses/brackets in React.memo, HOCs, or function wrappers
+3. The error location TypeScript reports may be AFTER the actual problem
+4. Project build mode errors can be misleading - always verify with alternative build methods
 
 ## Learnings from Task 0.7: Provider Health UI & Webhook Testing
 
