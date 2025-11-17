@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Circle, RefreshCw, ChevronDown, ChevronRight, Zap } from 'lucide-react'
 import type { ProviderHealth, ProviderMeta } from '@/types'
@@ -29,6 +29,26 @@ function formatTime(timestamp: string): string {
 export function ProviderCards({ providers, meta, onRefresh }: ProviderCardsProps) {
   const providerEntries = Object.entries(providers)
   const [expandedPayload, setExpandedPayload] = useState<string | null>(null)
+  const [flashingProvider, setFlashingProvider] = useState<string | null>(null)
+  const lastWebhookTime = useRef<Record<string, string>>({})
+
+  // Detect new webhooks and trigger flash animation
+  useEffect(() => {
+    providerEntries.forEach(([name, health]) => {
+      if (health.LastWebhook?.received_at) {
+        const previousTime = lastWebhookTime.current[name]
+        const currentTime = health.LastWebhook.received_at
+        
+        // If webhook time changed, trigger flash
+        if (previousTime && previousTime !== currentTime) {
+          setFlashingProvider(name)
+          setTimeout(() => setFlashingProvider(null), 1000)
+        }
+        
+        lastWebhookTime.current[name] = currentTime
+      }
+    })
+  }, [providerEntries])
 
   if (providerEntries.length === 0) {
     return (
@@ -67,8 +87,24 @@ export function ProviderCards({ providers, meta, onRefresh }: ProviderCardsProps
               <motion.div
                 key={name}
                 initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.2, delay: index * 0.05 }}
+                animate={
+                  flashingProvider === name
+                    ? {
+                        opacity: 1,
+                        scale: 1,
+                        borderColor: [
+                          'hsl(var(--border))',
+                          'hsl(var(--primary))',
+                          'hsl(var(--border))'
+                        ]
+                      }
+                    : { opacity: 1, scale: 1 }
+                }
+                transition={
+                  flashingProvider === name
+                    ? { duration: 0.8, borderColor: { duration: 0.8 } }
+                    : { duration: 0.2, delay: index * 0.05 }
+                }
                 whileHover={{ scale: 1.02 }}
                 className="rounded-lg border border-border bg-card p-4 hover:shadow-lg transition-shadow"
               >

@@ -32,10 +32,10 @@ test.describe('Provider Health UI', () => {
 
   test('should display provider with health indicator', async ({ page }) => {
     // Wait for provider cards container to appear
-    await page.waitForSelector('[data-testid="provider-cards"]', { timeout: 10000 })
+    await page.waitForSelector('[data-testid="provider-cards-list"]', { timeout: 10000 })
 
     // Should show at least one provider name (github, demo, azure, etc.)
-    const providerCard = page.locator('[data-testid="provider-cards"] > div').first()
+    const providerCard = page.locator('[data-testid="provider-cards-list"] > div').first()
     await expect(providerCard).toBeVisible()
 
     // Should show health status (green circle)
