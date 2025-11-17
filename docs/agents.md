@@ -36,14 +36,16 @@ ceye/
 │   └── ui/                # Terminal UI (Bubble Tea)
 ├── web/                   # Static web UI assets
 └── docs/                  # Documentation
+    ├── agents.md          # This file (SOURCE OF TRUTH)
+    │                      # Symlinked from: /AGENTS.md, /CLAUDE.md, /.github/copilot-instructions.md
+    ├── readme.md          # Project README (symlinked from /README.md)
     ├── plan.md            # Master development plan
-    ├── README.md          # Documentation index
     └── references/        # Reference docs and guides
-        ├── agents.md      # This file (symlinked to root)
+        ├── doc-inventory.md
         ├── testing-guide.md
         ├── webhook-guide.md
         ├── web-ui-architecture.md
-        └── ...
+        └── ui-demo.txt
 ```
 
 ### Data Flow
@@ -670,10 +672,29 @@ sudo cp bin/ci-dash /usr/local/bin/
 
 ## Links
 
-- **Master Plan**: [docs/plan.md](../plan.md)
-- **Testing Guide**: [docs/references/testing-guide.md](testing-guide.md)
-- **Webhook Guide**: [docs/references/webhook-guide.md](webhook-guide.md)
-- **Project README**: [docs/references/readme.md](readme.md)
+- **Master Plan**: [plan.md](plan.md)
+- **Project README**: [readme.md](readme.md)
+- **Testing Guide**: [references/testing-guide.md](references/testing-guide.md)
+- **Webhook Guide**: [references/webhook-guide.md](references/webhook-guide.md)
+
+## Symlink Structure
+
+**This file (`docs/agents.md`) is the SOURCE OF TRUTH for agent context.**
+
+It is symlinked to multiple locations for different AI tools:
+
+```
+/AGENTS.md                           → docs/agents.md (GitHub Copilot)
+/CLAUDE.md                           → docs/agents.md (Claude)
+/.github/copilot-instructions.md     → docs/agents.md (GitHub Copilot workspace)
+```
+
+Similarly, the project README:
+```
+/README.md                           → docs/readme.md (GitHub display)
+```
+
+**Never edit the symlinks directly - always edit `docs/agents.md` or `docs/readme.md`.**
 
 ## Documentation Organization
 

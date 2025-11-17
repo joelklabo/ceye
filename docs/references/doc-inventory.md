@@ -7,16 +7,31 @@
 
 ```
 docs/
-├── plan.md                          # Master development plan (current priorities)
-├── README.md                        # Documentation index
-└── references/                      # Reference documents (6 files)
-    ├── agents.md                    # Agent context (symlinked from /AGENTS.md)
+├── agents.md                        # Agent context (SOURCE OF TRUTH)
+│                                    # Symlinked from:
+│                                    # - /AGENTS.md (root)
+│                                    # - /CLAUDE.md (root)
+│                                    # - /.github/copilot-instructions.md
+├── readme.md                        # Project README (SOURCE OF TRUTH)
+│                                    # Symlinked from:
+│                                    # - /README.md (root)
+├── plan.md                          # Master development plan
+└── references/                      # Reference documents (5 files)
     ├── doc-inventory.md             # This file
-    ├── readme.md                    # Project README
     ├── testing-guide.md             # Testing standards, contract tests, safety tests
     ├── webhook-guide.md             # Webhook implementation (consolidated from 6 files)
-    └── web-ui-architecture.md       # Web UI design decisions
+    ├── web-ui-architecture.md       # Web UI design decisions
+    └── ui-demo.txt                  # TUI demo output
 ```
+
+## Root Files (All Symlinks)
+
+- `AGENTS.md` → `docs/agents.md` (for AI agents)
+- `CLAUDE.md` → `docs/agents.md` (for Claude)
+- `README.md` → `docs/readme.md` (for GitHub display)
+- `.github/copilot-instructions.md` → `../docs/agents.md` (for GitHub Copilot)
+
+**All source of truth files live in docs/ folder.**
 
 ## Root Files
 
