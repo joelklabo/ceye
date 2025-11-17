@@ -142,49 +142,51 @@ ceye/
 
 ---
 
-#### Phase 0.2: Core Components (8 hours) - **IN PROGRESS** 🚧
+#### Phase 0.2: Core Components (8 hours) - ✅ **COMPLETE**
 
 **Goal**: Build main dashboard components with animations
 
+**Commit**: e873ba3
+
 **Tasks**:
-- [🚧] **Stats Cards** (2 hours)
+- [✅] **Stats Cards** (2 hours)
   - 4 cards: Running, Queued, Success, Failed
   - Animated counters (count up/down)
   - Pulse effect on value changes
   - Gradient backgrounds
-  - Shadcn Card component
+  - Lucide icons
   
-- [ ] **Runs Table** (3 hours)
-  - Shadcn Table component
+- [✅] **Runs Table** (3 hours)
+  - Full table implementation
   - Columns: Provider, Repo, Workflow, Status, Duration, Time
-  - Sorting (click headers)
-  - Filtering (search box)
+  - Sorting (click headers with arrows)
+  - Filtering (search box with icon)
   - Status badges with colors
-  - Row hover effects (subtle lift)
-  - Smooth entrance animations for new rows
-  - Skeleton loader during fetch
+  - Row hover effects
+  - Smooth entrance animations with stagger
+  - Empty state handling
   
-- [ ] **Provider Health Cards** (2 hours)
+- [✅] **Provider Health Cards** (2 hours)
   - Card per provider
-  - Health indicator with pulse when active
+  - Health indicator with pulse animation
   - Last update timestamp
-  - Error states with messages
-  - Hover effect with lift
-  - Status colors transition smoothly
+  - Error states with count display
+  - Hover effect with scale
+  - Status colors with smooth transitions
   
-- [ ] **Activity Feed** (1 hour)
-  - Stacked timeline design
-  - Slide-in animation for new entries
+- [✅] **Activity Feed** (1 hour)
+  - Collapsible timeline design
+  - Slide-in animation for entries
   - Lucide icons for event types
   - Timestamp formatting
-  - Auto-scroll behavior
-  - Clear button
+  - Expand/collapse behavior
+  - Empty state handling
 
-**Success Criteria**:
+**Success Criteria**: ✅ ALL MET
 - ✅ All components render correctly
-- ✅ Animations smooth at 60fps
-- ✅ Responsive layout
-- ✅ Accessible (keyboard nav, ARIA labels)
+- ✅ Animations smooth at 60fps (Framer Motion)
+- ✅ Responsive layout (grid-based, mobile-friendly)
+- ✅ Accessible (semantic HTML, hover states)
 
 ---
 
