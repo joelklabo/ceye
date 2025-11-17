@@ -1,7 +1,7 @@
 # ceye Development Plan
 
-**Last Updated**: 2025-11-17 17:22 UTC  
-**Status**: Phase 0.7 Critical Issues - 🟢 **4 of 10 COMPLETE**
+**Last Updated**: 2025-11-17 17:25 UTC  
+**Status**: Phase 0.7 Critical Issues - 🟢 **4 of 11 COMPLETE**
 
 ## Current Status
 
@@ -18,6 +18,7 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 - 27 Playwright integration tests passing
 
 **🚨 REMAINING ISSUES**:
+- 🔴🔴 **Webhooks not triggering** - Need end-to-end testing & setup verification!
 - 🟡 Provider Health UI needs full-width redesign
 - 🟡 Activity Feed needs enhanced message details
 - 🟡 UI flicker on updates (needs investigation)
@@ -226,20 +227,196 @@ ceye validate --duration 1h --repos github.com/user/repo
 
 **Time**: 2 hours (vs estimated 4-6 hours)
 
+---
+
+#### 0.5. Webhook Integration Testing - Trigger & Verify (CRITICAL 🔴🔴) - 2-3 hours
+
+**Problem**: Webhooks appear to not be working in production
+- User reports NO webhook updates are being received
+- Webhook server is running but events may not be reaching it
+- Need to verify entire webhook pipeline end-to-end
+
+**Critical Questions to Answer**:
+1. Is the webhook endpoint reachable from GitHub?
+2. Is GitHub actually configured to send webhooks to our endpoint?
+3. Are webhooks being sent but our server isn't receiving them?
+4. Are webhooks being received but not processed correctly?
+5. Is ngrok/tunnel required but not running?
+
+**Root Cause Investigation Strategy**:
+
+**Step 1: Verify Webhook Configuration** (15 min)
+```bash
+# Check if webhooks are configured on GitHub repos
+gh api repos/OWNER/REPO/hooks
+
+# Expected: List of webhooks with our endpoint URL
+# If empty: Webhooks not configured! This is likely the issue.
+```
+
+**Step 2: Test Local Webhook Reception** (30 min)
+```bash
+# Terminal 1: Start ceye with webhook logging
+ceye --port 8080 --webhook-port 9090
+
+# Terminal 2: Send test webhook with curl
+curl -X POST http://localhost:9090/webhooks/github \
+  -H "Content-Type: application/json" \
+  -H "X-GitHub-Event: workflow_run" \
+  -d @test-webhook-payload.json
+
+# Expected: ceye logs "Received webhook: workflow_run"
+# If not: Server webhook handler broken
+```
+
+**Step 3: Create GitHub Webhook Configuration** (30 min)
+```bash
+# Use gh CLI to configure webhook
+gh api repos/OWNER/REPO/hooks \
+  -X POST \
+  -F url="https://YOUR_NGROK_URL/webhooks/github" \
+  -F content_type="application/json" \
+  -F events[]="workflow_run" \
+  -F active=true
+
+# Or use GitHub UI:
+# Settings → Webhooks → Add webhook
+# - Payload URL: https://your-tunnel/webhooks/github
+# - Content type: application/json
+# - Events: workflow_run
+```
+
+**Step 4: Set Up Tunnel (if needed)** (15 min)
+```bash
+# Install ngrok
+brew install ngrok
+
+# Start tunnel
+ngrok http 9090
+
+# Copy public URL (e.g., https://abc123.ngrok.io)
+# Configure GitHub webhook to point to: https://abc123.ngrok.io/webhooks/github
+```
+
+**Step 5: Trigger Real GitHub Action** (15 min)
+```bash
+# Trigger workflow via gh CLI
+gh workflow run CI --ref main
+
+# Or create empty commit to trigger CI
+git commit --allow-empty -m "Test webhook delivery"
+git push
+
+# Monitor webhook receipt in ceye logs
+```
+
+**Step 6: End-to-End Test Script** (30 min)
+```bash
+#!/bin/bash
+# scripts/test-webhook-e2e.sh
+
+set -e
+
+echo "🔍 Testing Webhook End-to-End"
+echo ""
+
+# 1. Check webhook configuration
+echo "1. Checking GitHub webhook configuration..."
+HOOKS=$(gh api repos/$OWNER/$REPO/hooks)
+if [ -z "$HOOKS" ]; then
+    echo "❌ No webhooks configured on GitHub!"
+    echo "   Run: gh api repos/$OWNER/$REPO/hooks -X POST ..."
+    exit 1
+fi
+echo "✅ Webhooks configured"
+
+# 2. Start ceye in background
+echo "2. Starting ceye..."
+ceye --port 8080 --webhook-port 9090 > tmp/ceye-webhook-test.log 2>&1 &
+CEYE_PID=$!
+sleep 3
+
+# 3. Test local webhook endpoint
+echo "3. Testing local webhook endpoint..."
+RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
+    http://localhost:9090/webhooks/health)
+if [ "$RESPONSE" != "200" ]; then
+    echo "❌ Webhook endpoint not responding"
+    kill $CEYE_PID
+    exit 1
+fi
+echo "✅ Webhook endpoint healthy"
+
+# 4. Trigger GitHub action
+echo "4. Triggering GitHub workflow..."
+gh workflow run CI --ref main
+sleep 5
+
+# 5. Check ceye logs for webhook receipt
+echo "5. Checking ceye logs..."
+if grep -q "Received webhook" tmp/ceye-webhook-test.log; then
+    echo "✅ Webhook received!"
+else
+    echo "⚠️  No webhook received in 5s"
+    echo "   Check tmp/ceye-webhook-test.log for details"
+fi
+
+# 6. Check validation harness
+echo "6. Running validation harness (30s)..."
+ceye validate --duration 30s
+
+# Cleanup
+kill $CEYE_PID
+echo ""
+echo "✅ Test complete"
+```
+
+**Implementation Plan**:
+
+**Phase 1: Diagnostic Tools** (30 min)
+- Add webhook logging to server
+- Create health check endpoint
+- Add webhook receipt counter
+
+**Phase 2: Configuration Guide** (30 min)
+- Document GitHub webhook setup
+- Document ngrok/tunnel setup
+- Create configuration checker script
+
+**Phase 3: E2E Test** (1 hour)
+- Create test-webhook-e2e.sh script
+- Add sample webhook payload files
+- Test with real GitHub repo
+
+**Phase 4: Debug Mode** (30 min)
+- Add `--webhook-debug` flag
+- Log ALL webhook attempts (success/failure)
+- Log request headers, body, signature
+
+**Success Criteria**:
+- [ ] Can verify webhook configuration on GitHub
+- [ ] Can receive test webhooks locally
+- [ ] Can set up ngrok tunnel
+- [ ] Can trigger real GitHub action
+- [ ] Can observe webhook delivery in logs
+- [ ] E2E test script passes
+- [ ] Documentation on webhook setup
+
 **Expected Findings**:
-- ✅ **If webhooks work**: 100% match rate, 30-60s faster
-- ⚠️ **If webhooks broken**: Missing runs in webhook store, 0s advantage
-- 🔧 **If partial failure**: Some runs missing, inconsistent advantage
+- ✅ **If working**: Webhooks received within seconds of GitHub event
+- ⚠️ **If not configured**: No webhooks on GitHub, need to add
+- 🔧 **If tunnel issue**: Need ngrok/public URL
+- ❌ **If server issue**: Webhook handler broken, need fix
 
 **Deliverables**:
-1. `internal/validation/harness.go` - Validation framework
-2. `cmd/ceye/validate.go` - CLI command
-3. `e2e/webhook-validation.spec.go` - Go integration test
-4. `tmp/validation-metrics.jsonl` - Metrics log (gitignored)
-5. `docs/webhook-validation-guide.md` - Operator guide
+1. `scripts/test-webhook-e2e.sh` - End-to-end test script
+2. `docs/webhook-setup-guide.md` - Setup documentation
+3. `test/fixtures/webhook-*.json` - Sample payloads
+4. Enhanced webhook logging in server
+5. `--webhook-debug` flag
 
-**Time**: 4-6 hours
-**Priority**: HIGHEST - Blocks confidence in core feature
+**Time**: 2-3 hours
+**Priority**: CRITICAL - User can't receive updates without working webhooks!
 
 ---
 
@@ -528,10 +705,11 @@ ceye validate --duration 1h --repos github.com/user/repo
 **Total Estimated Time**: 20-30 hours  
 **Priority Order**: 
 0. ✅ **Webhook vs Polling Validation (CRITICAL)** - **COMPLETE** (edfc9fb)
+0.5. 🔴🔴 **Webhook Integration Testing (CRITICAL)** - **HIGHEST PRIORITY**
 1. ✅ WebSocket Connection Fix (CRITICAL) - **COMPLETE** (2bde007)
 2. ✅ Remove Orphaned Code - **COMPLETE** (9ad241b)
 3. ✅ Startup Performance Metrics (HIGH) - **COMPLETE** (ab83713)
-4. 🔄 Provider Health UI Redesign (HIGH) - **NEXT**
+4. 🔄 Provider Health UI Redesign (HIGH)
 5. 🔄 Enhanced Activity Feed (HIGH)
 6. 🔄 Fix UI Flicker (LOW)
 7. 🔄 GitHub Logo Investigation (LOW)
