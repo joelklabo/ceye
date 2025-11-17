@@ -636,7 +636,7 @@ echo "✅ Webhook configured successfully!"
 
 ---
 
-#### 0.7. Provider Health UI Redesign - Full Width & Details (HIGH 🟡) - 🔄 **IN PROGRESS** - 3-4 hours
+#### 0.7. Provider Health UI Redesign - Full Width & Details (HIGH 🟡) - 3-4 hours
 
 **Problem**: Provider cards don't match Activity feed styling
 - Cards use grid layout (doesn't fill width)
@@ -987,7 +987,7 @@ type WebhookEvent struct {
 - [ ] Message count accurate
 - [ ] Smooth 60fps animations
 
-#### 5. Enhanced Activity Feed with Message Details (HIGH 🟡) - 2-3 hours
+#### 5. Enhanced Activity Feed with Message Details (HIGH 🟡) - 🔄 **IN PROGRESS** - 2-3 hours
 **Problem**: Activity feed shows minimal info - just workflow name and status
 - No message content details
 - Can't see what changed
