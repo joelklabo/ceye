@@ -1,7 +1,7 @@
 # ceye Development Plan
 
-**Last Updated**: 2025-11-17 16:47 UTC  
-**Status**: Phase 0.7 Critical Issues - 🟡 **1 of 6 COMPLETE**
+**Last Updated**: 2025-11-17 16:52 UTC  
+**Status**: Phase 0.7 Critical Issues - 🟡 **2 of 9 COMPLETE**
 
 ## Current Status
 
@@ -64,25 +64,176 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 
 **Time**: 1.5 hours (vs estimated 2-3 hours)
 
-#### 2. Remove Orphaned Code (HIGH 🟡) - 🔄 **IN PROGRESS** - 30 minutes
+#### 2. Remove Orphaned Code (HIGH 🟡) - ✅ **COMPLETE** (Commit: 9ad241b)
+
 **Problem**: Duplicate implementations causing confusion
 - `/internal/server/web/` - Old vanilla JS (NOT USED)
 - `/web/src/` - New React (ACTIVE)
 - Server serves from `/web/dist/` (React build)
 
-**Steps**:
-1. [ ] Verify `/internal/server/web/` not referenced in Go code
-2. [ ] Delete `/internal/server/web/` directory
-3. [ ] Update any stale documentation
-4. [ ] Commit + push
+**Solution**:
+1. ✅ Verified no Go code references
+2. ✅ Deleted `/internal/server/web/` directory (3,770 lines removed)
+3. ✅ All tests pass (4/4 WebSocket tests)
+4. ✅ Build succeeds
 
 **Success Criteria**:
-- [ ] Only one web implementation exists
-- [ ] All tests still pass
-- [ ] Build succeeds
+- ✅ Only one web implementation exists
+- ✅ All tests still pass
+- ✅ Build succeeds
 
-#### 3. Fix UI Flicker (HIGH 🟡) - 1-2 hours
-**Problem**: Extreme flicker during WebSocket updates
+**Time**: 10 minutes (vs estimated 30 minutes)
+
+#### 3. Startup Performance - Add Timing Metrics (HIGH 🟡) - 1-2 hours
+**Problem**: Slow startup time - takes ~60 seconds from invocation to web server ready
+- No visibility into what's taking time
+- Can't identify bottlenecks
+- Poor user experience waiting for server
+
+**Root Causes to Investigate**:
+- Provider initialization (GitHub API calls, auth)
+- Config discovery and parsing
+- Webhook server startup
+- Web asset loading
+- Storage/database initialization
+
+**Solution**:
+1. [ ] Add timing instrumentation to main.go
+2. [ ] Measure each initialization phase:
+   - Config loading
+   - Provider creation
+   - Storage initialization  
+   - Webhook server startup
+   - Web server startup
+3. [ ] Log timing summary at startup
+4. [ ] Identify and optimize slowest phases
+5. [ ] Add progress indicators
+6. [ ] Commit + push
+
+**Success Criteria**:
+- [ ] Startup time breakdown visible in logs
+- [ ] Can identify bottlenecks
+- [ ] Startup time reduced by >50% OR clear explanation of necessary delays
+- [ ] Progress shown to user during startup
+
+**Example Output**:
+```
+🚀 ceye starting...
+   ⏱️  Config loaded (125ms)
+   ⏱️  Providers created (2.3s)
+   ⏱️  Storage initialized (45ms)
+   ⏱️  Webhook server ready (120ms)
+   ⏱️  Web assets loaded (80ms)
+   ✅ Web server ready (total: 2.67s)
+```
+
+#### 4. Provider Health UI Redesign (HIGH 🟡) - 2-3 hours
+**Problem**: Provider Health cards don't use full sidebar width like Activity feed
+- Provider cards use grid layout (breaks on narrow sidebar)
+- No visual feedback when messages received
+- Missing refresh button
+- Inconsistent with Activity feed styling
+
+**Design Goals**:
+1. **Full-width card layout** - Match Activity feed width
+2. **Message receipt animation** - Flash/pulse when WebSocket message received
+3. **Message preview** - Show snippet of last message content
+4. **Refresh button** - Manual refresh integrated into header
+5. **Message count** - Show # of messages received since startup
+
+**Layout**:
+```
+┌─ Provider Health ──────────────── [↻ Refresh] ┐
+│                                                  │
+│ ● GitHub Prod                      [LIVE] 52ms  │
+│   Last msg: "workflow_run completed"            │
+│   📨 142 messages • ✓ Healthy                   │
+│                                                  │
+│ ● Azure DevOps                  [OFFLINE] 2.3s  │
+│   Last msg: "API rate limit exceeded"           │
+│   📨 89 messages • ⚠️ 3 errors                  │
+└──────────────────────────────────────────────── ┘
+```
+
+**Animation Requirements**:
+- Flash border green when message received (500ms)
+- Pulse logo when processing
+- Show latency (time from message received to UI update)
+- Count animation when new message arrives
+
+**Steps**:
+1. [ ] Update ProviderCards to full-width layout
+2. [ ] Add message metadata to DashboardContext
+3. [ ] Add refresh button to header
+4. [ ] Implement flash animation on message receipt
+5. [ ] Show last message preview
+6. [ ] Add message counter
+7. [ ] Write Playwright tests for animations
+8. [ ] Commit + push
+
+**Success Criteria**:
+- [ ] Provider Health matches Activity width
+- [ ] Cards flash when messages received
+- [ ] Last message content visible
+- [ ] Refresh button works
+- [ ] Message count accurate
+- [ ] Smooth 60fps animations
+
+#### 5. Enhanced Activity Feed with Message Details (HIGH 🟡) - 2-3 hours
+**Problem**: Activity feed shows minimal info - just workflow name and status
+- No message content details
+- Can't see what changed
+- No drill-down capability
+- Missing context for debugging
+
+**Current**:
+```
+✓ CI Build • ceye/main
+  2:45:32 PM
+```
+
+**Desired**:
+```
+✓ CI Build • ceye/main
+  workflow_run.completed → success
+  Duration: 2m 34s • Commit: 2bde007
+  "Fixed WebSocket infinite loop"
+  2:45:32 PM
+```
+
+**Message Details to Show**:
+1. **Event type** - `workflow_run.completed`, `check_suite.requested`, etc.
+2. **Duration** - How long the run took
+3. **Commit info** - SHA + first line of commit message
+4. **Changed files** - Count of files changed (if available)
+5. **Actor** - Who triggered the run
+6. **Conclusion** - success/failure/cancelled
+7. **Message body** - First 100 chars of relevant message
+
+**Expandable Details**:
+- Click to expand full message JSON
+- Show complete webhook payload
+- Link to GitHub/Azure/GitLab run URL
+
+**Steps**:
+1. [ ] Extend ActivityItem type with rich data
+2. [ ] Update DashboardContext to pass full run details
+3. [ ] Redesign ActivityFeed layout for more info
+4. [ ] Add expand/collapse for full details
+5. [ ] Add external link button
+6. [ ] Style improvements (better icons, colors, spacing)
+7. [ ] Write tests for new layout
+8. [ ] Commit + push
+
+**Success Criteria**:
+- [ ] Activity shows meaningful details
+- [ ] Can expand for full JSON
+- [ ] External links work
+- [ ] Easy to scan and understand
+- [ ] Helps with debugging
+
+#### 6. Fix UI Flicker (LOW 🟢) - 1-2 hours
+**Problem**: Possible flicker during WebSocket updates
 - Component re-renders on every message
 - No memoization
 - Animations re-trigger unnecessarily
@@ -100,7 +251,7 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 - [ ] 60fps smooth animations
 - [ ] Test proves improvement
 
-#### 4. GitHub Logo Investigation (MEDIUM 🟢) - 30 minutes
+#### 7. GitHub Logo Investigation (LOW 🟢) - 30 minutes
 **Problem**: User says GitHub icon "doesn't look right"
 - Screenshot shows circular GitHub mark (octocat)
 - Need to clarify: mark vs full logo?
@@ -116,7 +267,7 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 - [ ] Logo looks correct
 - [ ] User approves design
 
-#### 5. Developer Debugging Dashboard (LOW 🟢) - 2-3 hours
+#### 8. Developer Debugging Dashboard (LOW 🟢) - 2-3 hours
 **Problem**: No easy way to debug issues during development
 
 **Top 5 Debugging Tools Needed**:
@@ -141,7 +292,7 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 - [ ] Can see event timeline
 - [ ] Helps debug issues 10x faster
 
-#### 6. Build Failure Notification Use Case (LOW 🟢) - 1-2 hours
+#### 9. Build Failure Notification Use Case (LOW 🟢) - 1-2 hours
 **Problem**: Need to design for external tool sending build failure signals
 
 **Requirements**:
@@ -163,8 +314,17 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 - [ ] Tests verify end-to-end flow
 - [ ] API documented
 
-**Total Estimated Time**: 8-13 hours  
-**Priority Order**: 1 (WebSocket) → 2 (Cleanup) → 3 (Flicker) → 4 (Logo) → 5 (Debug Dashboard) → 6 (Notifications)
+**Total Estimated Time**: 15-23 hours  
+**Priority Order**: 
+1. ✅ WebSocket Connection Fix (CRITICAL) - **COMPLETE**
+2. ✅ Remove Orphaned Code - **COMPLETE**
+3. 🔄 Startup Performance Metrics (HIGH)
+4. 🔄 Provider Health UI Redesign (HIGH)  
+5. 🔄 Enhanced Activity Feed (HIGH)
+6. 🔄 Fix UI Flicker (LOW)
+7. 🔄 GitHub Logo Investigation (LOW)
+8. 🔄 Developer Debugging Dashboard (LOW)
+9. 🔄 Build Failure Notifications (LOW)
 
 ---
 
