@@ -44,7 +44,7 @@ export function ProviderCards({ providers, meta, onRefresh }: ProviderCardsProps
   }
 
   return (
-    <div className="rounded-lg border border-border bg-card" data-testid="provider-health-section">
+    <div className="rounded-lg border border-border bg-card" data-testid="provider-health">
       <div className="flex items-center justify-between border-b border-border p-4">
         <h2 className="text-lg font-semibold">Provider Health</h2>
         {onRefresh && (
@@ -57,7 +57,7 @@ export function ProviderCards({ providers, meta, onRefresh }: ProviderCardsProps
         )}
       </div>
       <div className="p-4 pt-0 mt-4">
-        <div className="space-y-3" data-testid="provider-cards"> {/* Removed grid layout */}
+        <div className="space-y-3" data-testid="provider-cards-list"> {/* Removed grid layout */}
           {providerEntries.map(([name, health], index) => {
             const isHealthy = health.ErrorCount === 0
             const lastUpdate = health.LastSuccess || health.LastError
