@@ -194,20 +194,19 @@ Tests are looking for wrong elements or have flaky selectors:
 - [ ] Verify coverage exists in websocket-critical.spec.ts
 - [ ] Commit: "test: Remove obsolete static HTML WebSocket tests"
 
-**Phase 3: Fix Provider Health Test Selectors** (1.5 hours) - 🔄 **IN PROGRESS by Atlas**
-- [ ] **Test 4** - Add data-testid="provider-cards" to ProviderCards container
-  - Update test to use `[data-testid="provider-cards"]` instead of `[class*="space-y"]`
+**Phase 3: Fix Provider Health Test Selectors** (1.5 hours) - ✅ **COMPLETE** (Commit: 236abdc by Atlas)
+- [x] **Test 4** - Add data-testid="provider-cards-list" to ProviderCards container
+  - Update test to use `[data-testid="provider-cards-list"]` instead of `[class*="space-y"]`
   
-- [ ] **Test 5** - Fix provider name selector
-  - Change `text=github` to `text=demo` (demo mode provider name)
-  - Or use `.capitalize()` to accept any provider name
+- [x] **Test 5** - Fix provider name selector
+  - Use generic provider card locator to accept any provider name (github, demo, azure, etc.)
   
-- [ ] **Test 6** - Add container test IDs
-  - Add data-testid="provider-cards-container" to ProviderCards
-  - Add data-testid="activity-feed-container" to ActivityFeed
+- [x] **Test 6** - Add container test IDs
+  - Add data-testid="provider-health" to ProviderCards
+  - Add data-testid="activity-feed" to ActivityFeed (already existed)
   - Compare widths using testid selectors
   
-- [ ] Commit: "test: Fix Provider Health UI test selectors"
+- [x] Commit: "test: Fix Provider Health UI test selectors" (236abdc)
 
 **Phase 4: Fix React Dashboard Refresh Button Test** (45 minutes)
 - [ ] **Test 7** - Option A: Add data-testid="provider-refresh-button"
@@ -245,7 +244,9 @@ Tests are looking for wrong elements or have flaky selectors:
 
 **Time Estimate**: 6-8 hours total (updated after detailed analysis)
 
-**Progress**: Phase 2 ✅ COMPLETE (5 tests fixed, 10→5 failures)
+**Progress**: 
+- Phase 2 ✅ COMPLETE (5 tests fixed, 10→5 failures)
+- Phase 3 ✅ COMPLETE (All provider-health-ui tests passing, 10→6 failures overall)
 
 **Files to Modify**:
 ```
