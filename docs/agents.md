@@ -57,6 +57,49 @@ SafeProvider (panic recovery, validation)
 Manager (lifecycle, health tracking)
 ```
 
+### Webhook Metadata Tracking
+
+**Added**: 2025-11-17 (Commit: a8370d7)
+
+The Store now tracks webhook metadata for real-time visibility:
+
+```go
+type WebhookMetadata struct {
+    EventType  string // "workflow_run", "ping", etc
+    DeliveryID string // GitHub delivery ID
+    Payload    string // Full webhook payload as JSON string
+    ReceivedAt time.Time
+}
+
+type ProviderHealth struct {
+    LastError    time.Time
+    ErrorCount   int
+    LastSuccess  time.Time
+    MessageCount int              // Total messages received
+    LastWebhook  *WebhookMetadata // Last webhook received
+}
+```
+
+**Key Points**:
+- Webhook metadata is populated in `internal/webhooks/server.go` when webhooks arrive
+- Store tracks up to 100 recent webhooks per provider in `webhookHistory`
+- ProviderHealth includes `MessageCount` and `LastWebhook` for UI display
+- Main event processor merges Store health (with webhooks) into server status
+- Frontend displays last webhook event type and message count
+
+**Integration**:
+1. Webhook arrives → `handleGitHub()` creates `WebhookMetadata`
+2. Attached to `RunEvent.WebhookMeta`
+3. Store.Merge() tracks it in `webhookHistory` and updates `ProviderHealth`
+4. Event processor calls `store.GetProviderHealth()` to merge webhook data
+5. WebSocket sends updated health to UI
+6. React component displays webhook info
+
+**Important**: There are TWO health tracking systems:
+- Store health: Has webhook metadata, message counts
+- Main.go providerHealth: Has error tracking from event processor
+- They are merged in the event loop before sending to UI
+
 ## ⚠️ CRITICAL: Temporary Files
 
 **ALWAYS use `tmp/` directory for ALL temporary files, logs, working documents, test outputs, debug files, session notes, etc.**
