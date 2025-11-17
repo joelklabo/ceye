@@ -1,7 +1,7 @@
 # ceye Development Plan
 
-**Last Updated**: 2025-11-17 17:40 UTC  
-**Status**: Phase 0.7 Critical Issues - 🟢 **5 of 11 COMPLETE**
+**Last Updated**: 2025-11-17 17:45 UTC  
+**Status**: Phase 0.7 Critical Issues - 🟢 **5 of 13 COMPLETE**
 
 ## Current Status
 
@@ -18,7 +18,10 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 - 27 Playwright integration tests passing
 
 **🚨 REMAINING ISSUES**:
-- 🟡 Provider Health UI needs full-width redesign
+- 🔴 **ngrok must auto-start** - Currently manual prerequisite
+- 🔴 **Webhook setup undocumented** - gh CLI commands not documented
+- 🟡 Provider Health UI needs full-width redesign + webhook indicators
+- 🟡 Can't view webhook payloads in UI
 - 🟡 Activity Feed needs enhanced message details
 - 🟡 UI flicker on updates (needs investigation)
 - 🟡 GitHub logo may not be correct (needs clarification)
@@ -418,21 +421,424 @@ echo "✅ Test complete"
 
 **Time**: 1 hour (vs estimated 2-3 hours)
 
-**Expected Findings**:
-- ✅ **If working**: Webhooks received within seconds of GitHub event
-- ⚠️ **If not configured**: No webhooks on GitHub, need to add
-- 🔧 **If tunnel issue**: Need ngrok/public URL
-- ❌ **If server issue**: Webhook handler broken, need fix
+---
 
-**Deliverables**:
-1. `scripts/test-webhook-e2e.sh` - End-to-end test script
-2. `docs/webhook-setup-guide.md` - Setup documentation
-3. `test/fixtures/webhook-*.json` - Sample payloads
-4. Enhanced webhook logging in server
-5. `--webhook-debug` flag
+#### 0.6. Automatic ngrok Setup & Webhook Documentation (HIGH 🟡) - 2-3 hours
+
+**Problem**: Manual ngrok setup is error-prone and undocumented
+- User must manually start ngrok every time
+- No validation that ngrok is running
+- Webhook setup via gh CLI not documented
+- Easy to forget prerequisite steps
+
+**Requirements**:
+1. **Auto-start ngrok** - Detect if ngrok needed, start automatically
+2. **Validate tunnel** - Check ngrok is accessible before starting
+3. **Document setup** - Clear guide for gh CLI webhook configuration
+4. **Persist config** - Remember ngrok URL between sessions
+
+**Implementation Plan**:
+
+**Phase 1: Ngrok Detection & Auto-start** (1 hour)
+```go
+// internal/ngrok/manager.go
+type Manager struct {
+    cmd    *exec.Cmd
+    url    string
+    port   int
+}
+
+func (m *Manager) Start(port int) (string, error) {
+    // Check if ngrok already running
+    if url := m.detectExisting(); url != "" {
+        return url, nil
+    }
+    
+    // Start ngrok
+    m.cmd = exec.Command("ngrok", "http", strconv.Itoa(port))
+    if err := m.cmd.Start(); err != nil {
+        return "", fmt.Errorf("failed to start ngrok: %w", err)
+    }
+    
+    // Wait for tunnel URL
+    time.Sleep(2 * time.Second)
+    url, err := m.getTunnelURL()
+    if err != nil {
+        return "", err
+    }
+    
+    m.url = url
+    return url, nil
+}
+
+func (m *Manager) getTunnelURL() (string, error) {
+    // Query ngrok API
+    resp, err := http.Get("http://localhost:4040/api/tunnels")
+    if err != nil {
+        return "", err
+    }
+    // Parse JSON, extract public_url
+    return url, nil
+}
+```
+
+**Phase 2: CLI Integration** (30 min)
+```go
+// cmd/ceye/main.go
+func run(...) error {
+    if enableWebhooks {
+        // Auto-start ngrok
+        ngrokMgr := ngrok.NewManager()
+        tunnelURL, err := ngrokMgr.Start(webhookPort)
+        if err != nil {
+            log.Printf("⚠️  Failed to start ngrok: %v", err)
+            log.Printf("   Install: brew install ngrok")
+            log.Printf("   Or start manually: ngrok http %d", webhookPort)
+        } else {
+            log.Printf("🌐 ngrok tunnel: %s", tunnelURL)
+            log.Printf("   Configure webhook:")
+            log.Printf("   gh api repos/OWNER/REPO/hooks -X POST --input - << EOF")
+            log.Printf("   {")
+            log.Printf("     \"config\": {\"url\": \"%s/webhooks/github\"}", tunnelURL)
+            log.Printf("   }")
+            log.Printf("   EOF")
+        }
+    }
+}
+```
+
+**Phase 3: Documentation** (30 min)
+Create `docs/webhook-setup.md`:
+```markdown
+# Webhook Setup Guide
+
+## Prerequisites
+- ngrok installed: `brew install ngrok`
+- gh CLI installed: `brew install gh`
+- GitHub authentication: `gh auth login`
+
+## Automatic Setup (Recommended)
+
+ceye automatically starts ngrok when `--webhooks` flag is used:
+
+```bash
+ceye --webhooks --webhook-port 9090
+```
+
+Output will show:
+```
+🌐 ngrok tunnel: https://abc123.ngrok.io
+   Configure webhook: [command shown]
+```
+
+## Manual Webhook Configuration
+
+### Option 1: Using gh CLI
+
+```bash
+# Get your ngrok URL
+NGROK_URL=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
+
+# Configure webhook
+gh api repos/OWNER/REPO/hooks -X POST --input - << EOF
+{
+  "name": "web",
+  "active": true,
+  "events": ["workflow_run"],
+  "config": {
+    "url": "$NGROK_URL/webhooks/github",
+    "content_type": "json"
+  }
+}
+EOF
+```
+
+### Option 2: Using GitHub UI
+
+1. Go to: https://github.com/OWNER/REPO/settings/hooks
+2. Click "Add webhook"
+3. Payload URL: `https://YOUR-NGROK-URL/webhooks/github`
+4. Content type: `application/json`
+5. Events: Select "Workflow runs"
+6. Click "Add webhook"
+
+## Verification
+
+Test webhook delivery:
+```bash
+# Send test ping
+gh api repos/OWNER/REPO/hooks/HOOK_ID/pings -X POST
+
+# Check ceye logs for:
+# "Received GitHub webhook: ping"
+```
+```
+
+**Phase 4: Auto-configure Helper** (1 hour)
+```bash
+# scripts/setup-webhook.sh
+#!/bin/bash
+# Interactive webhook setup
+
+OWNER=$1
+REPO=$2
+
+if [ -z "$OWNER" ] || [ -z "$REPO" ]; then
+    echo "Usage: ./setup-webhook.sh OWNER REPO"
+    exit 1
+fi
+
+# Get ngrok URL
+echo "🔍 Detecting ngrok tunnel..."
+NGROK_URL=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
+
+if [ -z "$NGROK_URL" ]; then
+    echo "❌ ngrok not running"
+    echo "   Start: ngrok http 9090"
+    exit 1
+fi
+
+echo "✅ Found ngrok: $NGROK_URL"
+
+# Check existing webhooks
+echo "🔍 Checking existing webhooks..."
+HOOKS=$(gh api repos/$OWNER/$REPO/hooks)
+
+if echo "$HOOKS" | jq -e ".[] | select(.config.url | contains(\"$NGROK_URL\"))" > /dev/null; then
+    echo "✅ Webhook already configured"
+    exit 0
+fi
+
+# Configure webhook
+echo "📝 Configuring webhook..."
+gh api repos/$OWNER/$REPO/hooks -X POST --input - << EOF
+{
+  "name": "web",
+  "active": true,
+  "events": ["workflow_run"],
+  "config": {
+    "url": "$NGROK_URL/webhooks/github",
+    "content_type": "json"
+  }
+}
+EOF
+
+echo "✅ Webhook configured successfully!"
+```
+
+**Success Criteria**:
+- [ ] ceye auto-starts ngrok if not running
+- [ ] Tunnel URL displayed in startup logs
+- [ ] Clear instructions for webhook configuration
+- [ ] Helper script for easy setup
+- [ ] Documentation complete
+- [ ] Works on clean machine
 
 **Time**: 2-3 hours
-**Priority**: CRITICAL - User can't receive updates without working webhooks!
+
+---
+
+#### 0.7. Provider Health UI Redesign - Full Width & Details (HIGH 🟡) - 3-4 hours
+
+**Problem**: Provider cards don't match Activity feed styling
+- Cards use grid layout (doesn't fill width)
+- Missing webhook activity indicators
+- No refresh button
+- Can't see webhook payloads
+- Inconsistent with Activity feed
+
+**Design Goals**:
+1. **Full-width cards** - Match Activity feed width exactly
+2. **Webhook indicators** - Flash/animation when webhook received
+3. **Refresh button** - Manual refresh in header
+4. **Payload viewing** - Click to see full webhook JSON
+5. **Message preview** - Show last webhook event type
+
+**Current vs Desired**:
+
+**Current**:
+```
+┌─ Provider Health ────────┐
+│ ● GitHub  [LIVE] 52ms    │
+└──────────────────────────┘
+```
+
+**Desired**:
+```
+┌─ Provider Health ─────────────────── [↻ Refresh] ┐
+│                                                     │
+│ ● GitHub Prod                       [LIVE] 52ms    │
+│   Last webhook: workflow_run.completed             │
+│   📨 142 messages • ✓ Healthy • [View Payload]    │
+│   ┌──────────────────────────────────────────┐    │
+│   │ {                                         │    │
+│   │   "action": "completed",                  │    │
+│   │   "workflow_run": {...}                   │    │
+│   │ }                                         │    │
+│   └──────────────────────────────────────────┘    │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+```
+
+**Implementation**:
+
+**Phase 1: Full-width Layout** (1 hour)
+```tsx
+// web/src/components/ProviderCards.tsx
+export const ProviderCards = memo(function ProviderCards({ providers }: Props) {
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle>Provider Health</CardTitle>
+          <Button variant="ghost" size="sm" onClick={onRefresh}>
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {providers.map(provider => (
+            <ProviderCard key={provider.name} provider={provider} />
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  )
+})
+
+// Full-width individual cards
+function ProviderCard({ provider }: { provider: Provider }) {
+  const [showPayload, setShowPayload] = useState(false)
+  
+  return (
+    <div className="border rounded-lg p-3 space-y-2">
+      {/* Header row */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <ProviderIcon provider={provider.name} />
+          <span className="font-medium">{provider.displayName}</span>
+        </div>
+        <Badge variant={provider.status === 'live' ? 'success' : 'secondary'}>
+          {provider.status} {provider.latency}ms
+        </Badge>
+      </div>
+      
+      {/* Webhook info */}
+      {provider.lastWebhook && (
+        <div className="text-sm text-muted-foreground">
+          Last webhook: {provider.lastWebhook.eventType}
+          <button 
+            className="ml-2 text-primary hover:underline"
+            onClick={() => setShowPayload(!showPayload)}
+          >
+            [View Payload]
+          </button>
+        </div>
+      )}
+      
+      {/* Stats */}
+      <div className="text-sm text-muted-foreground">
+        📨 {provider.messageCount} messages • 
+        {provider.healthy ? ' ✓ Healthy' : ' ⚠️ Errors'}
+      </div>
+      
+      {/* Payload viewer */}
+      {showPayload && provider.lastWebhook && (
+        <pre className="text-xs bg-muted p-2 rounded overflow-x-auto">
+          {JSON.stringify(provider.lastWebhook.payload, null, 2)}
+        </pre>
+      )}
+    </div>
+  )
+}
+```
+
+**Phase 2: Webhook Animation** (1 hour)
+```tsx
+// Flash border when webhook received
+function ProviderCard({ provider }: Props) {
+  const [flash, setFlash] = useState(false)
+  
+  useEffect(() => {
+    if (provider.lastWebhookTime > prevTime) {
+      setFlash(true)
+      setTimeout(() => setFlash(false), 500)
+    }
+  }, [provider.lastWebhookTime])
+  
+  return (
+    <motion.div
+      className={cn(
+        "border rounded-lg p-3",
+        flash && "border-green-500 shadow-lg"
+      )}
+      animate={flash ? { scale: [1, 1.02, 1] } : {}}
+      transition={{ duration: 0.3 }}
+    >
+      {/* ... */}
+    </motion.div>
+  )
+}
+```
+
+**Phase 3: Backend Support** (1 hour)
+```go
+// Extend RunEvent to include webhook metadata
+type RunEvent struct {
+    Provider    string
+    Runs        []Run
+    Timestamp   time.Time
+    WebhookMeta *WebhookMetadata // NEW
+}
+
+type WebhookMetadata struct {
+    EventType   string          // "workflow_run", "ping", etc
+    DeliveryID  string          // GitHub delivery ID
+    Payload     json.RawMessage // Full webhook payload
+    ReceivedAt  time.Time
+}
+
+// Store webhook metadata
+type Store struct {
+    // ...
+    webhookHistory map[string][]WebhookMetadata // provider -> webhooks
+    mu sync.RWMutex
+}
+
+func (s *Store) GetWebhookHistory(provider string) []WebhookMetadata {
+    s.mu.RLock()
+    defer s.mu.RUnlock()
+    return s.webhookHistory[provider]
+}
+```
+
+**Phase 4: WebSocket Updates** (30 min)
+```go
+// Send webhook metadata to UI
+type DashboardMessage struct {
+    Runs         []Run
+    Providers    map[string]ProviderStatus
+    WebhookEvent *WebhookEvent // NEW
+}
+
+type WebhookEvent struct {
+    Provider   string
+    EventType  string
+    DeliveryID string
+    Timestamp  time.Time
+}
+```
+
+**Success Criteria**:
+- [ ] Provider cards full-width
+- [ ] Refresh button in header works
+- [ ] Webhook flash animation on receipt
+- [ ] Can view last webhook payload
+- [ ] Message count accurate
+- [ ] Matches Activity feed styling
+
+**Time**: 3-4 hours
 
 ---
 
@@ -722,11 +1128,13 @@ echo "✅ Test complete"
 **Priority Order**: 
 0. ✅ **Webhook vs Polling Validation (CRITICAL)** - **COMPLETE** (edfc9fb)
 0.5. ✅ **Webhook Integration Testing (CRITICAL)** - **COMPLETE** (940a953) 🎉
+0.6. 🔴 **Automatic ngrok Setup & Documentation (HIGH)** - **NEXT**
+0.7. 🔴 **Provider Health UI Redesign (HIGH)**
 1. ✅ WebSocket Connection Fix (CRITICAL) - **COMPLETE** (2bde007)
 2. ✅ Remove Orphaned Code - **COMPLETE** (9ad241b)
 3. ✅ Startup Performance Metrics (HIGH) - **COMPLETE** (ab83713)
-4. 🔄 Provider Health UI Redesign (HIGH) - **NEXT**
-5. 🔄 Enhanced Activity Feed (HIGH)
+4. 🔄 Enhanced Activity Feed (HIGH)
+5. 🔄 Fix UI Flicker (LOW)
 6. 🔄 Fix UI Flicker (LOW)
 7. 🔄 GitHub Logo Investigation (LOW)
 8. 🔄 Developer Debugging Dashboard (LOW)
