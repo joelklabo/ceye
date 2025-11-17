@@ -11,7 +11,7 @@
         - generic [ref=e10]:
           - img [ref=e11]
           - generic [ref=e13]: Disconnected
-          - generic [ref=e14]: • 4:46:33 AM
+          - generic [ref=e14]: • 5:10:23 AM
         - button "Switch to dark theme" [ref=e15] [cursor=pointer]:
           - img [ref=e16]
   - main [ref=e18]:
@@ -64,77 +64,77 @@
                   - text: Time
                   - img [ref=e92]
           - rowgroup [ref=e95]:
-            - row "github ceye .github/workflows/snapshot.yml failure - 17m ago" [ref=e96]:
+            - row "github ceye .github/workflows/snapshot.yml failure - 16m ago" [ref=e96]:
               - cell "github" [ref=e97]
               - cell "ceye" [ref=e98]:
                 - link "ceye" [ref=e99] [cursor=pointer]:
-                  - /url: https://github.com/joelklabo/ceye/actions/runs/19429624136
+                  - /url: https://github.com/joelklabo/ceye/actions/runs/19430315178
               - cell ".github/workflows/snapshot.yml" [ref=e100]
               - cell "failure" [ref=e101]:
                 - generic [ref=e102]: failure
               - cell "-" [ref=e103]
-              - cell "17m ago" [ref=e104]
-            - row "github ceye .github/workflows/release.yml failure - 17m ago" [ref=e105]:
+              - cell "16m ago" [ref=e104]
+            - row "github ceye .github/workflows/release.yml failure - 16m ago" [ref=e105]:
               - cell "github" [ref=e106]
               - cell "ceye" [ref=e107]:
                 - link "ceye" [ref=e108] [cursor=pointer]:
-                  - /url: https://github.com/joelklabo/ceye/actions/runs/19429623403
+                  - /url: https://github.com/joelklabo/ceye/actions/runs/19430315342
               - cell ".github/workflows/release.yml" [ref=e109]
               - cell "failure" [ref=e110]:
                 - generic [ref=e111]: failure
               - cell "-" [ref=e112]
-              - cell "17m ago" [ref=e113]
-            - row "github ceye .github/workflows/snapshot.yml failure - 18m ago" [ref=e114]:
+              - cell "16m ago" [ref=e113]
+            - row "github ceye .github/workflows/snapshot.yml failure - 17m ago" [ref=e114]:
               - cell "github" [ref=e115]
               - cell "ceye" [ref=e116]:
                 - link "ceye" [ref=e117] [cursor=pointer]:
-                  - /url: https://github.com/joelklabo/ceye/actions/runs/19429605553
+                  - /url: https://github.com/joelklabo/ceye/actions/runs/19430283852
               - cell ".github/workflows/snapshot.yml" [ref=e118]
               - cell "failure" [ref=e119]:
                 - generic [ref=e120]: failure
               - cell "-" [ref=e121]
-              - cell "18m ago" [ref=e122]
-            - row "github ceye .github/workflows/release.yml failure - 18m ago" [ref=e123]:
+              - cell "17m ago" [ref=e122]
+            - row "github ceye .github/workflows/code-quality.yml failure - 17m ago" [ref=e123]:
               - cell "github" [ref=e124]
               - cell "ceye" [ref=e125]:
                 - link "ceye" [ref=e126] [cursor=pointer]:
-                  - /url: https://github.com/joelklabo/ceye/actions/runs/19429604855
-              - cell ".github/workflows/release.yml" [ref=e127]
+                  - /url: https://github.com/joelklabo/ceye/actions/runs/19430283693
+              - cell ".github/workflows/code-quality.yml" [ref=e127]
               - cell "failure" [ref=e128]:
                 - generic [ref=e129]: failure
               - cell "-" [ref=e130]
-              - cell "18m ago" [ref=e131]
-            - row "github ceye ⚡️ CI - Build & Test cancelled 4m 16s 22m ago" [ref=e132]:
+              - cell "17m ago" [ref=e131]
+            - row "github ceye ⚡️ CI - Build & Test cancelled 21m 8s 20m ago" [ref=e132]:
               - cell "github" [ref=e133]
               - cell "ceye" [ref=e134]:
                 - link "ceye" [ref=e135] [cursor=pointer]:
-                  - /url: https://github.com/joelklabo/ceye/actions/runs/19429384388
+                  - /url: https://github.com/joelklabo/ceye/actions/runs/19429624394
               - cell "⚡️ CI - Build & Test" [ref=e136]
               - cell "cancelled" [ref=e137]:
                 - generic [ref=e138]: cancelled
-              - cell "4m 16s" [ref=e139]
-              - cell "22m ago" [ref=e140]
-            - row "github ceye .github/workflows/snapshot.yml failure - 22m ago" [ref=e141]:
+              - cell "21m 8s" [ref=e139]
+              - cell "20m ago" [ref=e140]
+            - row "github ceye .github/workflows/snapshot.yml failure - 20m ago" [ref=e141]:
               - cell "github" [ref=e142]
               - cell "ceye" [ref=e143]:
                 - link "ceye" [ref=e144] [cursor=pointer]:
-                  - /url: https://github.com/joelklabo/ceye/actions/runs/19429499748
+                  - /url: https://github.com/joelklabo/ceye/actions/runs/19430205973
               - cell ".github/workflows/snapshot.yml" [ref=e145]
               - cell "failure" [ref=e146]:
                 - generic [ref=e147]: failure
               - cell "-" [ref=e148]
-              - cell "22m ago" [ref=e149]
-            - row "github ceye .github/workflows/workflow-health.yml failure - 22m ago" [ref=e150]:
+              - cell "20m ago" [ref=e149]
+            - row "github ceye .github/workflows/code-quality.yml failure - 20m ago" [ref=e150]:
               - cell "github" [ref=e151]
               - cell "ceye" [ref=e152]:
                 - link "ceye" [ref=e153] [cursor=pointer]:
-                  - /url: https://github.com/joelklabo/ceye/actions/runs/19429499016
-              - cell ".github/workflows/workflow-health.yml" [ref=e154]
+                  - /url: https://github.com/joelklabo/ceye/actions/runs/19430205454
+              - cell ".github/workflows/code-quality.yml" [ref=e154]
               - cell "failure" [ref=e155]:
                 - generic [ref=e156]: failure
               - cell "-" [ref=e157]
-              - cell "22m ago" [ref=e158]
-            - row "github SwiftTOON Coverage Badge skipped 1s 11h ago" [ref=e159]:
+              - cell "20m ago" [ref=e158]
+            - row "github SwiftTOON Coverage Badge skipped 1s 12h ago" [ref=e159]:
               - cell "github" [ref=e160]
               - cell "SwiftTOON" [ref=e161]:
                 - link "SwiftTOON" [ref=e162] [cursor=pointer]:
@@ -143,8 +143,8 @@
               - cell "skipped" [ref=e164]:
                 - generic [ref=e165]: skipped
               - cell "1s" [ref=e166]
-              - cell "11h ago" [ref=e167]
-            - row "github SwiftTOON CI failure 27s 11h ago" [ref=e168]:
+              - cell "12h ago" [ref=e167]
+            - row "github SwiftTOON CI failure 27s 12h ago" [ref=e168]:
               - cell "github" [ref=e169]
               - cell "SwiftTOON" [ref=e170]:
                 - link "SwiftTOON" [ref=e171] [cursor=pointer]:
@@ -153,8 +153,8 @@
               - cell "failure" [ref=e173]:
                 - generic [ref=e174]: failure
               - cell "27s" [ref=e175]
-              - cell "11h ago" [ref=e176]
-            - row "github SwiftTOON Coverage Badge skipped 1s 11h ago" [ref=e177]:
+              - cell "12h ago" [ref=e176]
+            - row "github SwiftTOON Coverage Badge skipped 1s 12h ago" [ref=e177]:
               - cell "github" [ref=e178]
               - cell "SwiftTOON" [ref=e179]:
                 - link "SwiftTOON" [ref=e180] [cursor=pointer]:
@@ -163,8 +163,8 @@
               - cell "skipped" [ref=e182]:
                 - generic [ref=e183]: skipped
               - cell "1s" [ref=e184]
-              - cell "11h ago" [ref=e185]
-            - row "github SwiftTOON CI failure 34s 11h ago" [ref=e186]:
+              - cell "12h ago" [ref=e185]
+            - row "github SwiftTOON CI failure 34s 12h ago" [ref=e186]:
               - cell "github" [ref=e187]
               - cell "SwiftTOON" [ref=e188]:
                 - link "SwiftTOON" [ref=e189] [cursor=pointer]:
@@ -173,8 +173,8 @@
               - cell "failure" [ref=e191]:
                 - generic [ref=e192]: failure
               - cell "34s" [ref=e193]
-              - cell "11h ago" [ref=e194]
-            - row "github SwiftTOON Coverage Badge skipped - 11h ago" [ref=e195]:
+              - cell "12h ago" [ref=e194]
+            - row "github SwiftTOON Coverage Badge skipped - 12h ago" [ref=e195]:
               - cell "github" [ref=e196]
               - cell "SwiftTOON" [ref=e197]:
                 - link "SwiftTOON" [ref=e198] [cursor=pointer]:
@@ -183,8 +183,8 @@
               - cell "skipped" [ref=e200]:
                 - generic [ref=e201]: skipped
               - cell "-" [ref=e202]
-              - cell "11h ago" [ref=e203]
-            - row "github SwiftTOON CI failure 30s 11h ago" [ref=e204]:
+              - cell "12h ago" [ref=e203]
+            - row "github SwiftTOON CI failure 30s 12h ago" [ref=e204]:
               - cell "github" [ref=e205]
               - cell "SwiftTOON" [ref=e206]:
                 - link "SwiftTOON" [ref=e207] [cursor=pointer]:
@@ -193,7 +193,7 @@
               - cell "failure" [ref=e209]:
                 - generic [ref=e210]: failure
               - cell "30s" [ref=e211]
-              - cell "11h ago" [ref=e212]
+              - cell "12h ago" [ref=e212]
             - row "github SwiftTOON Coverage Badge skipped 2s 12h ago" [ref=e213]:
               - cell "github" [ref=e214]
               - cell "SwiftTOON" [ref=e215]:
@@ -254,7 +254,7 @@
                 - generic [ref=e264]: failure
               - cell "30s" [ref=e265]
               - cell "12h ago" [ref=e266]
-            - row "github SwiftTOON Coverage Badge skipped 1s 12h ago" [ref=e267]:
+            - row "github SwiftTOON Coverage Badge skipped 1s 13h ago" [ref=e267]:
               - cell "github" [ref=e268]
               - cell "SwiftTOON" [ref=e269]:
                 - link "SwiftTOON" [ref=e270] [cursor=pointer]:
@@ -263,8 +263,8 @@
               - cell "skipped" [ref=e272]:
                 - generic [ref=e273]: skipped
               - cell "1s" [ref=e274]
-              - cell "12h ago" [ref=e275]
-            - row "github SwiftTOON Performance Benchmarks skipped 1s 12h ago" [ref=e276]:
+              - cell "13h ago" [ref=e275]
+            - row "github SwiftTOON Performance Benchmarks skipped 1s 13h ago" [ref=e276]:
               - cell "github" [ref=e277]
               - cell "SwiftTOON" [ref=e278]:
                 - link "SwiftTOON" [ref=e279] [cursor=pointer]:
@@ -273,8 +273,8 @@
               - cell "skipped" [ref=e281]:
                 - generic [ref=e282]: skipped
               - cell "1s" [ref=e283]
-              - cell "12h ago" [ref=e284]
-            - row "github SwiftTOON CI failure 27s 12h ago" [ref=e285]:
+              - cell "13h ago" [ref=e284]
+            - row "github SwiftTOON CI failure 27s 13h ago" [ref=e285]:
               - cell "github" [ref=e286]
               - cell "SwiftTOON" [ref=e287]:
                 - link "SwiftTOON" [ref=e288] [cursor=pointer]:
@@ -283,8 +283,8 @@
               - cell "failure" [ref=e290]:
                 - generic [ref=e291]: failure
               - cell "27s" [ref=e292]
-              - cell "12h ago" [ref=e293]
-            - row "github SwiftTOON Publish Performance History skipped 1s 12h ago" [ref=e294]:
+              - cell "13h ago" [ref=e293]
+            - row "github SwiftTOON Publish Performance History skipped 1s 13h ago" [ref=e294]:
               - cell "github" [ref=e295]
               - cell "SwiftTOON" [ref=e296]:
                 - link "SwiftTOON" [ref=e297] [cursor=pointer]:
@@ -293,7 +293,7 @@
               - cell "skipped" [ref=e299]:
                 - generic [ref=e300]: skipped
               - cell "1s" [ref=e301]
-              - cell "12h ago" [ref=e302]
+              - cell "13h ago" [ref=e302]
             - row "github XcodeBuildMCP CI success 28s 192d ago" [ref=e303]:
               - cell "github" [ref=e304]
               - cell "XcodeBuildMCP" [ref=e305]:
@@ -323,7 +323,7 @@
                 - img "GitHub" [ref=e328]
                 - generic [ref=e330]:
                   - heading "github" [level=3] [ref=e331]
-                  - paragraph [ref=e332]: "Last update: just now"
+                  - paragraph [ref=e332]: "Last update: 3m ago"
               - img [ref=e334]
             - generic [ref=e336]: ✓ Healthy
         - generic [ref=e337]:
@@ -334,38 +334,38 @@
             - generic [ref=e344]:
               - img [ref=e346]
               - generic [ref=e350]:
-                - paragraph [ref=e351]: .github/workflows/snapshot.yml • ceye/main
-                - paragraph [ref=e352]: 04:28:53 AM
+                - paragraph [ref=e351]: .github/workflows/release.yml • ceye/main
+                - paragraph [ref=e352]: 04:54:08 AM
             - generic [ref=e353]:
               - img [ref=e355]
               - generic [ref=e359]:
-                - paragraph [ref=e360]: .github/workflows/release.yml • ceye/main
-                - paragraph [ref=e361]: 04:28:51 AM
+                - paragraph [ref=e360]: .github/workflows/snapshot.yml • ceye/main
+                - paragraph [ref=e361]: 04:54:08 AM
             - generic [ref=e362]:
               - img [ref=e364]
               - generic [ref=e368]:
-                - paragraph [ref=e369]: .github/workflows/snapshot.yml • ceye/main
-                - paragraph [ref=e370]: 04:28:13 AM
+                - paragraph [ref=e369]: .github/workflows/code-quality.yml • ceye/main
+                - paragraph [ref=e370]: 04:52:55 AM
             - generic [ref=e371]:
               - img [ref=e373]
               - generic [ref=e377]:
-                - paragraph [ref=e378]: .github/workflows/release.yml • ceye/main
-                - paragraph [ref=e379]: 04:28:11 AM
+                - paragraph [ref=e378]: .github/workflows/snapshot.yml • ceye/main
+                - paragraph [ref=e379]: 04:52:55 AM
             - generic [ref=e380]:
               - img [ref=e382]
               - generic [ref=e385]:
                 - paragraph [ref=e386]: ⚡️ CI - Build & Test • ceye/main
-                - paragraph [ref=e387]: 04:24:26 AM
+                - paragraph [ref=e387]: 04:50:01 AM
             - generic [ref=e388]:
               - img [ref=e390]
               - generic [ref=e394]:
                 - paragraph [ref=e395]: .github/workflows/snapshot.yml • ceye/main
-                - paragraph [ref=e396]: 04:24:23 AM
+                - paragraph [ref=e396]: 04:49:58 AM
             - generic [ref=e397]:
               - img [ref=e399]
               - generic [ref=e403]:
-                - paragraph [ref=e404]: .github/workflows/workflow-health.yml • ceye/main
-                - paragraph [ref=e405]: 04:24:21 AM
+                - paragraph [ref=e404]: .github/workflows/code-quality.yml • ceye/main
+                - paragraph [ref=e405]: 04:49:57 AM
             - generic [ref=e406]:
               - img [ref=e408]
               - generic [ref=e411]:

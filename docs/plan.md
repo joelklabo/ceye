@@ -1,13 +1,14 @@
 # ceye Development Plan
 
-**Last Updated**: 2025-11-17 12:46 UTC  
-**Status**: React Dashboard Complete with Provider Branding 🎨✨
+**Last Updated**: 2025-11-17 13:05 UTC  
+**Status**: UI Polish & Bug Fixes 🐛✨
 
 ## Current Status
 
-**React Migration**: ALL phases complete ✅
+**React Migration**: ALL phases complete ✅  
+**Critical Issues**: UI flicker and workflow name display need attention
 
-The React dashboard is fully functional with real-time WebSocket updates and comprehensive test coverage.
+The React dashboard is fully functional with real-time WebSocket updates and comprehensive test coverage, but experiencing performance issues with table animations.
 
 **Stack**:
 - React 19 + Vite + TypeScript
@@ -15,9 +16,80 @@ The React dashboard is fully functional with real-time WebSocket updates and com
 - Real-time WebSocket integration
 - 22 Playwright integration tests (100% passing)
 
+**Known Issues**:
+- 🐛 Table flicker: Every WebSocket message re-animates all rows
+- ❓ Workflow names: May show filenames instead of display names
+- 💡 Need: Real-time connection pulse/feedback
+- 💡 Need: Default icon for providers without logos
+
 ---
 
 ## 🚧 Active Tasks
+
+### Phase 0.6: UI Polish & Bug Fixes - 🚧 **IN PROGRESS**
+
+**Goal**: Fix critical UI issues and add polish
+
+**Issues to Fix**:
+
+#### 1. Table Flicker (HIGH PRIORITY) 🔴
+**Problem**: Extreme flicker - table rows re-animate on every WebSocket message
+- `RunsTable.tsx:156-160` - Every row has `initial={{ opacity: 0, x: -20 }}`
+- WebSocket updates cause full component re-renders
+- No memoization preventing unnecessary animations
+
+**Solution**:
+- [🚧] Memoize table row component with `React.memo()`
+- [ ] Only animate on mount, not on updates
+- [ ] Use `layoutId` for smooth position transitions
+- [ ] Use `AnimatePresence` only for new/removed items
+- [ ] Test with rapid WebSocket updates
+
+**Time**: 2 hours
+
+#### 2. Real-Time Connection Indicator (MEDIUM PRIORITY) 🟡
+**Problem**: Static indicator doesn't show activity
+- Current: Simple circle in header
+- Desired: Pulse/animation on WebSocket messages
+
+**Solution**:
+- [ ] Add pulse animation when message received
+- [ ] Toast-style notification for updates
+- [ ] Activity feed with smooth entry animations
+- [ ] "Live" badge with glow effect
+
+**Time**: 1.5 hours
+
+#### 3. Workflow Name Display (MEDIUM PRIORITY) 🟡
+**Problem**: Some workflows may show `.github/workflows/ci.yml` instead of "CI Build"
+**Investigation needed**:
+- [ ] Check GitHub webhook payload structure
+- [ ] Verify `WorkflowName` parsing in `internal/webhooks/github.go`
+- [ ] Test with real GitHub workflows
+- [ ] Show filename as subtitle if different
+
+**Time**: 1 hour
+
+#### 4. Default Provider Icons (LOW PRIORITY) 🟢
+**Problem**: Providers without logos show broken/missing icons
+**Solution**:
+- [ ] Create generic icon component
+- [ ] Generate color from provider name hash
+- [ ] Show initials/monogram
+- [ ] Add to ProviderIcon component
+
+**Time**: 1 hour
+
+**Total Time**: 5.5 hours
+
+**Success Criteria**:
+- [ ] No table flicker on WebSocket updates
+- [ ] Connection feels "live" with visual feedback
+- [ ] Workflow names display correctly (with filename as subtitle if needed)
+- [ ] All providers have icons (built-in or fallback)
+- [ ] All existing tests still pass
+
+---
 
 ### Phase -1: Testing & Screenshots - ✅ **COMPLETE**
 

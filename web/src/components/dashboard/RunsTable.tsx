@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion'
-import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useState, memo } from 'react'
 import { Search, ArrowUpDown } from 'lucide-react'
 import type { Run } from '@/types'
 import { cn } from '@/lib/utils'
@@ -10,6 +10,57 @@ interface RunsTableProps {
 
 type SortField = 'Provider' | 'Repo' | 'Status' | 'UpdatedAt'
 type SortDirection = 'asc' | 'desc'
+
+interface RunRowProps {
+  run: Run
+}
+
+// Memoized row component to prevent unnecessary re-renders
+const RunRow = memo(({ run }: RunRowProps) => {
+  return (
+    <motion.tr
+      layout
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.15, layout: { duration: 0.2 } }}
+      className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors"
+    >
+      <td className="px-4 py-3 text-sm font-medium">
+        {run.Provider}
+      </td>
+      <td className="px-4 py-3 text-sm">
+        <a
+          href={run.URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-primary hover:underline"
+        >
+          {run.Repo}
+        </a>
+      </td>
+      <td className="px-4 py-3 text-sm text-muted-foreground max-w-xs truncate">
+        {run.WorkflowName}
+      </td>
+      <td className="px-4 py-3">
+        <span
+          className={cn(
+            'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
+            getStatusColor(run.Status, run.Conclusion)
+          )}
+        >
+          {run.Conclusion || run.Status}
+        </span>
+      </td>
+      <td className="px-4 py-3 text-sm text-muted-foreground">
+        {formatDuration(run.Duration)}
+      </td>
+      <td className="px-4 py-3 text-sm text-muted-foreground">
+        {formatTime(run.UpdatedAt)}
+      </td>
+    </motion.tr>
+  )
+})
 
 function getStatusColor(status: string, conclusion: string): string {
   if (status === 'in_progress') return 'text-purple-400 bg-purple-400/10'
@@ -152,48 +203,11 @@ export function RunsTable({ runs }: RunsTableProps) {
               </tr>
             </thead>
             <tbody>
-              {sortedRuns.map((run, index) => (
-                <motion.tr
-                  key={run.ID}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.2, delay: index * 0.02 }}
-                  className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors"
-                >
-                  <td className="px-4 py-3 text-sm font-medium">
-                    {run.Provider}
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    <a
-                      href={run.URL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:text-primary hover:underline"
-                    >
-                      {run.Repo}
-                    </a>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground max-w-xs truncate">
-                    {run.WorkflowName}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={cn(
-                        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
-                        getStatusColor(run.Status, run.Conclusion)
-                      )}
-                    >
-                      {run.Conclusion || run.Status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">
-                    {formatDuration(run.Duration)}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">
-                    {formatTime(run.UpdatedAt)}
-                  </td>
-                </motion.tr>
-              ))}
+              <AnimatePresence mode="popLayout">
+                {sortedRuns.map((run) => (
+                  <RunRow key={run.ID} run={run} />
+                ))}
+              </AnimatePresence>
             </tbody>
           </table>
         </div>
