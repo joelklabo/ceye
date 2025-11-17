@@ -149,6 +149,237 @@ go build 2>&1 | tee /tmp/build.txt     # Wrong dir
 cat > notes.md                         # Not temp location
 ```
 
+## 🐛 Developer Debugging Tools
+
+**Added**: 2025-11-17 (Task 8)
+
+The ceye dashboard includes built-in debugging tools accessible via the **Debug Panel**.
+
+### Accessing the Debug Panel
+
+1. **Open the app**: `http://localhost:8080`
+2. **Click the bug icon** (🐛) in the bottom-right corner
+3. **Panel slides in from the right** with three tabs
+
+### Debug Panel Features
+
+#### 1. WebSocket Inspector
+
+**What it shows**:
+- All WebSocket messages received (last 50)
+- Message type (e.g. `runs_update`, `snapshot`)
+- Timestamp of receipt
+- Direction indicator (↓ received)
+- Full JSON payload (click to expand)
+
+**How to use**:
+```
+1. Open Debug Panel (bug icon)
+2. Click "WebSocket" tab
+3. Watch messages arrive in real-time
+4. Click any message to see full JSON
+5. Click "Clear" to reset the list
+```
+
+**Example debugging session**:
+```
+Problem: Runs not updating in UI
+Steps:
+1. Open Debug Panel → WebSocket tab
+2. Check if messages arriving (should see runs_update every ~15s)
+3. If no messages → WebSocket connection issue
+4. If messages arriving → check JSON payload for runs data
+5. Expand message → verify Run objects have correct fields
+6. Compare with UI → identify transformation issue
+```
+
+**What to look for**:
+- ✅ Messages arriving regularly (every 15-30s)
+- ✅ Message type is `runs_update`
+- ✅ Runs array contains expected workflow runs
+- ✅ Provider health shows webhook metadata
+- ❌ No messages → Check WebSocket connection
+- ❌ Empty Runs array → Check provider configuration
+- ❌ Missing fields → Check backend RunEvent structure
+
+#### 2. Logs Tab (Coming Soon)
+
+Will capture frontend console.log() in real-time
+
+#### 3. Events Tab (Coming Soon)
+
+Will show visual timeline of all system events
+
+### Additional Debugging Tools
+
+#### Browser DevTools
+
+**Console**:
+```javascript
+// In browser console
+localStorage.debugPanelOpen = 'true'  // Auto-open on reload
+localStorage.removeItem('debugPanelOpen')  // Close on reload
+```
+
+**Network Tab**:
+- Filter by "WS" to see WebSocket traffic
+- Shows connection handshake, frames, close events
+- Useful for low-level WebSocket debugging
+
+**React DevTools**:
+- Install React Developer Tools extension
+- Inspect component state
+- View DashboardContext values
+- Track re-renders
+
+#### Server Logs
+
+**View real-time server logs**:
+```bash
+# Standard output
+./bin/ceye --port 8080
+
+# With timestamp and component tags
+./bin/ceye --port 8080 2>&1 | grep -E "webhook|github|store"
+
+# Save to file
+./bin/ceye --port 8080 2>&1 | tee tmp/server.log
+
+# Follow specific provider
+./bin/ceye --port 8080 2>&1 | grep "github:"
+```
+
+**Key log patterns**:
+```
+✅ "Web server starting on http://localhost:8080" - Server ready
+✅ "github: webhook mode enabled" - Webhooks active
+✅ "✅ Parsed GitHub webhook" - Webhook received
+❌ "Error parsing GitHub webhook" - Malformed payload
+❌ "Warning: event channel full" - System overload
+```
+
+#### Testing with Demo Mode
+
+**Quick debugging setup**:
+```bash
+# Start with demo provider
+./bin/ceye --demo --demo-runs 10 --port 8080
+
+# Demo generates fake runs every 15s
+# Perfect for testing UI updates without real CI data
+```
+
+#### Webhook Testing
+
+**Test webhook delivery**:
+```bash
+# 1. Start ngrok
+ngrok http 9090
+
+# 2. Get tunnel URL
+https://abc123.ngrok.io
+
+# 3. Configure GitHub webhook
+gh api repos/owner/repo/hooks --method POST \
+  -f url="https://abc123.ngrok.io/webhooks/github" \
+  -f content_type="json" \
+  -f events='["workflow_run"]'
+
+# 4. Watch Debug Panel → WebSocket tab
+# Should see runs_update with WebhookMeta field
+
+# 5. Check server logs
+./bin/ceye 2>&1 | grep "webhook"
+```
+
+#### Store Inspection
+
+**Check Store state** (add temporary debug endpoint):
+```bash
+# View all runs in store
+curl http://localhost:8080/api/runs
+
+# View provider health
+curl http://localhost:8080/api/health
+```
+
+### Common Debugging Scenarios
+
+#### Scenario 1: WebSocket Not Connecting
+
+**Symptoms**: UI shows "OFFLINE", no activity updates
+
+**Debug steps**:
+1. Open Debug Panel → Should see "No messages yet" initially
+2. Wait 5s → Should see first `snapshot` message
+3. If no messages:
+   - Check browser console for WebSocket errors
+   - Verify server running on correct port
+   - Check firewall/proxy settings
+
+**Fix**: Usually browser cache - hard reload (Cmd+Shift+R)
+
+#### Scenario 2: Webhooks Not Working
+
+**Symptoms**: Polling works but no real-time updates
+
+**Debug steps**:
+1. Open Debug Panel → WebSocket tab
+2. Trigger a workflow run on GitHub
+3. Check if message arrives within 2-3 seconds
+4. If no message:
+   - Verify ngrok tunnel is running
+   - Check GitHub webhook delivery page
+   - Look for "X-GitHub-Delivery" header in server logs
+
+**Fix**: Re-create webhook with correct ngrok URL
+
+#### Scenario 3: UI Flicker/Performance
+
+**Symptoms**: UI stutters, runs re-animate on updates
+
+**Debug steps**:
+1. Open React DevTools → Profiler
+2. Start recording
+3. Wait for WebSocket message
+4. Stop recording
+5. Check which components re-rendered
+
+**Fix**: Add React.memo() to expensive components
+
+#### Scenario 4: Missing Run Data
+
+**Symptoms**: Runs show in logs but not in UI
+
+**Debug steps**:
+1. Open Debug Panel → WebSocket tab
+2. Expand latest `runs_update` message
+3. Check Runs array → Should have run objects
+4. Compare with UI → Identify missing data
+5. Check DashboardContext → useDashboard() hook
+
+**Fix**: Usually data transformation issue in App.tsx
+
+### Debugging Tips
+
+**Performance**:
+- Use `tmp/` for log files (never `/tmp/` or project root)
+- Debug Panel persists state in localStorage
+- Clear messages regularly to avoid memory issues
+
+**Best Practices**:
+- Always check Debug Panel first (fastest way to see live data)
+- Use browser DevTools for deep inspection
+- Save problematic payloads to `tmp/debug-payload.json`
+- Add temporary console.log() with prefix: `console.log('[DEBUG]', ...)`
+
+**When to use what**:
+- 🐛 **Debug Panel**: Real-time WebSocket message inspection
+- 🔍 **Browser Console**: Quick checks, one-off debugging
+- 📊 **React DevTools**: Component state, props, re-renders
+- 📝 **Server Logs**: Backend issues, API errors, webhook delivery
+- 🧪 **Demo Mode**: UI testing without real CI data
+
 ### Key Abstractions
 
 **Provider Interface** (The "Agent" Interface)

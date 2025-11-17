@@ -23,6 +23,8 @@ type Server struct {
 	port           int
 	clients        map[*websocket.Conn]bool
 	clientsMu      sync.RWMutex
+	writeMu        map[*websocket.Conn]*sync.Mutex // Added: Mutex for each client's write operations
+	writeMuMu      sync.RWMutex                    // Added: Mutex to protect the writeMu map
 	upgrader       websocket.Upgrader
 	trendAnalyzer  interface{} // *storage.TrendAnalyzer (optional)
 	alertEngine    interface{} // *alerting.Engine (optional)
@@ -63,6 +65,7 @@ func New(store *core.Store, providerNames []string, port int, webFS fs.FS) *Serv
 		store:          store,
 		port:           port,
 		clients:        make(map[*websocket.Conn]bool),
+		writeMu:        make(map[*websocket.Conn]*sync.Mutex), // Added
 		providerNames:  providerNames,
 		providerStatus: make(map[string]string),
 		providerHealth: make(map[string]core.ProviderHealth),
@@ -148,11 +151,22 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	s.clientsMu.Lock()
 	s.clients[conn] = true
 	s.clientsMu.Unlock()
+
+	// Add write mutex for this connection
+	s.writeMuMu.Lock()
+	s.writeMu[conn] = &sync.Mutex{}
+	s.writeMuMu.Unlock()
 	
 	defer func() {
 		s.clientsMu.Lock()
 		delete(s.clients, conn)
 		s.clientsMu.Unlock()
+
+		// Remove write mutex for this connection
+		s.writeMuMu.Lock()
+		delete(s.writeMu, conn)
+		s.writeMuMu.Unlock()
+		
 		conn.Close()
 	}()
 	
@@ -225,7 +239,7 @@ func (s *Server) sendSnapshot(conn *websocket.Conn) {
 		BuildTime:  s.buildTime,
 	}
 	
-	if err := conn.WriteJSON(msg); err != nil {
+	if err := s.writeJSON(conn, msg); err != nil { // Changed to use s.writeJSON
 		log.Printf("Failed to send snapshot: %v", err)
 	}
 }
@@ -258,6 +272,20 @@ func (s *Server) BroadcastUpdate() {
 	for _, conn := range clients {
 		s.sendSnapshot(conn)
 	}
+}
+
+// writeJSON is a helper to safely write JSON to a WebSocket connection.
+func (s *Server) writeJSON(conn *websocket.Conn, msg interface{}) error {
+	s.writeMuMu.RLock()
+	mu, ok := s.writeMu[conn]
+	s.writeMuMu.RUnlock()
+	if !ok {
+		return fmt.Errorf("no write mutex found for connection")
+	}
+
+	mu.Lock()
+	defer mu.Unlock()
+	return conn.WriteJSON(msg)
 }
 
 // handleAnalyticsTrends serves trend data as JSON for the analytics dashboard

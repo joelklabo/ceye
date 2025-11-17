@@ -5,6 +5,7 @@ import { ProviderCards } from '@/components/dashboard/ProviderCards'
 import { ActivityFeed } from '@/components/dashboard/ActivityFeed'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { ConnectionIndicator } from '@/components/ConnectionIndicator'
+import { DebugPanel } from '@/components/debug/DebugPanel'
 import { useDashboard } from '@/contexts/DashboardContext'
 import { SkeletonCard, SkeletonTable } from '@/components/ui/Skeleton'
 
@@ -100,6 +101,9 @@ function App() {
           </>
         )}
       </main>
+      
+      {/* Debug Panel - only in development/when needed */}
+      <DebugPanel />
     </div>
   )
 }
