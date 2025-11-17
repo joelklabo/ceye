@@ -717,6 +717,51 @@ go test -v -count=1 ./...
 
 ### WebSocket Not Connecting
 
+**Common Error**: "WebSocket connection failed: Insufficient resources"
+
+**Root Cause**: Infinite WebSocket connection loop in React useEffect
+
+**Critical lesson from Phase 0.7 (commit 2bde007)**:
+
+```typescript
+// ❌ BAD - Infinite loop creating hundreds of connections
+const connect = useCallback(() => {
+  const ws = new WebSocket(url)
+  // ... setup
+}, [url, onMessage, onError, ...]) // Dependencies cause recreation
+
+useEffect(() => {
+  connect()
+  return () => ws?.close()
+}, [connect]) // ⚠️ connect recreated every render → infinite loop!
+
+// ✅ GOOD - Only connect on mount
+useEffect(() => {
+  connect()
+  return () => ws?.close()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []) // Only run once on mount
+```
+
+**Why this happens**:
+1. useCallback dependencies cause `connect` to be recreated on every render
+2. useEffect sees new `connect` function → runs again
+3. New WebSocket created → state changes → component re-renders
+4. Back to step 1 → infinite loop
+5. Hundreds of connections exhaust browser resources ("Insufficient resources")
+
+**How to debug**:
+- Check browser console for rapid "WebSocket connection failed" errors
+- Check server logs for many connection attempts
+- Use React DevTools to see if component re-renders constantly
+- Add logging inside useEffect to count how many times it runs
+
+**Prevention**:
+- Don't include callback functions in useEffect dependencies if they shouldn't change
+- Use empty dependency array `[]` for setup that should only run on mount
+- Use `useRef` for functions that need to be stable across renders
+
+**Other WebSocket issues**:
 - Check server is running on correct port
 - Check firewall rules
 - Verify WebSocket endpoint exists

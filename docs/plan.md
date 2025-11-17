@@ -1,26 +1,23 @@
 # ceye Development Plan
 
-**Last Updated**: 2025-11-17 14:10 UTC  
-**Status**: Phase 0.7 Critical Issues - 🔴 **CRITICAL BUGS FOUND**
+**Last Updated**: 2025-11-17 16:47 UTC  
+**Status**: Phase 0.7 Critical Issues - 🟡 **1 of 6 COMPLETE**
 
 ## Current Status
 
 **React Migration**: Complete ✅  
-**Test Suite**: 23/25 passing ✅  
-**Status**: 🔴 **OFFLINE - WebSocket not connecting!**
+**Test Suite**: 27/29 passing ✅  
+**Status**: ✅ **ONLINE - WebSocket FIXED!**
 
-The React dashboard is NOT working - WebSocket connection is failing and the app shows "OFFLINE" status with no activity feed updates.
+The React dashboard is now working! WebSocket connection was fixed by removing infinite reconnection loop.
 
 **Stack**:
 - React 19 + Vite + TypeScript
 - Tailwind CSS v3 + Framer Motion
-- Real-time WebSocket integration (BROKEN)
-- 23 Playwright integration tests passing
+- Real-time WebSocket integration (WORKING ✅)
+- 27 Playwright integration tests passing
 
-**🚨 CRITICAL ISSUES IDENTIFIED**:
-- 🔴 WebSocket connection failing ("Max reconnection attempts reached")
-- 🔴 App shows "OFFLINE" status constantly
-- 🔴 No activity feed updates
+**🚨 REMAINING ISSUES**:
 - 🔴 Orphaned code: `/internal/server/web/` not used but still in repo
 - 🟡 UI flicker on updates (needs investigation)
 - 🟡 GitHub logo may not be correct (needs clarification)
@@ -38,34 +35,34 @@ The React dashboard is NOT working - WebSocket connection is failing and the app
 
 **Tasks** (5-8 hours):
 
-#### 1. WebSocket Connection Fix (CRITICAL 🔴) - 2-3 hours
+#### 1. WebSocket Connection Fix (CRITICAL 🔴) - ✅ **COMPLETE** (Commit: 2bde007)
+
 **Problem**: 
 - Connection error: "Max reconnection attempts reached. Retrying..."
 - App shows "OFFLINE" constantly
-- No activity feed updates
-- WebSocket endpoint not responding
+- WebSocket connection failed with "Insufficient resources"
 
-**Root Causes to Investigate**:
-- [ ] Is WebSocket endpoint `/ws` being served?
-- [ ] Is server broadcasting initial state on connect?
-- [ ] Are there CORS issues?
-- [ ] Is reconnection logic broken?
-- [ ] Are there race conditions in useWebSocket hook?
+**Root Cause Found**:
+- ✅ useWebSocket hook had `connect` in useEffect dependencies
+- ✅ `connect` is useCallback with dependencies, recreated every render
+- ✅ This caused infinite loop: render → new connect → useEffect → new WebSocket → state change → render
+- ✅ Hundreds of WebSocket connections created in seconds, exhausting browser resources
 
-**Steps**:
-1. [ ] Write test that proves WebSocket connects
-2. [ ] Debug server WebSocket handler
-3. [ ] Debug client WebSocket hook
-4. [ ] Fix connection issues
-5. [ ] Verify tests pass
-6. [ ] Commit + push
+**Solution Implemented**:
+1. ✅ Wrote 4 integration tests (all passing)
+2. ✅ Debugged client - found infinite reconnection loop
+3. ✅ Fixed: Removed `connect` from useEffect dependencies
+4. ✅ Tests pass - connection works immediately
+5. ✅ Committed and pushed (2bde007)
 
 **Success Criteria**:
-- [ ] WebSocket connects on page load
-- [ ] Connection indicator shows "LIVE"
-- [ ] Activity feed receives updates
-- [ ] No "Max reconnection attempts" errors
-- [ ] Integration tests pass
+- ✅ WebSocket connects on page load
+- ✅ Connection indicator shows "LIVE"
+- ✅ Activity feed receives updates
+- ✅ No "Max reconnection attempts" errors
+- ✅ 4/4 WebSocket integration tests passing
+
+**Time**: 1.5 hours (vs estimated 2-3 hours)
 
 #### 2. Remove Orphaned Code (HIGH 🟡) - 30 minutes
 **Problem**: Duplicate implementations causing confusion
