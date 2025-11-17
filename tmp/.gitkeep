@@ -1,0 +1,16 @@
+# Temporary Files Directory
+
+This directory is for temporary files, logs, test outputs, and working files.
+
+⚠️ **IMPORTANT**: Nothing in this directory is tracked by git.
+
+Use this for:
+- Log files (*.log)
+- Test outputs
+- Temporary scripts
+- Debug files
+- PID files
+- Working documents
+- Session notes
+
+Do NOT use /tmp/ system directory to avoid permission issues.

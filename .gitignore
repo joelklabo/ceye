@@ -22,4 +22,8 @@ Thumbs.db
 
 # Build artifacts
 /dist/
+
+# Temporary files (use tmp/ folder for all temp files, logs, working docs)
 tmp/
+# Keep the folder but not its contents
+!tmp/.gitkeep

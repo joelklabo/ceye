@@ -56,6 +56,35 @@ SafeProvider (panic recovery, validation)
 Manager (lifecycle, health tracking)
 ```
 
+## ⚠️ CRITICAL: Temporary Files
+
+**ALWAYS use `tmp/` directory for temporary files**
+
+```
+tmp/                    # Gitignored, safe for any temporary work
+├── .gitkeep           # Explains the folder purpose
+├── *.log              # Log files from testing
+├── *.md               # Working notes, test results
+├── *.txt              # Debug output, snapshots
+├── *.pid              # Process IDs
+└── ...                # Any temporary file
+
+DO:
+✅ Write all logs to tmp/
+✅ Put test outputs in tmp/
+✅ Use tmp/ for debugging files
+✅ Store session notes in tmp/
+✅ Save temporary scripts in tmp/
+
+DO NOT:
+❌ Write to /tmp/ (permission issues)
+❌ Create temp files in project root
+❌ Put temp files in docs/
+❌ Commit anything from tmp/ to git
+```
+
+**Why**: Avoids permission errors, keeps project organized, all temp files in one place.
+
 ### Key Abstractions
 
 **Provider Interface** (The "Agent" Interface)
