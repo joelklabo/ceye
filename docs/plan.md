@@ -37,6 +37,21 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 
 **Tasks** (20-30 hours):
 
+#### 0.0. Investigate and Fix CI Failures (Comprehensive Tests) (CRITICAL 🔴🔴🔴) - 🔄 **IN PROGRESS**
+**Problem**: The "Comprehensive Tests" CI badge is failing, indicating issues with the Go test suite. This is a blocking issue for further development.
+**Research Context**:
+*   CI workflow is defined in `.github/workflows/ci.yml`.
+*   The `test` job runs `go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...`.
+*   The failure is likely within the Go unit/integration tests, not Playwright E2E tests (which are typically run separately).
+*   The CI environment uses `go-version: '1.21'` and `self-hosted` runners.
+**Implementation Plan**:
+1.  **Run all Go tests locally**: Execute `go test -v -race ./...` to identify failing tests.
+2.  **Analyze failures**: Examine the output to understand the root cause of the failing tests.
+3.  **Reproduce locally**: Ensure the failing tests can be consistently reproduced in the local development environment.
+4.  **Fix tests/code**: Implement necessary fixes to make the tests pass.
+5.  **Verify locally**: Run `go test -v -race ./...` again to confirm all tests pass.
+6.  **Commit and Push**: Commit the fixes and push to trigger CI.
+
 #### 0. Webhook vs Polling Validation Test (CRITICAL 🔴🔴🔴) - ✅ **COMPLETE** (Commit: edfc9fb) - 2 hours
 **Problem**: Webhooks enabled but no confidence they're actually working
 - Webhook mode enabled but user hasn't seen updates
