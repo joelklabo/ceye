@@ -32,6 +32,10 @@ type Server struct {
 	providerHealth map[string]core.ProviderHealth
 	providerNames  []string
 	statusMu       sync.RWMutex
+	
+	version    string
+	gitCommit  string
+	buildTime  string
 }
 
 type Message struct {
@@ -43,6 +47,9 @@ type Message struct {
 	Health     map[string]core.ProviderHealth `json:"health,omitempty"`
 	Totals     map[string]int                 `json:"totals,omitempty"`
 	AlertCount int                            `json:"alert_count,omitempty"`
+	Version    string                         `json:"version,omitempty"`
+	GitCommit  string                         `json:"git_commit,omitempty"`
+	BuildTime  string                         `json:"build_time,omitempty"`
 }
 
 func New(store *core.Store, providerNames []string, port int) *Server {
@@ -70,6 +77,13 @@ func (s *Server) SetTrendAnalyzer(analyzer interface{}) {
 // SetAlertEngine sets the optional alert engine for rule stats
 func (s *Server) SetAlertEngine(engine interface{}) {
 	s.alertEngine = engine
+}
+
+// SetVersion sets the version information for display
+func (s *Server) SetVersion(version, gitCommit, buildTime string) {
+	s.version = version
+	s.gitCommit = gitCommit
+	s.buildTime = buildTime
 }
 
 func (s *Server) getWebFS() (fs.FS, error) {
@@ -186,6 +200,9 @@ func (s *Server) sendSnapshot(conn *websocket.Conn) {
 		Health:     health,
 		Totals:     totals,
 		AlertCount: s.store.GetAlertCount(),
+		Version:    s.version,
+		GitCommit:  s.gitCommit,
+		BuildTime:  s.buildTime,
 	}
 	
 	if err := conn.WriteJSON(msg); err != nil {

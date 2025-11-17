@@ -44,9 +44,13 @@ type RunUpdatedMsg struct {
 	Store        []manager.ProviderRecord
 	Audit        []manager.StoreAuditEntry
 	MissingRepos []string
+	IsWebhook    bool      // True if this update came from a webhook
+	WebhookRun   *core.Run // The run that triggered the webhook
 }
 
 type flashExpiredMsg struct{}
+
+type webhookPulseTickMsg struct{}
 
 // ProviderStoreActionType describes the type of action requested in the store overlay.
 type ProviderStoreActionType int
@@ -184,6 +188,11 @@ type Model struct {
 	trendAnalyzer             interface{}           // *storage.TrendAnalyzer (optional, interface to avoid import)
 	showTrends                bool                  // Whether to show trends panel
 	showAlerts                bool                  // Whether to show alerts panel
+	webhookPulseActive        bool                  // Whether webhook pulse animation is active
+	webhookPulseFrames        int                   // Current frame count for pulse animation
+	webhookLastRun            *core.Run             // Last run received via webhook
+	webhookBorderNormal       lipgloss.Style        // Normal border style
+	webhookBorderPulse        lipgloss.Style        // Pulsing border style
 }
 
 type commitInfo struct {
@@ -416,8 +425,34 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.Level == "error" && msg.Message != "" {
 			cmd = m.setAlert(msg.Message)
 		}
+		
+		// Handle webhook notifications with pulsing border animation
+		if msg.IsWebhook && msg.WebhookRun != nil {
+			m.webhookPulseActive = true
+			m.webhookPulseFrames = 0
+			m.webhookLastRun = msg.WebhookRun
+			cmd = webhookPulseTick()
+		}
+		
 		m.refreshTable()
 		return m, cmd
+	
+	case webhookPulseTickMsg:
+		if !m.webhookPulseActive {
+			return m, nil
+		}
+		
+		m.webhookPulseFrames++
+		
+		// Animation lasts for 6 frames (3 pulses * 2 frames each)
+		if m.webhookPulseFrames >= 6 {
+			m.webhookPulseActive = false
+			m.webhookPulseFrames = 0
+			return m, nil
+		}
+		
+		// Continue the animation
+		return m, webhookPulseTick()
 	case tea.KeyMsg:
 		if m.handleSearchInput(msg) {
 			return m, nil
@@ -524,6 +559,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
+// webhookPulseTick returns a command that ticks the webhook pulse animation
+func webhookPulseTick() tea.Cmd {
+	return tea.Tick(250*time.Millisecond, func(t time.Time) tea.Msg {
+		return webhookPulseTickMsg{}
+	})
+}
+
 // View renders the UI.
 func (m Model) View() string {
 	header := m.renderHeader()
@@ -598,9 +640,9 @@ func (m Model) renderHeader() string {
 			return m.searchQuery
 		}(),
 	)
-	title := "CI Status Dashboard"
+	title := "ceye CI Dashboard"
 	if m.buildInfo != "" {
-		title = fmt.Sprintf("%s (%s)", title, m.buildInfo)
+		title = fmt.Sprintf("%s • %s", title, m.buildInfo)
 	}
 	lines := []string{
 		m.headerStyle.Render(fmt.Sprintf("%s  •  Last update %s", title, last)),
@@ -619,8 +661,27 @@ func (m Model) renderHeader() string {
 }
 
 func (m Model) renderRunsTable() string {
-	title := sectionTitleStyle.Render(fmt.Sprintf("Runs (%d showing)", len(m.visibleRuns)))
-	return lipgloss.JoinVertical(lipgloss.Left, title, m.bodyBoxStyle.Render(m.Table.View()))
+	// Add webhook indicator to title if pulsing
+	titleText := fmt.Sprintf("Runs (%d showing)", len(m.visibleRuns))
+	if m.webhookPulseActive && m.webhookLastRun != nil {
+		titleText = fmt.Sprintf("🪝 Runs (%d showing) — Webhook: %s/%s · %s",
+			len(m.visibleRuns),
+			m.webhookLastRun.Repo,
+			m.webhookLastRun.WorkflowName,
+			formatStatusText(*m.webhookLastRun),
+		)
+	}
+	title := sectionTitleStyle.Render(titleText)
+	
+	// Use pulsing border style during webhook animation
+	borderStyle := m.bodyBoxStyle
+	if m.webhookPulseActive && m.webhookPulseFrames%2 == 0 {
+		borderStyle = m.webhookBorderPulse
+	} else if m.webhookPulseActive {
+		borderStyle = m.webhookBorderNormal
+	}
+	
+	return lipgloss.JoinVertical(lipgloss.Left, title, borderStyle.Render(m.Table.View()))
 }
 
 func (m Model) renderDashboardBody() string {
@@ -2537,6 +2598,18 @@ func (m *Model) refreshStyles() {
 	m.tagStyle = tag
 	m.tagWarningStyle = tagWarn
 	m.tagErrorStyle = tagErr
+	
+	// Set webhook border styles
+	m.webhookBorderNormal = lipgloss.NewStyle().
+		Padding(0, 1).
+		BorderStyle(lipgloss.NormalBorder()).
+		BorderForeground(borderColor)
+	
+	m.webhookBorderPulse = lipgloss.NewStyle().
+		Padding(0, 1).
+		BorderStyle(lipgloss.ThickBorder()).
+		BorderForeground(lipgloss.Color("#667eea")).
+		Bold(true)
 }
 
 func (m *Model) toggleContrast() {

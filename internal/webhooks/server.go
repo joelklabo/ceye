@@ -111,24 +111,61 @@ http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 return
 }
 
-log.Printf("Received GitHub webhook: %s", r.Header.Get("X-GitHub-Event"))
-log.Printf("  Delivery ID: %s", r.Header.Get("X-GitHub-Delivery"))
-log.Printf("  Signature: %s", r.Header.Get("X-Hub-Signature-256"))
+eventType := r.Header.Get("X-GitHub-Event")
+deliveryID := r.Header.Get("X-GitHub-Delivery")
 
-// For now, just log the payload
-var payload map[string]interface{}
-if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-log.Printf("Error decoding payload: %v", err)
+log.Printf("Received GitHub webhook: %s (delivery: %s)", eventType, deliveryID)
+
+// Only process workflow_run events
+if eventType != "workflow_run" {
+log.Printf("Ignoring event type: %s", eventType)
+w.WriteHeader(http.StatusOK)
+fmt.Fprintf(w, "Event type %s not processed", eventType)
+return
+}
+
+// Read and parse body
+var buf []byte
+var err error
+if r.Body != nil {
+buf, err = json.Marshal(map[string]interface{}{})
+decoder := json.NewDecoder(r.Body)
+var temp interface{}
+if err := decoder.Decode(&temp); err != nil {
+log.Printf("Error reading body: %v", err)
+http.Error(w, "Error reading body", http.StatusBadRequest)
+return
+}
+buf, _ = json.Marshal(temp)
+}
+
+// Parse the webhook payload
+run, err := ParseGitHubWebhook(buf)
+if err != nil {
+log.Printf("Error parsing GitHub webhook: %v", err)
 http.Error(w, "Invalid payload", http.StatusBadRequest)
 return
 }
 
-// Pretty print for inspection
-payloadJSON, _ := json.MarshalIndent(payload, "", "  ")
-log.Printf("Payload:\n%s", string(payloadJSON))
+log.Printf("✅ Parsed GitHub webhook: %s/%s (status: %s, conclusion: %s)",
+run.Repo, run.WorkflowName, run.Status, run.Conclusion)
+
+// Emit RunEvent
+event := core.RunEvent{
+Provider:  "github-webhook",
+Runs:      []core.Run{run},
+Timestamp: time.Now(),
+}
+
+select {
+case s.events <- event:
+log.Printf("Sent RunEvent to channel")
+default:
+log.Printf("Warning: event channel full, dropping event")
+}
 
 w.WriteHeader(http.StatusOK)
-fmt.Fprintf(w, "Webhook received at %s", time.Now().Format(time.RFC3339))
+fmt.Fprintf(w, "Webhook processed at %s", time.Now().Format(time.RFC3339))
 }
 
 func (s *Server) handleAzure(w http.ResponseWriter, r *http.Request) {
@@ -139,17 +176,45 @@ return
 
 log.Printf("Received Azure DevOps webhook")
 
-var payload map[string]interface{}
-if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-log.Printf("Error decoding payload: %v", err)
+// Read and parse body
+var buf []byte
+var err error
+if r.Body != nil {
+decoder := json.NewDecoder(r.Body)
+var temp interface{}
+if err := decoder.Decode(&temp); err != nil {
+log.Printf("Error reading body: %v", err)
+http.Error(w, "Error reading body", http.StatusBadRequest)
+return
+}
+buf, _ = json.Marshal(temp)
+}
+
+// Parse the webhook payload
+run, err := ParseAzureWebhook(buf)
+if err != nil {
+log.Printf("Error parsing Azure webhook: %v", err)
 http.Error(w, "Invalid payload", http.StatusBadRequest)
 return
 }
 
-// Pretty print for inspection
-payloadJSON, _ := json.MarshalIndent(payload, "", "  ")
-log.Printf("Payload:\n%s", string(payloadJSON))
+log.Printf("✅ Parsed Azure webhook: %s/%s (status: %s, conclusion: %s)",
+run.Repo, run.WorkflowName, run.Status, run.Conclusion)
+
+// Emit RunEvent
+event := core.RunEvent{
+Provider:  "azure-webhook",
+Runs:      []core.Run{run},
+Timestamp: time.Now(),
+}
+
+select {
+case s.events <- event:
+log.Printf("Sent RunEvent to channel")
+default:
+log.Printf("Warning: event channel full, dropping event")
+}
 
 w.WriteHeader(http.StatusOK)
-fmt.Fprintf(w, "Webhook received at %s", time.Now().Format(time.RFC3339))
+fmt.Fprintf(w, "Webhook processed at %s", time.Now().Format(time.RFC3339))
 }

@@ -35,6 +35,7 @@ import (
 	"github.com/joelklabo/ceye/internal/server"
 	"github.com/joelklabo/ceye/internal/storage"
 	"github.com/joelklabo/ceye/internal/ui"
+	"github.com/joelklabo/ceye/internal/webhooks"
 )
 
 const (
@@ -51,6 +52,7 @@ const (
 var (
 	Version   = "dev"
 	GitCommit = "unknown"
+	BuildTime = "unknown"
 )
 
 var (
@@ -76,12 +78,15 @@ func main() {
 	var web bool
 	var webPort int
 	var alertDebug bool
+	var enableWebhooks bool
+	var webhookPort int
+	var webhookSecret string
 	rootCmd := &cobra.Command{
 		Use:     "ceye",
 		Short:   "CI Status Dashboard TUI",
 		Version: fmt.Sprintf("%s (%s)", Version, GitCommit),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return run(ctx, cfgPath, configDirFlag, demo, demoRuns, demoDuration, eventLogPath, notify, historyPath, webhookURL, resolveProviderStorePath(providerStoreFlag), githubOrgFlag, azureOrgFlag, azureProjectFlag, web, webPort)
+			return run(ctx, cfgPath, configDirFlag, demo, demoRuns, demoDuration, eventLogPath, notify, historyPath, webhookURL, resolveProviderStorePath(providerStoreFlag), githubOrgFlag, azureOrgFlag, azureProjectFlag, web, webPort, enableWebhooks, webhookPort, webhookSecret)
 		},
 	}
 	rootCmd.SetVersionTemplate("ceye version {{.Version}}\n")
@@ -101,15 +106,56 @@ func main() {
 	rootCmd.PersistentFlags().BoolVar(&web, "web", false, "Start web server instead of TUI")
 	rootCmd.PersistentFlags().IntVar(&webPort, "port", 8080, "Port for web server (requires --web)")
 	rootCmd.PersistentFlags().BoolVar(&alertDebug, "alert-debug", false, "Enable verbose alert debugging (logs all rule evaluations)")
+	rootCmd.PersistentFlags().BoolVar(&enableWebhooks, "webhooks", false, "Enable webhook receiver for push-based updates")
+	rootCmd.PersistentFlags().IntVar(&webhookPort, "webhook-port", 9090, "Port for webhook server (requires --webhooks)")
+	rootCmd.PersistentFlags().StringVar(&webhookSecret, "webhook-secret", "", "GitHub webhook secret for signature verification")
 
 	rootCmd.AddCommand(providerCmd())
+	rootCmd.AddCommand(versionCmd())
 
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
 		os.Exit(1)
 	}
 }
 
-func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRuns int, demoDuration time.Duration, eventLogPath string, notify bool, historyPath string, webhookURL string, providerStorePath string, githubOrg, azureOrg, azureProject string, web bool, webPort int) error {
+func versionCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "version",
+		Short: "Show detailed version information",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Printf("ceye version:\n")
+			fmt.Printf("  Version:    %s\n", Version)
+			fmt.Printf("  Commit:     %s\n", GitCommit)
+			fmt.Printf("  Build Time: %s\n", BuildTime)
+			fmt.Printf("  Go Version: %s\n", runtime.Version())
+			fmt.Printf("  OS/Arch:    %s/%s\n", runtime.GOOS, runtime.GOARCH)
+			
+			// Check if running from expected location
+			exe, err := os.Executable()
+			if err == nil {
+				fmt.Printf("  Executable: %s\n", exe)
+			}
+			
+			// Git status
+			gitCmd := exec.Command("git", "status", "--porcelain")
+			gitCmd.Dir = "/Users/honk/code/ceye"
+			if output, err := gitCmd.Output(); err == nil && len(output) > 0 {
+				fmt.Printf("  Git Status: DIRTY (uncommitted changes)\n")
+			} else {
+				fmt.Printf("  Git Status: clean\n")
+			}
+		},
+	}
+}
+
+func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRuns int, demoDuration time.Duration, eventLogPath string, notify bool, historyPath string, webhookURL string, providerStorePath string, githubOrg, azureOrg, azureProject string, web bool, webPort int, enableWebhooks bool, webhookPort int, webhookSecret string) error {
+	// Print version info immediately
+	exe, _ := os.Executable()
+	fmt.Fprintf(os.Stderr, "🚀 ceye %s (%s) starting...\n", Version, GitCommit)
+	fmt.Fprintf(os.Stderr, "   Build: %s\n", BuildTime)
+	fmt.Fprintf(os.Stderr, "   Binary: %s\n", exe)
+	fmt.Fprintf(os.Stderr, "\n")
+	
 	ctx, cancel := context.WithCancel(parentCtx)
 	defer cancel()
 
@@ -264,6 +310,38 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 	}
 	
 	eventCh := make(chan core.RunEvent)
+	
+	// Start webhook server if enabled
+	if enableWebhooks {
+		webhookCfg := webhooks.Config{
+			Port:         webhookPort,
+			GitHubSecret: webhookSecret,
+		}
+		webhookServer := webhooks.NewServer(webhookCfg)
+		
+		// Start webhook server
+		go func() {
+			if err := webhookServer.Start(ctx); err != nil && ctx.Err() == nil {
+				log.Printf("Webhook server error: %v", err)
+			}
+		}()
+		
+		// Merge webhook events into main event channel
+		go func() {
+			for event := range webhookServer.Events() {
+				select {
+				case eventCh <- event:
+				case <-ctx.Done():
+					return
+				}
+			}
+		}()
+		
+		log.Printf("🪝 Webhook server enabled on port %d", webhookPort)
+		log.Printf("   GitHub: http://localhost:%d/webhooks/github", webhookPort)
+		log.Printf("   Azure:  http://localhost:%d/webhooks/azure", webhookPort)
+		log.Printf("   Expose with: ngrok http %d", webhookPort)
+	}
 	
 	// Fan out events to alerting engine if configured
 	var storeEventCh chan core.RunEvent
@@ -564,6 +642,13 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 						fmt.Fprintf(os.Stderr, "webhook: %v\n", err)
 					}
 				}
+				// Check if this is a webhook event (provider name ends with "-webhook")
+				isWebhook := strings.HasSuffix(event.Provider, "-webhook")
+				var webhookRun *core.Run
+				if isWebhook && len(event.Runs) > 0 {
+					webhookRun = &event.Runs[0]
+				}
+				
 				program.Send(ui.RunUpdatedMsg{
 					Timestamp:    ts,
 					Status:       copyStatus(providerStatus),
@@ -575,6 +660,8 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 					History:      copyHistory(providerHistory),
 					Store:        copyProviderRecords(providerStore.List()),
 					MissingRepos: snapshotMissing(),
+					IsWebhook:    isWebhook,
+					WebhookRun:   webhookRun,
 				})
 			}
 		}
@@ -1193,6 +1280,9 @@ func writeEventLog(w io.Writer, event core.RunEvent) error {
 
 func runWebServer(ctx context.Context, store *core.Store, storageBackend *storage.Storage, providerNames []string, providerStatus map[string]string, providerHealth map[string]core.ProviderHealth, eventCh chan core.RunEvent, port int, notify bool, webhookURL string) error {
 	srv := server.New(store, providerNames, port)
+	
+	// Set version information
+	srv.SetVersion(Version, GitCommit, BuildTime)
 	
 	// Add trend analyzer if storage backend is available
 	if storageBackend != nil {
