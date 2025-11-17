@@ -27,6 +27,7 @@ import (
 	"github.com/joelklabo/ceye/internal/config"
 	"github.com/joelklabo/ceye/internal/core"
 	"github.com/joelklabo/ceye/internal/alerting"
+	"github.com/joelklabo/ceye/internal/ngrok" // Added
 	"github.com/joelklabo/ceye/internal/providers"
 	azureprovider "github.com/joelklabo/ceye/internal/providers/azure"
 	githubprovider "github.com/joelklabo/ceye/internal/providers/github"
@@ -362,7 +363,23 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 		log.Printf("🪝 Webhook server enabled on port %d", webhookPort)
 		log.Printf("   GitHub: http://localhost:%d/webhooks/github", webhookPort)
 		log.Printf("   Azure:  http://localhost:%d/webhooks/azure", webhookPort)
-		log.Printf("   Expose with: ngrok http %d", webhookPort)
+		
+		// Auto-start ngrok
+		ngrokMgr := ngrok.NewManager()
+		tunnelURL, err := ngrokMgr.Start(webhookPort)
+		if err != nil {
+			log.Printf("⚠️  Failed to start ngrok: %v", err)
+			log.Printf("   Install: brew install ngrok")
+			log.Printf("   Or start manually: ngrok http %d", webhookPort)
+		} else {
+			log.Printf("🌐 ngrok tunnel: %s", tunnelURL)
+			log.Printf("   Configure webhook:")
+			log.Printf("   gh api repos/OWNER/REPO/hooks -X POST --input - << EOF")
+			log.Printf("   {")
+			log.Printf("     \"config\": {\"url\": \"%s/webhooks/github\"}", tunnelURL)
+			log.Printf("   }")
+			log.Printf("   EOF")
+		}
 		logPhase("Webhook server started")
 	}
 	

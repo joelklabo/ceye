@@ -482,7 +482,7 @@ func (m *Manager) getTunnelURL() (string, error) {
 }
 ```
 
-**Phase 2: CLI Integration** (30 min)
+**Phase 2: CLI Integration** (30 min) - 🔄 **IN PROGRESS**
 ```go
 // cmd/ceye/main.go
 func run(...) error {
