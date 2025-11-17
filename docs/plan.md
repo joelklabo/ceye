@@ -32,6 +32,37 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 
 ## 🚧 Active Tasks
 
+### 🚨 CRITICAL BUILD FAILURE - TypeScript Build Broken (CRITICAL 🔴🔴🔴)
+
+**Discovered**: 2025-11-17 21:34 UTC by Nova  
+**Status**: 🔥 **BLOCKS ALL DEVELOPMENT** 🔥
+
+**Problem**: `make build` fails with TypeScript errors in ActivityFeed.tsx, but file syntax is correct.
+
+```bash
+Error: src/components/dashboard/ActivityFeed.tsx(152,1): error TS1005: ',' expected.
+# ... 8 more similar errors lines 152-194
+```
+
+**Impact**:
+- ❌ Cannot rebuild web app
+- ❌ Cannot make any UI changes
+- ❌ Blocks Task 0.7.1 and all UI tasks
+- ✅ Existing binary (bin/ceye) still works for testing
+
+**Investigation**:
+- File syntax is correct (visual inspection + `tsc --noEmit` passes)
+- `tsc -b` fails consistently
+- Affects multiple commits (9205aa8 through HEAD)
+- Clean builds don't help
+- Possibly related to `erasableSyntaxOnly: true` in tsconfig.app.json
+
+**Fix Priority**: **IMMEDIATE** - Must fix before any other work
+
+**See**: docs/agents.md line 1544 for full investigation details
+
+---
+
 ### Phase 0.7: Critical Bug Fixes & Cleanup - 🔴 **IN PROGRESS**
 
 **Goal**: Fix broken WebSocket connection and clean up codebase

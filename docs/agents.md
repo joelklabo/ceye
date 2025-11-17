@@ -1545,6 +1545,60 @@ logger.Error("Failed to connect: %v", err)
 
 **Lesson**: Structure logs from the start - ad-hoc string formatting makes logs hard to parse later.
 
+## 🚨 CRITICAL: TypeScript Build Failure (2025-11-17)
+
+**Date**: 2025-11-17 21:34 UTC  
+**Agent**: Nova  
+**Status**: UNRESOLVED - BLOCKS ALL DEVELOPMENT
+
+### Problem
+
+TypeScript build (`tsc -b`) fails with syntax errors in ActivityFeed.tsx lines 152-194, but the file syntax is correct and `tsc --noEmit` passes:
+
+```
+src/components/dashboard/ActivityFeed.tsx(152,1): error TS1005: ',' expected.
+src/components/dashboard/ActivityFeed.tsx(152,11): error TS1005: ',' expected.
+(... 7 more similar errors)
+```
+
+### Investigation
+
+1. **File is valid**: ActivityFeed.tsx has correct syntax, no missing brackets or commas
+2. **`tsc --noEmit` passes**: Direct TypeScript check succeeds
+3. **`tsc -b` fails**: Project build mode fails consistently  
+4. **Multiple commits affected**: Issue exists in commits 9205aa8 through HEAD (20e5016)
+5. **Previous binary works**: bin/ceye from Nov 17 13:32 exists and runs
+6. **Clean builds fail**: Removing node_modules/.tmp, .vite doesn't help
+
+### Potential Causes
+
+1. **tsconfig.json project references**: Using TypeScript project mode with references
+2. **`erasableSyntaxOnly: true`**: New TS 5.7+ feature in tsconfig.app.json (line 27)
+3. **Build cache corruption**: But clean builds also fail
+4. **TypeScript version mismatch**: Possible version incompatibility
+
+### Files to Check
+
+- `web/tsconfig.json` - Project references configuration
+- `web/tsconfig.app.json` - App-specific settings (note `erasableSyntaxOnly`)
+- `web/package.json` - TypeScript version
+- `web/src/components/dashboard/ActivityFeed.tsx` - Line 152 onwards
+
+### Recommended Fix
+
+1. Try removing `erasableSyntaxOnly: true` from tsconfig.app.json
+2. Check TypeScript version compatibility (`npx tsc --version`)
+3. Try building without project references (`tsc` instead of `tsc -b`)
+4. Check if tsconfig.node.json has conflicts
+5. As last resort, revert tsconfig files to working state
+
+### Impact
+
+- **BLOCKS**: All web development (can't rebuild React app)
+- **BLOCKS**: Task 0.7.1 (full-width layout fix)
+- **BLOCKS**: Any UI changes
+- **Workaround**: Use existing bin/ceye binary for testing (no web changes possible)
+
 ## Learnings from Task 0.7: Provider Health UI & Webhook Testing
 
 ### Testing Webhook Features with Demo Provider
