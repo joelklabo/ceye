@@ -21,6 +21,9 @@ func ParseGitHubRuns(data []byte) ([]core.Run, error) {
 			HTMLURL    string  `json:"html_url"`
 			CreatedAt  string  `json:"created_at"`
 			UpdatedAt  string  `json:"updated_at"`
+			Repository struct {
+				FullName string `json:"full_name"`
+			} `json:"repository"`
 		} `json:"workflow_runs"`
 	}
 
@@ -48,6 +51,7 @@ func ParseGitHubRuns(data []byte) ([]core.Run, error) {
 		runs = append(runs, core.Run{
 			ID:           fmt.Sprintf("%d", wr.ID),
 			Provider:     "github",
+			Repo:         wr.Repository.FullName,
 			WorkflowName: wr.Name,
 			Branch:       wr.HeadBranch,
 			CommitSHA:    wr.HeadSHA,

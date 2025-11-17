@@ -93,7 +93,8 @@ function App() {
               <div className="space-y-8">
                 <ProviderCards 
                   providers={providers} 
-                  meta={meta}
+                  meta={meta} 
+                  onRefresh={() => console.log('Refresh button clicked')} // Added onRefresh
                 />
                 <ActivityFeed items={activityItems} />
               </div>

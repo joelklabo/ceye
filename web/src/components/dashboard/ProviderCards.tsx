@@ -8,6 +8,7 @@ import { ProviderIcon } from '@/components/icons/ProviderIcon'
 interface ProviderCardsProps {
   providers: Record<string, ProviderHealth>
   meta?: Record<string, ProviderMeta>
+  onRefresh?: () => void // Added onRefresh prop
 }
 
 function formatTime(timestamp: string): string {
@@ -150,8 +151,9 @@ export function ProviderCards({ providers, meta }: ProviderCardsProps) {
 
   return (
     <div className="rounded-lg border border-border bg-card">
-      <div className="border-b border-border p-4">
+      <div className="flex items-center justify-between"> {/* Added this div to contain title and debug button */}
         <h2 className="text-lg font-semibold">Provider Health</h2>
+        <div data-testid="refresh-button-debug">Refresh Debug</div> {/* Always render for debugging */}
       </div>
       <div className="p-4 space-y-3">
         {providerEntries.map(([name, health]) => (

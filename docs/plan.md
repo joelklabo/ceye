@@ -1131,7 +1131,7 @@ type WebhookEvent struct {
 - [ ] Can see event timeline (TODO: Events tab)
 - [x] Helps debug issues 10x faster ✅
 
-#### 9. Fix Activity Feed Duration Display (HIGH 🟡) - 30 minutes
+#### 9. Fix Activity Feed Duration Display (HIGH 🟡) - 🔄 **IN PROGRESS** - 30 minutes
 **Problem**: Duration in Activity Feed always shows "0s" - not calculating correctly
 
 **Root Cause**: Need to investigate:
