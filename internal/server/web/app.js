@@ -203,17 +203,21 @@ function addActivityItem(type, message, details) {
     const content = `<span class="timestamp">${timestamp}</span><span class="message">${message}</span>`;
     item.innerHTML = details ? `${content}<div class="details">${details}</div>` : content;
     
-    // Remove first item if over limit
-    if (log.children.length >= maxActivityItems) {
+    // Clear "waiting" message on first real item (before adding new item)
+    if (log.children.length === 1) {
+        const firstChild = log.firstChild;
+        if (firstChild && firstChild.classList && firstChild.classList.contains('muted')) {
+            log.innerHTML = '';
+        }
+    }
+    
+    // Add the new item
+    log.appendChild(item);
+    
+    // Remove first item if over limit (after adding new item)
+    if (log.children.length > maxActivityItems) {
         log.removeChild(log.firstChild);
     }
-    
-    // Clear "waiting" message on first real item
-    if (log.children.length === 1 && log.firstChild && log.firstChild.classList && log.firstChild.classList.contains('muted')) {
-        log.innerHTML = '';
-    }
-    
-    log.appendChild(item);
     
     // Auto-scroll to bottom if near bottom
     if (log.scrollHeight - log.scrollTop <= log.clientHeight + 50) {

@@ -183,13 +183,10 @@ test.describe('ceye Dashboard', () => {
   });
 
   test('Issue 9: WebSocket receives messages', async ({ page }) => {
-    await page.goto(BASE_URL);
-    
     console.log(`\n📡 Monitoring WebSocket messages...`);
     
-    // Listen for WebSocket messages
-    const messages = [];
-    await page.evaluate(() => {
+    // Inject WebSocket interceptor BEFORE loading the page
+    await page.addInitScript(() => {
       window.wsMessages = [];
       const originalWebSocket = window.WebSocket;
       window.WebSocket = function(...args) {
@@ -201,8 +198,11 @@ test.describe('ceye Dashboard', () => {
       };
     });
     
-    // Wait for messages
-    await page.waitForTimeout(5000);
+    // Now navigate to the page
+    await page.goto(BASE_URL);
+    
+    // Wait for messages (initial snapshot should arrive immediately)
+    await page.waitForTimeout(2000);
     
     // Check if any messages received
     const wsMessages = await page.evaluate(() => window.wsMessages || []);
