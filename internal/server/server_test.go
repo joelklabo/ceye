@@ -38,7 +38,7 @@ func TestServerStaticFiles(t *testing.T) {
 			name:         "css loads",
 			path:         "/style.css",
 			wantStatus:   http.StatusOK,
-			wantContains: "background: #0a0e27",
+			wantContains: "--bg-primary", // CSS variables
 		},
 		{
 			name:         "javascript loads",

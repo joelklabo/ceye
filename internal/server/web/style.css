@@ -1,3 +1,64 @@
+/* Theme system with CSS variables */
+:root, :root[data-theme="dark"] {
+    --bg-primary: #0a0e27;
+    --bg-secondary: #1a1f3a;
+    --bg-tertiary: #24283b;
+    --text-primary: #e0e0e0;
+    --text-secondary: #8892b0;
+    --accent-primary: #61dafb;
+    --accent-green: #28a745;
+    --accent-yellow: #ffc107;
+    --accent-red: #dc3545;
+    --accent-blue: #17a2b8;
+    --border-primary: #2d3654;
+    --border-secondary: #414868;
+}
+
+:root[data-theme="light"] {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f5;
+    --bg-tertiary: #e9ecef;
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --accent-primary: #0088cc;
+    --accent-green: #28a745;
+    --accent-yellow: #ffc107;
+    --accent-red: #dc3545;
+    --accent-blue: #17a2b8;
+    --border-primary: #dee2e6;
+    --border-secondary: #ced4da;
+}
+
+:root[data-theme="solarized-dark"] {
+    --bg-primary: #002b36;
+    --bg-secondary: #073642;
+    --bg-tertiary: #0e4350;
+    --text-primary: #839496;
+    --text-secondary: #586e75;
+    --accent-primary: #268bd2;
+    --accent-green: #859900;
+    --accent-yellow: #b58900;
+    --accent-red: #dc322f;
+    --accent-blue: #268bd2;
+    --border-primary: #073642;
+    --border-secondary: #586e75;
+}
+
+:root[data-theme="dracula"] {
+    --bg-primary: #282a36;
+    --bg-secondary: #44475a;
+    --bg-tertiary: #6272a4;
+    --text-primary: #f8f8f2;
+    --text-secondary: #6272a4;
+    --accent-primary: #bd93f9;
+    --accent-green: #50fa7b;
+    --accent-yellow: #f1fa8c;
+    --accent-red: #ff5555;
+    --accent-blue: #8be9fd;
+    --border-primary: #44475a;
+    --border-secondary: #6272a4;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -6,9 +67,10 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    background: #0a0e27;
-    color: #e0e0e0;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     line-height: 1.6;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .container {
@@ -27,12 +89,12 @@ header {
 }
 
 h1 {
-    color: #61dafb;
+    color: var(--accent-primary);
     font-size: 2em;
 }
 
 h2 {
-    color: #61dafb;
+    color: var(--accent-primary);
     margin-bottom: 15px;
     font-size: 1.3em;
 }
@@ -45,17 +107,18 @@ h2 {
 
 button, select, input[type="text"] {
     padding: 8px 16px;
-    background: #1a1f3a;
-    border: 1px solid #2d3654;
-    color: #e0e0e0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    color: var(--text-primary);
     border-radius: 4px;
     cursor: pointer;
     font-size: 14px;
+    transition: all 0.2s ease;
 }
 
 button:hover, select:hover {
-    background: #252b4a;
-    border-color: #3d4664;
+    background: var(--bg-tertiary);
+    border-color: var(--border-secondary);
 }
 
 input[type="text"] {
@@ -70,39 +133,40 @@ input[type="text"] {
 }
 
 .stat-card {
-    background: #1a1f3a;
-    border: 1px solid #2d3654;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
     border-radius: 8px;
     padding: 20px;
     text-align: center;
+    transition: all 0.2s ease;
 }
 
 .stat-card.success {
-    border-color: #28a745;
+    border-color: var(--accent-green);
 }
 
 .stat-card.failed {
-    border-color: #dc3545;
+    border-color: var(--accent-red);
 }
 
 .stat-label {
     font-size: 14px;
-    color: #8892b0;
+    color: var(--text-secondary);
     margin-bottom: 8px;
 }
 
 .stat-value {
     font-size: 32px;
     font-weight: bold;
-    color: #61dafb;
+    color: var(--accent-primary);
 }
 
 .stat-card.success .stat-value {
-    color: #28a745;
+    color: var(--accent-green);
 }
 
 .stat-card.failed .stat-value {
-    color: #dc3545;
+    color: var(--accent-red);
 }
 
 .panels {
@@ -119,10 +183,11 @@ input[type="text"] {
 }
 
 .panel {
-    background: #1a1f3a;
-    border: 1px solid #2d3654;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
     border-radius: 8px;
     padding: 20px;
+    transition: all 0.2s ease;
 }
 
 .table-container {
@@ -141,15 +206,15 @@ th, td {
 }
 
 th {
-    color: #61dafb;
+    color: var(--accent-primary);
     font-weight: 600;
     position: sticky;
     top: 0;
-    background: #1a1f3a;
+    background: var(--bg-secondary);
 }
 
 tr:hover {
-    background: #252b4a;
+    background: var(--bg-tertiary);
 }
 
 .status-badge {

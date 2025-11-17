@@ -8,6 +8,25 @@ const filters = {
     search: ''
 };
 
+// Theme management
+function initTheme() {
+    const savedTheme = localStorage.getItem('ceye-theme') || 'dark';
+    setTheme(savedTheme);
+    
+    const selector = document.getElementById('themeSelector');
+    if (selector) {
+        selector.value = savedTheme;
+        selector.addEventListener('change', (e) => {
+            setTheme(e.target.value);
+        });
+    }
+}
+
+function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('ceye-theme', theme);
+}
+
 function connect() {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws`;
@@ -309,6 +328,9 @@ document.getElementById('searchBox').addEventListener('input', (e) => {
     filters.search = e.target.value;
     if (currentData) render(currentData);
 });
+
+// Initialize theme
+initTheme();
 
 // Initialize
 connect();
