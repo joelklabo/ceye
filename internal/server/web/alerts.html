@@ -23,6 +23,7 @@
                     <option value="">All Rules</option>
                 </select>
                 <input type="text" id="searchBox" placeholder="Search alerts...">
+                <button onclick="showKeyboardHelp()" class="btn-help" title="Keyboard shortcuts (?)">⌨️</button>
             </div>
         </header>
 
@@ -69,6 +70,49 @@
                 <button class="modal-close" onclick="closeAlertModal()">&times;</button>
             </div>
             <div id="alertDetails" class="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- Keyboard Help Modal -->
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⌨️ Keyboard Shortcuts</h2>
+                <button class="modal-close" onclick="closeHelpModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="shortcuts-section">
+                    <h3>Navigation</h3>
+                    <div class="shortcut-list">
+                        <div class="shortcut-item">
+                            <kbd>/</kbd>
+                            <span>Focus search box</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>Esc</kbd>
+                            <span>Close modal / clear filters / blur search</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>d</kbd>
+                            <span>Go to Dashboard</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="shortcuts-section">
+                    <h3>Actions</h3>
+                    <div class="shortcut-list">
+                        <div class="shortcut-item">
+                            <kbd>r</kbd>
+                            <span>Refresh alerts</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>?</kbd>
+                            <span>Show this help</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

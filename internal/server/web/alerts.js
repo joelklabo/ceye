@@ -373,6 +373,82 @@ function closeAlertModal() {
     modal.classList.remove('show');
 }
 
+// Keyboard shortcuts
+const shortcuts = {
+    'r': () => fetchAlerts(),
+    '/': focusSearch,
+    'Escape': handleEscape,
+    'd': () => window.location.href = '/',
+    '?': showKeyboardHelp,
+};
+
+function focusSearch() {
+    const searchBox = document.getElementById('searchBox');
+    searchBox.focus();
+    searchBox.select();
+}
+
+function handleEscape() {
+    // Close modal if open
+    const alertModal = document.getElementById('alertModal');
+    if (alertModal && alertModal.classList.contains('show')) {
+        closeAlertModal();
+        return;
+    }
+    
+    const helpModal = document.getElementById('helpModal');
+    if (helpModal && helpModal.classList.contains('show')) {
+        closeHelpModal();
+        return;
+    }
+    
+    // Otherwise clear search/filters
+    const searchBox = document.getElementById('searchBox');
+    if (document.activeElement === searchBox) {
+        searchBox.blur();
+    } else if (filters.search || filters.severity || filters.rule) {
+        filters.search = '';
+        filters.severity = '';
+        filters.rule = '';
+        document.getElementById('searchBox').value = '';
+        document.getElementById('severityFilter').value = '';
+        document.getElementById('ruleFilter').value = '';
+        render();
+    }
+}
+
+function showKeyboardHelp() {
+    const modal = document.getElementById('helpModal');
+    if (modal) {
+        modal.classList.add('show');
+    }
+}
+
+function closeHelpModal() {
+    const modal = document.getElementById('helpModal');
+    if (modal) {
+        modal.classList.remove('show');
+    }
+}
+
+// Keyboard event handler
+document.addEventListener('keydown', (e) => {
+    // Don't intercept if typing in input/textarea
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        // But allow Escape to blur
+        if (e.key === 'Escape') {
+            e.target.blur();
+        }
+        return;
+    }
+    
+    const handler = shortcuts[e.key];
+    if (handler) {
+        e.preventDefault();
+        handler();
+    }
+});
+
 // Event listeners
 document.getElementById('refreshBtn').addEventListener('click', fetchAlerts);
 

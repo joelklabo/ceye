@@ -218,6 +218,76 @@ function updateAlertBadge(count) {
     }
 }
 
+// Keyboard shortcuts
+let selectedRowIndex = -1;
+
+const shortcuts = {
+    'r': refresh,
+    '/': focusSearch,
+    'Escape': clearSearch,
+    'a': goToAlerts,
+    '?': showKeyboardHelp,
+};
+
+function refresh() {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send('refresh');
+    }
+}
+
+function focusSearch() {
+    const searchBox = document.getElementById('searchBox');
+    searchBox.focus();
+    searchBox.select();
+}
+
+function clearSearch() {
+    const searchBox = document.getElementById('searchBox');
+    if (document.activeElement === searchBox) {
+        searchBox.blur();
+    } else if (filters.search || filters.provider || filters.status) {
+        filters.search = '';
+        filters.provider = '';
+        filters.status = '';
+        document.getElementById('searchBox').value = '';
+        document.getElementById('providerFilter').value = '';
+        document.getElementById('statusFilter').value = '';
+        if (currentData) render(currentData);
+    }
+}
+
+function goToAlerts() {
+    window.location.href = '/alerts.html';
+}
+
+function showKeyboardHelp() {
+    const modal = document.getElementById('helpModal');
+    if (modal) {
+        modal.classList.add('show');
+    }
+}
+
+function closeHelpModal() {
+    const modal = document.getElementById('helpModal');
+    if (modal) {
+        modal.classList.remove('show');
+    }
+}
+
+// Keyboard event handler
+document.addEventListener('keydown', (e) => {
+    // Don't intercept if typing in input/textarea
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+    }
+    
+    const handler = shortcuts[e.key];
+    if (handler) {
+        e.preventDefault();
+        handler();
+    }
+});
+
 // Event listeners
 document.getElementById('refreshBtn').addEventListener('click', () => {
     if (ws && ws.readyState === WebSocket.OPEN) {
