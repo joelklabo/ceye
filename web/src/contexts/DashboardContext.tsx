@@ -1,4 +1,4 @@
-import { createContext, useContext, type ReactNode } from 'react'
+import { createContext, useContext, useMemo, type ReactNode } from 'react'
 import { useWebSocket } from '@/hooks/useWebSocket'
 import type { Run, ProviderHealth, ProviderMeta, StatsData } from '@/types'
 
@@ -53,33 +53,36 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
     },
   })
 
-  const runs = lastMessage?.runs || []
-  const stats = lastMessage?.totals
-    ? {
-        running: lastMessage.totals.running || 0,
-        queued: lastMessage.totals.queued || 0,
-        success: lastMessage.totals.success || 0,
-        failed: lastMessage.totals.failed || 0,
-      }
-    : calculateStats(runs)
-  
-  const providers = lastMessage?.health || {}
-  const meta = lastMessage?.meta || {}
-  const lastUpdate = lastMessage ? new Date(lastMessage.timestamp) : null
+  // Memoize context value to prevent unnecessary re-renders
+  const value: DashboardContextValue = useMemo(() => {
+    const runs = lastMessage?.runs || []
+    const stats = lastMessage?.totals
+      ? {
+          running: lastMessage.totals.running || 0,
+          queued: lastMessage.totals.queued || 0,
+          success: lastMessage.totals.success || 0,
+          failed: lastMessage.totals.failed || 0,
+        }
+      : calculateStats(runs)
+    
+    const providers = lastMessage?.health || {}
+    const meta = lastMessage?.meta || {}
+    const lastUpdate = lastMessage ? new Date(lastMessage.timestamp) : null
 
-  // Loading state: we're loading if connected but no data yet
-  const isLoading = isConnected && !lastMessage
+    // Loading state: we're loading if connected but no data yet
+    const isLoading = isConnected && !lastMessage
 
-  const value: DashboardContextValue = {
-    runs,
-    stats,
-    providers,
-    meta,
-    isConnected,
-    isLoading,
-    error,
-    lastUpdate,
-  }
+    return {
+      runs,
+      stats,
+      providers,
+      meta,
+      isConnected,
+      isLoading,
+      error,
+      lastUpdate,
+    }
+  }, [lastMessage, isConnected, error])
 
   return (
     <DashboardContext.Provider value={value}>

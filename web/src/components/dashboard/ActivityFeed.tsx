@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle2, XCircle, Clock, Activity as ActivityIcon, ExternalLink } from 'lucide-react'
+import { CheckCircle2, XCircle, Clock, Activity as ActivityIcon, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react'
 import { useState } from 'react'
 
 interface ActivityItem {
@@ -15,6 +15,139 @@ interface ActivityItem {
   repo?: string
   conclusion?: string
   url?: string
+}
+
+interface ActivityItemRowProps {
+  item: ActivityItem
+  index: number
+}
+
+function ActivityItemRow({ item, index }: ActivityItemRowProps) {
+  const [isExpanded, setIsExpanded] = useState(false)
+
+  return (
+    <motion.div
+      key={item.id}
+      data-testid="activity-item"
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.2, delay: index * 0.03 }}
+      className="border-b border-border last:border-0"
+    >
+      <div 
+        className="flex items-start gap-3 p-4 hover:bg-muted/20 transition-colors cursor-pointer"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <div className="mt-0.5">{getIcon(item.type)}</div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium">{item.message}</p>
+            <div className="flex items-center gap-2">
+              {item.url && (
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="activity-external-link"
+                  className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                  title="View on GitHub"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              )}
+              {isExpanded ? (
+                <ChevronUp className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              )}
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-muted-foreground">
+            {item.duration !== undefined && (
+              <span>Duration: {formatDuration(item.duration)}</span>
+            )}
+            {item.commitSHA && (
+              <span>•</span>
+            )}
+            {item.commitSHA && (
+              <span className="font-mono">{item.commitSHA.substring(0, 7)}</span>
+            )}
+            {item.commitMessage && (
+              <span>•</span>
+            )}
+            {item.commitMessage && (
+              <span className="italic truncate max-w-xs">
+                "{item.commitMessage.split('\n')[0]}"
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            {formatTime(item.timestamp)}
+          </p>
+        </div>
+      </div>
+      
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden bg-muted/30 px-4 py-3 border-t border-border"
+          >
+            <div className="text-xs space-y-2">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <span className="font-semibold text-muted-foreground">Status:</span>
+                  <span className="ml-2">{item.type}</span>
+                </div>
+                {item.conclusion && (
+                  <div>
+                    <span className="font-semibold text-muted-foreground">Conclusion:</span>
+                    <span className="ml-2">{item.conclusion}</span>
+                  </div>
+                )}
+                {item.repo && (
+                  <div>
+                    <span className="font-semibold text-muted-foreground">Repository:</span>
+                    <span className="ml-2">{item.repo}</span>
+                  </div>
+                )}
+                {item.branch && (
+                  <div>
+                    <span className="font-semibold text-muted-foreground">Branch:</span>
+                    <span className="ml-2">{item.branch}</span>
+                  </div>
+                )}
+                {item.commitSHA && (
+                  <div className="col-span-2">
+                    <span className="font-semibold text-muted-foreground">Commit:</span>
+                    <span className="ml-2 font-mono">{item.commitSHA}</span>
+                  </div>
+                )}
+                {item.url && (
+                  <div className="col-span-2">
+                    <span className="font-semibold text-muted-foreground">URL:</span>
+                    <a 
+                      href={item.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="ml-2 text-primary hover:underline break-all"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {item.url}
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  )
 }
 
 interface ActivityFeedProps {
@@ -90,57 +223,9 @@ export function ActivityFeed({ items, maxItems = 10 }: ActivityFeedProps) {
                   <p className="text-sm text-muted-foreground">No activity yet</p>
                 </div>
               ) : (
-                <div className="divide-y divide-border">
+                <div>
                   {displayItems.map((item, index) => (
-                    <motion.div
-                      key={item.id}
-                      data-testid="activity-item"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.2, delay: index * 0.03 }}
-                      className="flex items-start gap-3 p-4 hover:bg-muted/20 transition-colors"
-                    >
-                      <div className="mt-0.5">{getIcon(item.type)}</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium">{item.message}</p>
-                          {item.url && (
-                            <a
-                              href={item.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              data-testid="activity-external-link"
-                              className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                              title="View on GitHub"
-                            >
-                              <ExternalLink className="h-3 w-3" />
-                            </a>
-                          )}
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-muted-foreground">
-                          {item.duration !== undefined && (
-                            <span>Duration: {formatDuration(item.duration)}</span>
-                          )}
-                          {item.commitSHA && (
-                            <span>•</span>
-                          )}
-                          {item.commitSHA && (
-                            <span className="font-mono">{item.commitSHA.substring(0, 7)}</span>
-                          )}
-                          {item.commitMessage && (
-                            <span>•</span>
-                          )}
-                          {item.commitMessage && (
-                            <span className="italic truncate max-w-xs">
-                              "{item.commitMessage.split('\n')[0]}"
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {formatTime(item.timestamp)}
-                        </p>
-                      </div>
-                    </motion.div>
+                    <ActivityItemRow key={item.id} item={item} index={index} />
                   ))}
                 </div>
               )}

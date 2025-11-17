@@ -105,7 +105,7 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 - [ ] Works for both completed and in-progress runs
 - [ ] Ready for Azure DevOps URLs
 
-#### 5. Enhanced Activity Feed with Message Details (HIGH 🟡) - 2-3 hours
+#### 5. Enhanced Activity Feed with Message Details (HIGH 🟡) - 🔄 **IN PROGRESS** - 2-3 hours
 **Problem**: Activity feed shows minimal info - just workflow name and status
 - No message content details
 - Can't see what changed
@@ -143,7 +143,7 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 - [ ] Easy to scan and understand
 - [ ] Helps with debugging
 
-#### 6. Fix UI Flicker (LOW 🟢) - 1-2 hours
+#### 6. Fix UI Flicker (LOW 🟢) - 🔄 **IN PROGRESS** - 1-2 hours
 **Problem**: Possible flicker during WebSocket updates
 - Component re-renders on every message
 - No memoization

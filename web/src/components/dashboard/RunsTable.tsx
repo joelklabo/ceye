@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState, memo } from 'react'
+import { useState, memo, useMemo } from 'react'
 import { Search, ArrowUpDown, ExternalLink } from 'lucide-react'
 import type { Run } from '@/types'
 import { cn } from '@/lib/utils'
@@ -122,25 +122,30 @@ export function RunsTable({ runs }: RunsTableProps) {
     }
   }
 
-  const filteredRuns = runs.filter(run => {
-    const searchLower = search.toLowerCase()
-    return (
-      run.Repo.toLowerCase().includes(searchLower) ||
-      run.Provider.toLowerCase().includes(searchLower) ||
-      run.WorkflowName.toLowerCase().includes(searchLower) ||
-      run.Branch.toLowerCase().includes(searchLower)
-    )
-  })
+  // Memoize expensive filtering and sorting operations
+  const filteredRuns = useMemo(() => {
+    return runs.filter(run => {
+      const searchLower = search.toLowerCase()
+      return (
+        run.Repo.toLowerCase().includes(searchLower) ||
+        run.Provider.toLowerCase().includes(searchLower) ||
+        run.WorkflowName.toLowerCase().includes(searchLower) ||
+        run.Branch.toLowerCase().includes(searchLower)
+      )
+    })
+  }, [runs, search])
 
-  const sortedRuns = [...filteredRuns].sort((a, b) => {
-    let aVal: any = a[sortField]
-    let bVal: any = b[sortField]
-    
-    if (sortDirection === 'asc') {
-      return aVal > bVal ? 1 : -1
-    }
-    return aVal < bVal ? 1 : -1
-  })
+  const sortedRuns = useMemo(() => {
+    return [...filteredRuns].sort((a, b) => {
+      let aVal: any = a[sortField]
+      let bVal: any = b[sortField]
+      
+      if (sortDirection === 'asc') {
+        return aVal > bVal ? 1 : -1
+      }
+      return aVal < bVal ? 1 : -1
+    })
+  }, [filteredRuns, sortField, sortDirection])
 
   if (runs.length === 0) {
     return (
