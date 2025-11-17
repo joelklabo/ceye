@@ -46,6 +46,11 @@
         </div>
 
         <div class="panel">
+            <h2>Alert Rules Status</h2>
+            <div id="rulesStatus" class="rules-container"></div>
+        </div>
+
+        <div class="panel">
             <h2>Alert History</h2>
             <div id="alertsTable" class="table-container"></div>
         </div>
@@ -54,6 +59,17 @@
             <span id="connectionStatus">Connecting...</span>
             <span id="lastUpdate"></span>
         </footer>
+    </div>
+
+    <!-- Alert Details Modal -->
+    <div id="alertModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Alert Details</h2>
+                <button class="modal-close" onclick="closeAlertModal()">&times;</button>
+            </div>
+            <div id="alertDetails" class="modal-body"></div>
+        </div>
     </div>
 
     <!-- Toast Notification Container -->

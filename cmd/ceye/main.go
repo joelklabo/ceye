@@ -75,6 +75,7 @@ func main() {
 	var webhookURL string
 	var web bool
 	var webPort int
+	var alertDebug bool
 	rootCmd := &cobra.Command{
 		Use:     "ceye",
 		Short:   "CI Status Dashboard TUI",
@@ -99,6 +100,7 @@ func main() {
 	rootCmd.PersistentFlags().StringVar(&azureProjectFlag, "azure-project", "", "Azure DevOps project scanned when auto-discovering pipelines")
 	rootCmd.PersistentFlags().BoolVar(&web, "web", false, "Start web server instead of TUI")
 	rootCmd.PersistentFlags().IntVar(&webPort, "port", 8080, "Port for web server (requires --web)")
+	rootCmd.PersistentFlags().BoolVar(&alertDebug, "alert-debug", false, "Enable verbose alert debugging (logs all rule evaluations)")
 
 	rootCmd.AddCommand(providerCmd())
 

@@ -1,6 +1,7 @@
 let ws = null;
 let reconnectTimeout = null;
 let alerts = [];
+let ruleStats = [];
 let lastAlertCount = 0;
 
 const filters = {
@@ -19,6 +20,7 @@ function connect() {
         console.log('WebSocket connected');
         updateConnectionStatus(true);
         fetchAlerts();
+        fetchRuleStats();
     };
     
     ws.onmessage = (event) => {
@@ -75,8 +77,24 @@ async function fetchAlerts() {
 function render() {
     updateStats();
     updateRuleFilter();
+    updateRulesStatus();
     updateAlertsTable();
     updateLastUpdate();
+}
+
+async function fetchRuleStats() {
+    try {
+        const response = await fetch('/api/alerts/rules/stats');
+        if (!response.ok) {
+            console.warn('Rule stats not available');
+            return;
+        }
+        const data = await response.json();
+        ruleStats = data.rules || [];
+        updateRulesStatus();
+    } catch (error) {
+        console.error('Failed to fetch rule stats:', error);
+    }
 }
 
 function updateStats() {
@@ -114,6 +132,52 @@ function updateRuleFilter() {
     }
 }
 
+function updateRulesStatus() {
+    const container = document.getElementById('rulesStatus');
+    
+    if (ruleStats.length === 0) {
+        container.innerHTML = '<div class="empty-state">No alert rules configured</div>';
+        return;
+    }
+    
+    container.innerHTML = ruleStats.map(rule => {
+        const statusClass = rule.enabled ? 'rule-enabled' : 'rule-disabled';
+        const cooldownText = rule.cooldown_remaining_seconds > 0 
+            ? `(cooldown: ${rule.cooldown_remaining_seconds}s)` 
+            : '';
+        
+        return `
+            <div class="rule-card ${statusClass}">
+                <div class="rule-header">
+                    <span class="rule-name">${escapeHtml(rule.rule_name)}</span>
+                    <span class="rule-status-badge ${rule.enabled ? 'enabled' : 'disabled'}">
+                        ${rule.enabled ? '✓ Active' : '○ Disabled'}
+                    </span>
+                </div>
+                <div class="rule-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Total Fires:</span>
+                        <span class="stat-value">${rule.total_alerts}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Last Hour:</span>
+                        <span class="stat-value">${rule.fires_last_hour}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Last Fired:</span>
+                        <span class="stat-value">${rule.last_fired ? formatTime(rule.last_fired) : 'Never'}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Evaluations:</span>
+                        <span class="stat-value">${rule.total_evaluations.toLocaleString()}</span>
+                    </div>
+                </div>
+                ${cooldownText ? `<div class="rule-cooldown">${cooldownText}</div>` : ''}
+            </div>
+        `;
+    }).join('');
+}
+
 function updateAlertsTable() {
     const container = document.getElementById('alertsTable');
     
@@ -144,10 +208,11 @@ function updateAlertsTable() {
                 <th>Message</th>
                 <th>Repo</th>
                 <th>Workflow</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
-            ${filtered.map(alert => `
+            ${filtered.map((alert, index) => `
                 <tr>
                     <td>${formatTime(alert.triggered_at)}</td>
                     <td><span class="severity-badge severity-${alert.severity}">${alert.severity}</span></td>
@@ -155,6 +220,9 @@ function updateAlertsTable() {
                     <td>${escapeHtml(alert.message)}</td>
                     <td>${alert.run ? escapeHtml(alert.run.Repo) : '-'}</td>
                     <td>${alert.run ? escapeHtml(alert.run.WorkflowName) : '-'}</td>
+                    <td>
+                        <button class="btn-details" onclick="showAlertDetails(${index})">Details</button>
+                    </td>
                 </tr>
             `).join('')}
         </tbody>
@@ -209,6 +277,100 @@ function showToast(message, severity = 'info') {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 300);
     }, 4000);
+}
+
+function showAlertDetails(index) {
+    const filtered = alerts.filter(alert => {
+        if (filters.severity && alert.severity !== filters.severity) return false;
+        if (filters.rule && alert.rule_name !== filters.rule) return false;
+        if (filters.search) {
+            const search = filters.search.toLowerCase();
+            return alert.message.toLowerCase().includes(search) ||
+                   alert.rule_name.toLowerCase().includes(search) ||
+                   (alert.run && alert.run.Repo && alert.run.Repo.toLowerCase().includes(search));
+        }
+        return true;
+    });
+    
+    const alert = filtered[index];
+    if (!alert) return;
+    
+    const modal = document.getElementById('alertModal');
+    const details = document.getElementById('alertDetails');
+    
+    const run = alert.run || {};
+    const fullTime = new Date(alert.triggered_at).toLocaleString();
+    
+    details.innerHTML = `
+        <div class="detail-section">
+            <h3>Alert Information</h3>
+            <div class="detail-row">
+                <span class="detail-label">Rule:</span>
+                <span class="rule-badge">${escapeHtml(alert.rule_name)}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Severity:</span>
+                <span class="severity-badge severity-${alert.severity}">${alert.severity}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Condition:</span>
+                <span>${escapeHtml(alert.condition)}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Triggered:</span>
+                <span>${fullTime}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Message:</span>
+                <span>${escapeHtml(alert.message)}</span>
+            </div>
+        </div>
+        
+        ${run.id ? `
+            <div class="detail-section">
+                <h3>Run Information</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Repository:</span>
+                    <span>${escapeHtml(run.Repo)}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Workflow:</span>
+                    <span>${escapeHtml(run.WorkflowName)}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Branch:</span>
+                    <span>${escapeHtml(run.branch)}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Status:</span>
+                    <span class="status-badge status-${run.status}">${run.status}</span>
+                </div>
+                ${run.conclusion ? `
+                    <div class="detail-row">
+                        <span class="detail-label">Conclusion:</span>
+                        <span>${escapeHtml(run.conclusion)}</span>
+                    </div>
+                ` : ''}
+                <div class="detail-row">
+                    <span class="detail-label">Run ID:</span>
+                    <span class="monospace">${escapeHtml(run.id)}</span>
+                </div>
+                ${run.url ? `
+                    <div class="detail-row">
+                        <span class="detail-label">URL:</span>
+                        <a href="${escapeHtml(run.url)}" target="_blank" class="run-link">View Run →</a>
+                    </div>
+                ` : ''}
+            </div>
+        ` : '<p class="empty-state">No run information available</p>'}
+    `;
+    
+    modal.classList.add('show');
+}
+
+function closeAlertModal() {
+    const modal = document.getElementById('alertModal');
+    modal.classList.remove('show');
 }
 
 // Event listeners

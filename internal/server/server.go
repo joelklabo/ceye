@@ -26,6 +26,7 @@ type Server struct {
 	clientsMu      sync.RWMutex
 	upgrader       websocket.Upgrader
 	trendAnalyzer  interface{} // *storage.TrendAnalyzer (optional)
+	alertEngine    interface{} // *alerting.Engine (optional)
 	
 	providerStatus map[string]string
 	providerHealth map[string]core.ProviderHealth
@@ -66,6 +67,11 @@ func (s *Server) SetTrendAnalyzer(analyzer interface{}) {
 	s.trendAnalyzer = analyzer
 }
 
+// SetAlertEngine sets the optional alert engine for rule stats
+func (s *Server) SetAlertEngine(engine interface{}) {
+	s.alertEngine = engine
+}
+
 func (s *Server) getWebFS() (fs.FS, error) {
 	return fs.Sub(webAssets, "web")
 }
@@ -79,8 +85,9 @@ func (s *Server) Start(ctx context.Context) error {
 	// Analytics API endpoint
 	mux.HandleFunc("/api/analytics/trends", s.handleAnalyticsTrends)
 	
-	// Alerts API endpoint
+	// Alerts API endpoints
 	mux.HandleFunc("/api/alerts/history", s.handleAlertsHistory)
+	mux.HandleFunc("/api/alerts/rules/stats", s.handleRuleStats)
 	
 	// Static files
 	webFS, err := s.getWebFS()
@@ -332,4 +339,34 @@ json.NewEncoder(w).Encode(map[string]interface{}{
 	"alerts": response,
 	"count":  len(response),
 })
+}
+
+func (s *Server) handleRuleStats(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	
+	if s.alertEngine == nil {
+		http.Error(w, `{"error":"Alerting not enabled"}`, http.StatusServiceUnavailable)
+		return
+	}
+	
+	// Type assert to get stats
+	type StatsGetter interface {
+		GetRuleStats() interface{}
+	}
+	
+	engine, ok := s.alertEngine.(StatsGetter)
+	if !ok {
+		http.Error(w, `{"error":"Invalid alert engine"}`, http.StatusInternalServerError)
+		return
+	}
+	
+	stats := engine.GetRuleStats()
+	
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"rules": stats,
+	})
 }

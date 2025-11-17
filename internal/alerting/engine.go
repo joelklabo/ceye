@@ -71,6 +71,52 @@ func (e *Engine) GetRules() []*AlertRule {
 	return rules
 }
 
+// RuleStats represents statistics for a rule
+type RuleStats struct {
+	RuleName           string    `json:"rule_name"`
+	Enabled            bool      `json:"enabled"`
+	TotalAlerts        int       `json:"total_alerts"`
+	FiresInLastHour    int       `json:"fires_last_hour"`
+	LastFired          time.Time `json:"last_fired,omitempty"`
+	LastEvaluated      time.Time `json:"last_evaluated,omitempty"`
+	TotalEvaluations   int64     `json:"total_evaluations"`
+	CooldownRemaining  int       `json:"cooldown_remaining_seconds"`
+}
+
+// GetRuleStats returns statistics for all rules
+func (e *Engine) GetRuleStats() []RuleStats {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+
+	stats := make([]RuleStats, 0, len(e.rules))
+	now := time.Now()
+	
+	for _, rule := range e.rules {
+		state := e.state[rule.Name]
+		
+		var cooldownRemaining int
+		if !state.lastAlertTime.IsZero() {
+			elapsed := now.Sub(state.lastAlertTime)
+			if elapsed < rule.Cooldown {
+				cooldownRemaining = int((rule.Cooldown - elapsed).Seconds())
+			}
+		}
+		
+		stats = append(stats, RuleStats{
+			RuleName:          rule.Name,
+			Enabled:           rule.Enabled,
+			TotalAlerts:       state.alertCount,
+			FiresInLastHour:   state.firesInLastHour,
+			LastFired:         state.lastAlertTime,
+			LastEvaluated:     state.lastEvaluationTime,
+			TotalEvaluations:  state.totalEvaluations,
+			CooldownRemaining: cooldownRemaining,
+		})
+	}
+	
+	return stats
+}
+
 // Start begins processing run events and evaluating alert rules
 func (e *Engine) Start(ctx context.Context, events <-chan core.RunEvent) {
 	log.Printf("alerting: engine started")
@@ -113,6 +159,16 @@ func (e *Engine) evaluateRun(run core.Run) {
 		}
 
 		state := e.state[rule.Name]
+		
+		// Update evaluation stats
+		state.totalEvaluations++
+		state.lastEvaluationTime = now
+		
+		// Reset hourly counter if needed
+		if state.hourStartTime.IsZero() || now.Sub(state.hourStartTime) > time.Hour {
+			state.hourStartTime = now
+			state.firesInLastHour = 0
+		}
 
 		// Check cooldown
 		if !state.lastAlertTime.IsZero() && now.Sub(state.lastAlertTime) < rule.Cooldown {
@@ -161,6 +217,7 @@ func (e *Engine) evaluateRun(run core.Run) {
 		// Update state
 		state.lastAlertTime = now
 		state.alertCount++
+		state.firesInLastHour++
 	}
 }
 

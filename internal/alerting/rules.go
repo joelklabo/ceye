@@ -58,6 +58,10 @@ const (
 
 // RuleState tracks per-rule alerting state
 type ruleState struct {
-	lastAlertTime time.Time
-	alertCount    int
+	lastAlertTime      time.Time
+	alertCount         int
+	totalEvaluations   int64
+	lastEvaluationTime time.Time
+	firesInLastHour    int
+	hourStartTime      time.Time
 }
