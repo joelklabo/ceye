@@ -102,45 +102,7 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 - [ ] Works for both completed and in-progress runs
 - [ ] Ready for Azure DevOps URLs
 
-#### 5. Enhanced Activity Feed with Message Details (HIGH 🟡) - 🔄 **IN PROGRESS** - 2-3 hours
-**Problem**: Activity feed shows minimal info - just workflow name and status
-- No message content details
-- Can't see what changed
-- No drill-down capability
-- Missing context for debugging
-
-**Message Details to Show**:
-1. **Event type** - `workflow_run.completed`, `check_suite.requested`, etc.
-2. **Duration** - How long the run took
-3. **Commit info** - SHA + first line of commit message
-4. **Changed files** - Count of files changed (if available)
-5. **Actor** - Who triggered the run
-6. **Conclusion** - success/failure/cancelled
-7. **Message body** - First 100 chars of relevant message
-
-**Expandable Details**:
-- Click to expand full message JSON
-- Show complete webhook payload
-- Link to GitHub/Azure/GitLab run URL (see Task 4)
-
-**Steps**:
-1. [ ] Extend ActivityItem type with rich data
-2. [ ] Update DashboardContext to pass full run details
-3. [ ] Redesign ActivityFeed layout for more info
-4. [ ] Add expand/collapse for full details
-5. [ ] Add external link button
-6. [ ] Style improvements (better icons, colors, spacing)
-7. [ ] Write tests for new layout
-8. [ ] Commit + push
-
-**Success Criteria**:
-- [ ] Activity shows meaningful details
-- [ ] Can expand for full JSON
-- [ ] External links work
-- [ ] Easy to scan and understand
-- [ ] Helps with debugging
-
-#### 6. Fix UI Flicker (LOW 🟢) - 🔄 **IN PROGRESS** - 1-2 hours
+#### 6. Fix UI Flicker (LOW 🟢) - ⏸️ **NOT STARTED** - 1-2 hours
 **Problem**: Possible flicker during WebSocket updates
 - Component re-renders on every message
 - No memoization
@@ -181,7 +143,7 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 - [ ] Works for completed runs (shows total duration)
 - [ ] Format is human-readable
 
-#### 10. Enhanced Debug Panel - Unified Log Stream (HIGH 🟡) - ✅ **COMPLETED** (Commit: 2b21a48) - 3-4 hours
+#### 10. Enhanced Debug Panel - Unified Log Stream (HIGH 🟡) - ✅ **COMPLETE** (Commit: 4395dce) - 3 hours
 **Problem**: No way to see backend logs in UI, have to switch between terminal and browser
 
 **Vision**: One place to see EVERYTHING happening in the system
@@ -214,7 +176,7 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 - [x] Clear button
 - [x] All tests passing
 
-#### 11. Debug Panel - Event Timeline Visualization (MEDIUM 🟡) - 🔄 **IN PROGRESS** - 4-5 hours
+#### 11. Debug Panel - Event Timeline Visualization (MEDIUM 🟡) - ⏸️ **NOT STARTED** - 4-5 hours
 **Problem**: Hard to understand event flow and timing relationships
 
 **Vision**: Visual timeline showing all system events with timing and relationships
