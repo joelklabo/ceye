@@ -2,6 +2,7 @@ package alerting
 
 import (
 	"context"
+	"sync" // Added
 	"testing"
 	"time"
 
@@ -207,10 +208,13 @@ func TestEngineStart(t *testing.T) {
 
 	engine := NewEngine(store)
 
+	var mu sync.Mutex // Added mutex
 	alertCount := 0
 	testChannel := &testChannel{
 		onSend: func(alert Alert) error {
+			mu.Lock() // Lock before write
 			alertCount++
+			mu.Unlock() // Unlock after write
 			return nil
 		},
 	}
@@ -247,9 +251,11 @@ func TestEngineStart(t *testing.T) {
 	// Give time for processing
 	time.Sleep(100 * time.Millisecond)
 
+	mu.Lock() // Lock before read
 	if alertCount != 1 {
 		t.Errorf("expected 1 alert from event, got %d", alertCount)
 	}
+	mu.Unlock() // Unlock after read
 
 	// Send success event (should not alert)
 	events <- core.RunEvent{
@@ -264,9 +270,11 @@ func TestEngineStart(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 
+	mu.Lock() // Lock before read
 	if alertCount != 1 {
 		t.Errorf("expected still 1 alert (success doesn't trigger), got %d", alertCount)
 	}
+	mu.Unlock() // Unlock after read
 }
 
 func TestEngineSeverityAssignment(t *testing.T) {
