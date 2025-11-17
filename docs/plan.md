@@ -93,43 +93,49 @@ ceye/
 
 ---
 
-#### Phase 0.1: Foundation Setup (4 hours) - **IN PROGRESS** 🚧
+#### Phase 0.1: Foundation Setup (4 hours) - ✅ **COMPLETE**
 
 **Goal**: Initialize React project and verify Go embedding works
 
+**Commit**: 2d76988
+
 **Tasks**:
-- [🚧] Initialize Vite + React + TypeScript project in `/web`
+- [✅] Initialize Vite + React + TypeScript project in `/web`
   - `npm create vite@latest web -- --template react-ts`
-- [ ] Install dependencies:
+- [✅] Install dependencies:
   - `npm install -D tailwindcss postcss autoprefixer`
   - `npm install @radix-ui/react-* (Shadcn dependencies)`
   - `npm install framer-motion apexcharts`
   - `npm install @tanstack/react-query`
   - `npm install lucide-react`
-- [ ] Initialize Shadcn/ui:
-  - `npx shadcn-ui@latest init`
-  - Configure with Tailwind v3
-- [ ] Configure Vite build:
+- [✅] Initialize Shadcn/ui:
+  - Manual setup (cli had path issues)
+  - Configured Tailwind v3 with design tokens
+  - Created utils.ts with cn() helper
+- [✅] Configure Vite build:
   - Output to `dist/` folder
   - Set base path for embedded serving
-- [ ] Update Go server:
-  - Change embed directive from `internal/server/web` to `web/dist`
-  - Update static file serving
-- [ ] Create basic App shell:
+  - Added path alias support (@/)
+- [✅] Update Go server:
+  - Created cmd/ceye/web.go with embed directive
+  - Modified Server.New() to accept fs.FS parameter
+  - Build copies web/dist to cmd/ceye/web/dist for embedding
+- [✅] Create basic App shell:
   - Simple header + main layout
-  - Test component rendering
-- [ ] Test build & embed:
+  - Test component rendering with Tailwind
+- [✅] Test build & embed:
   - `npm run build` (creates dist/)
   - `go build` (embeds dist/)
-  - Verify Go serves React app at http://localhost:8080
-- [ ] Add npm scripts to Makefile:
+  - Verified Go serves React app at http://localhost:8080
+- [✅] Add npm scripts to Makefile:
   - `make web-dev` (starts Vite dev server)
   - `make web-build` (builds for production)
-  - `make build` (builds web + Go)
+  - `make web-install` (installs dependencies)
+  - `make build` (builds web + Go automatically)
 
-**Success Criteria**:
+**Success Criteria**: ✅ ALL MET
 - ✅ Vite dev server runs (localhost:5173)
-- ✅ React app renders "Hello World"
+- ✅ React app renders with Tailwind styles
 - ✅ Go embeds and serves React build
 - ✅ No build errors
 - ✅ Hot reload works in dev mode

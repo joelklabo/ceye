@@ -668,6 +668,59 @@ await page.goto(URL);
 
 **Why**: WebSocket connections establish during page load. If you inject the interceptor after `goto()`, you miss the initial snapshot.
 
+### React + Vite + Go Embedding
+
+**Problem**: Need to embed a React app built with Vite into a Go binary.
+
+**Solution**: Three-step build process (commit 2d76988)
+
+```bash
+# 1. Build React app
+cd web && npm run build  # Creates web/dist/
+
+# 2. Copy dist to Go embed location
+cp -r web/dist cmd/ceye/web/
+
+# 3. Go embeds from cmd/ceye/web.go
+//go:embed web/dist
+var webAssets embed.FS
+```
+
+**Key Issues Solved**:
+
+1. **go:embed doesn't support `../` paths**
+   - ❌ `//go:embed ../../web/dist` - ERROR
+   - ✅ Solution: Create cmd/ceye/web/ and copy dist there
+   
+2. **go:embed doesn't follow symlinks**
+   - ❌ `ln -s ../../web web` - ERROR  
+   - ✅ Solution: Actual copy in build process
+
+3. **Server needs access to embedded FS**
+   - ❌ Can't export embed.FS across packages
+   - ✅ Solution: Pass fs.FS to Server.New()
+
+**Makefile Integration**:
+```make
+web-build:
+	cd web && npm run build
+	rm -rf cmd/ceye/web
+	mkdir -p cmd/ceye/web
+	cp -r web/dist cmd/ceye/web/
+
+build: web-build
+	go build -o bin/ceye ./cmd/ceye
+```
+
+**Development Workflow**:
+- Dev: `make web-dev` → Vite dev server (localhost:5173)
+- Prod: `make build` → Builds web + embeds + Go binary
+- Result: Single binary serves React SPA
+
+**Tailwind v3 vs v4**:
+- Shadcn/ui requires Tailwind v3
+- If you see v4 installed, downgrade: `npm install -D tailwindcss@^3`
+
 ## Quick Reference
 
 ### Most Important Files
