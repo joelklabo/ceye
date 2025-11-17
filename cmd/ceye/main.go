@@ -422,7 +422,7 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 	for _, provider := range providerInstances {
 		go func(p core.Provider) {
 			if err := p.Start(ctx, eventCh); err != nil && ctx.Err() == nil {
-				fmt.Fprintf(os.Stderr, "provider %s exited with error: %v\n", p.Name(), err)
+				srv.logger.Error("provider %s exited with error: %v", p.Name(), err)
 			}
 		}(provider)
 	}
