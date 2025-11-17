@@ -64,14 +64,15 @@ The React dashboard is now working! WebSocket connection was fixed by removing i
 **Phase 4: WebSocket Updates** (30 min)
 
 **Success Criteria**:
-- [ ] Provider cards full-width
-- [ ] Refresh button in header works
+- [x] Provider cards full-width
+- [x] Refresh button in header works
 - [ ] Webhook flash animation on receipt
-- [ ] Can view last webhook payload
-- [ ] Message count accurate
-- [ ] Matches Activity feed styling
+- [x] Can view last webhook payload
+- [x] Message count accurate
+- [x] Matches Activity feed styling
 
 **Time**: 3-4 hours
+**Progress**: 5/6 complete (Commit: f12a2f0)
 
 #### 4. Add Workflow Source Links (HIGH 🟡) - ✅ **COMPLETE** (Commit: fa33c2e) - 1 hour
 **Problem**: No way to open workflow run at source (GitHub/Azure DevOps)
