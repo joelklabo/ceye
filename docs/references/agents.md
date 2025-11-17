@@ -37,8 +37,13 @@ ceye/
 ├── web/                   # Static web UI assets
 └── docs/                  # Documentation
     ├── plan.md            # Master development plan
-    ├── plans/             # Historical implementation plans
+    ├── README.md          # Documentation index
     └── references/        # Reference docs and guides
+        ├── agents.md      # This file (symlinked to root)
+        ├── testing-guide.md
+        ├── webhook-guide.md
+        ├── web-ui-architecture.md
+        └── ...
 ```
 
 ### Data Flow
@@ -636,10 +641,34 @@ sudo cp bin/ci-dash /usr/local/bin/
 
 ## Links
 
-- **Master Plan**: [docs/plan.md](docs/plan.md)
-- **Testing Guide**: [docs/references/testing-guide.md](docs/references/testing-guide.md)
-- **Project README**: [docs/references/readme.md](docs/references/readme.md)
-- **UI Testing**: [docs/references/agents.md](docs/references/agents.md)
+- **Master Plan**: [docs/plan.md](../plan.md)
+- **Testing Guide**: [docs/references/testing-guide.md](testing-guide.md)
+- **Webhook Guide**: [docs/references/webhook-guide.md](webhook-guide.md)
+- **Project README**: [docs/references/readme.md](readme.md)
+
+## Documentation Organization
+
+All documentation lives in the `docs/` folder:
+
+```
+docs/
+├── plan.md                          # Master development plan
+├── README.md                        # Documentation index
+└── references/                      # Reference documents
+    ├── agents.md                    # This file (symlinked to /AGENTS.md)
+    ├── doc-inventory.md             # Documentation structure guide
+    ├── readme.md                    # Project README
+    ├── testing-guide.md             # Testing standards and practices
+    ├── webhook-guide.md             # Webhook implementation guide
+    └── web-ui-architecture.md       # Web UI design decisions
+```
+
+**Key principles**:
+- All markdown files use lowercase-with-hyphens naming
+- No markdown files in project root (except AGENTS.md symlink)
+- Implementation plans deleted after completion
+- Only active/useful reference docs kept
+- Consolidate related docs (6 webhook docs → 1 guide)
 
 ## Summary
 

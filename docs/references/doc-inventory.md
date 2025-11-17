@@ -1,7 +1,7 @@
 # Documentation Inventory
 
 **Last Updated**: 2025-11-16  
-**Status**: Complete
+**Status**: Consolidated and current
 
 ## Structure
 
@@ -9,34 +9,47 @@
 docs/
 ├── plan.md                          # Master development plan (current priorities)
 ├── README.md                        # Documentation index
-├── plans/                           # Implementation plans
-│   ├── ci-status-dashboard.md
-│   ├── ui-enhancements.md
-│   └── web-ui.md
-└── references/                      # Reference documents
-    ├── agents.md                    # Agent context (symlinked from root)
-    ├── azure-provider-phase1-complete.md
-    ├── docs-summary.md
-    ├── documentation-reorganization.md
-    ├── integration-tests-complete.md
-    ├── next-session-start.md
-    ├── provider-contract-tests-complete.md
-    ├── provider-interface-complete.md
-    ├── provider-interface-hardening.md
-    ├── readme.md
-    ├── testing-guide.md
-    ├── webhook-localhost-analysis.md
-    ├── webhook-research-summary.md
-    ├── webhook-research.md
-    ├── webhook-setup-status.md
-    ├── webhook-test-guide.md
-    └── webhook-test-results.md
+└── references/                      # Reference documents (6 files)
+    ├── agents.md                    # Agent context (symlinked from /AGENTS.md)
+    ├── doc-inventory.md             # This file
+    ├── readme.md                    # Project README
+    ├── testing-guide.md             # Testing standards, contract tests, safety tests
+    ├── webhook-guide.md             # Webhook implementation (consolidated from 6 files)
+    └── web-ui-architecture.md       # Web UI design decisions
 ```
 
 ## Root Files
 
 - `AGENTS.md` - Symlink to `docs/references/agents.md` (for GitHub Copilot/Claude)
 - No other markdown files in root
+
+## Recent Consolidation (2025-11-16)
+
+**Deleted** (completed work, redundant, or superseded):
+- docs-summary.md (reorganization complete)
+- documentation-reorganization.md (reorganization complete)
+- provider-interface-hardening.md (old plan, completed)
+- provider-interface-complete.md (merged into testing-guide.md)
+- provider-contract-tests-complete.md (merged into testing-guide.md)
+- integration-tests-complete.md (merged into testing-guide.md)
+- azure-provider-phase1-complete.md (key info in plan.md)
+- next-session-start.md (outdated session notes)
+- plans/ci-status-dashboard.md (superseded by plan.md)
+- plans/ui-enhancements.md (completed features)
+
+**Consolidated**:
+- 6 webhook files → webhook-guide.md (543 lines → practical guide)
+  - webhook-research.md (843 lines)
+  - webhook-research-summary.md (146 lines)
+  - webhook-localhost-analysis.md (372 lines)
+  - webhook-setup-status.md (308 lines)
+  - webhook-test-guide.md (334 lines)
+  - webhook-test-results.md (231 lines)
+
+**Moved**:
+- plans/web-ui.md → references/web-ui-architecture.md
+
+**Result**: 24 files → 6 files (75% reduction)
 
 ## Naming Convention
 
@@ -47,33 +60,29 @@ All files follow **lowercase-with-hyphens** (kebab-case) naming:
 
 ## Key Documents
 
-| Document | Location | Purpose |
-|----------|----------|---------|
-| Master Plan | `docs/plan.md` | Current sprint, priorities, roadmap |
-| Agent Context | `docs/references/agents.md` | Full project context for AI agents |
-| Testing Guide | `docs/references/testing-guide.md` | Testing standards and practices |
-| Next Session | `docs/references/next-session-start.md` | Quick start for next work session |
+| Document | Purpose |
+|----------|---------|
+| `plan.md` | Current sprint, priorities, roadmap |
+| `agents.md` | Full project context for AI agents |
+| `testing-guide.md` | Testing standards, contract tests, completion reports |
+| `webhook-guide.md` | Webhook implementation (setup, testing, integration) |
+| `web-ui-architecture.md` | Web UI design and architecture decisions |
+| `readme.md` | Project overview and getting started |
 
-## Document Types
+## Organization Principles
 
-### Plans (`docs/plans/`)
-Historical implementation plans for completed features:
-- Web UI implementation
-- CI status dashboard design
-- UI enhancements
+1. **Naming**: All files use lowercase-with-hyphens (kebab-case)
+2. **Location**: All markdown in `docs/` (except AGENTS.md symlink)
+3. **Lifecycle**: Delete implementation plans after completion
+4. **Consolidation**: Merge related docs (6 webhook files → 1 guide)
+5. **Focus**: Keep only active/useful documentation
+6. **Referencing**: Use relative paths in links
 
-### References (`docs/references/`)
-Reference documentation, guides, and completion summaries:
-- Webhook implementation docs
-- Provider interface specifications
-- Testing completion reports
-- Setup and configuration guides
+## Adding New Documentation
 
-## Updates
-
-When adding new documentation:
+When adding new docs:
 1. Use lowercase-with-hyphens naming
-2. Place in `docs/plans/` if it's an implementation plan
-3. Place in `docs/references/` if it's reference/guide material
-4. Update `docs/README.md` if it's a key document
-5. No markdown files in project root (except AGENTS.md symlink)
+2. Place in `docs/references/` (reference material)
+3. Update `docs/README.md` if it's a key document
+4. Delete old implementation plans when feature complete
+5. Consolidate if you create multiple related docs
