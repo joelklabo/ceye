@@ -92,12 +92,19 @@ File: `e2e/screenshots/generate-marketing.spec.ts`
 - [✅] **Built-in Logos** (1h) - GitHub, Azure, GitLab, AWS, Generic fallback SVG components (Commit: c3ceebe)
 - [✅] **Integration** (30m) - Add to Provider Cards (Commit: c3ceebe)
 - [✅] **Tests** (30m) - Test built-in, fallback, theme support (Commit: c3ceebe)
-- [🚧] **Config Support** (30m) - Add `logo` field to provider schema, pass to frontend
+- [🚧] **Config Support** (45m) - Add `logo` field to provider schema, pass to frontend, document size requirements
 
 **Display Locations**:
 1. Provider Cards - 24px logo + name (primary)
 2. Activity Feed - 16px logo on items (secondary)
 3. Skip table rows (too busy)
+
+**Logo Size Requirements**:
+- **Format**: SVG only (scalable, theme-compatible)
+- **ViewBox**: 24x24 (standard icon size)
+- **File size**: < 10KB recommended
+- **Colors**: Use `currentColor` for theme compatibility
+- **Validation**: Component validates SVG format and displays helpful error
 
 **Config Example**:
 ```yaml
@@ -108,12 +115,14 @@ providers:
   
   - type: jenkins  
     display_name: "Jenkins"
-    logo: "/logos/jenkins.svg"
+    logo: "/logos/jenkins.svg"  # Must be SVG with 24x24 viewBox
 ```
 
 **Success Criteria**:
-- [ ] All built-in providers have logos
-- [ ] Custom logo paths work
+- [✅] All built-in providers have logos (Commit: TBD)
+- [🚧] Custom logo paths work - **IN PROGRESS**
+- [ ] Logo size requirements documented in config
+- [ ] Validation errors show helpful messages
 - [ ] Fallback graceful
 - [ ] No performance impact
 

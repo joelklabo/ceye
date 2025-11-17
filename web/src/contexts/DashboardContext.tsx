@@ -1,11 +1,12 @@
 import { createContext, useContext, type ReactNode } from 'react'
 import { useWebSocket } from '@/hooks/useWebSocket'
-import type { Run, ProviderHealth, StatsData } from '@/types'
+import type { Run, ProviderHealth, ProviderMeta, StatsData } from '@/types'
 
 interface DashboardContextValue {
   runs: Run[]
   stats: StatsData
   providers: Record<string, ProviderHealth>
+  meta: Record<string, ProviderMeta>
   isConnected: boolean
   isLoading: boolean
   error: string | null
@@ -63,6 +64,7 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
     : calculateStats(runs)
   
   const providers = lastMessage?.health || {}
+  const meta = lastMessage?.meta || {}
   const lastUpdate = lastMessage ? new Date(lastMessage.timestamp) : null
 
   // Loading state: we're loading if connected but no data yet
@@ -72,6 +74,7 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
     runs,
     stats,
     providers,
+    meta,
     isConnected,
     isLoading,
     error,

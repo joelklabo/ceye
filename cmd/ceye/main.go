@@ -243,6 +243,7 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 	var providerNames []string
 	providerStatus := make(map[string]string)
 	providerHealth := make(map[string]core.ProviderHealth)
+	providerMeta := make(map[string]server.ProviderMeta)
 
 	for _, candidate := range buildProviderEntries(cfg, providerStore) {
 		provider, err := providers.CreateProvider(candidate.Config, deps)
@@ -265,6 +266,11 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 		providerInstances = append(providerInstances, wrapProvider(safeProvider, alias))
 		providerNames = append(providerNames, alias)
 		providerStatus[alias] = ""
+		
+		// Store provider metadata (logo, etc.)
+		if candidate.Config.Logo != "" {
+			providerMeta[alias] = server.ProviderMeta{Logo: candidate.Config.Logo}
+		}
 	}
 	
 	// Initialize storage for historical data
@@ -387,7 +393,7 @@ func run(parentCtx context.Context, cfgPath, configDir string, demo bool, demoRu
 	}
 
 	// Web mode is now the default and only mode
-	return runWebServer(ctx, store, storageBackend, providerNames, providerStatus, providerHealth, storeEventCh, webPort, notify, webhookURL)
+	return runWebServer(ctx, store, storageBackend, providerNames, providerStatus, providerHealth, providerMeta, storeEventCh, webPort, notify, webhookURL)
 }
 
 func githubToken() string {
@@ -987,7 +993,7 @@ func writeEventLog(w io.Writer, event core.RunEvent) error {
 	return nil
 }
 
-func runWebServer(ctx context.Context, store *core.Store, storageBackend *storage.Storage, providerNames []string, providerStatus map[string]string, providerHealth map[string]core.ProviderHealth, eventCh chan core.RunEvent, port int, notify bool, webhookURL string) error {
+func runWebServer(ctx context.Context, store *core.Store, storageBackend *storage.Storage, providerNames []string, providerStatus map[string]string, providerHealth map[string]core.ProviderHealth, providerMeta map[string]server.ProviderMeta, eventCh chan core.RunEvent, port int, notify bool, webhookURL string) error {
 	// Get embedded web assets
 	webFS, err := GetWebFS()
 	if err != nil {
@@ -998,6 +1004,11 @@ func runWebServer(ctx context.Context, store *core.Store, storageBackend *storag
 	
 	// Set version information
 	srv.SetVersion(Version, GitCommit, BuildTime)
+	
+	// Set provider metadata (logos, etc.)
+	for name, meta := range providerMeta {
+		srv.SetProviderMeta(name, meta)
+	}
 	
 	// Add trend analyzer if storage backend is available
 	if storageBackend != nil {

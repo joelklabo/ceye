@@ -30,12 +30,17 @@ type Server struct {
 	
 	providerStatus map[string]string
 	providerHealth map[string]core.ProviderHealth
+	providerMeta   map[string]ProviderMeta
 	providerNames  []string
 	statusMu       sync.RWMutex
 	
 	version    string
 	gitCommit  string
 	buildTime  string
+}
+
+type ProviderMeta struct {
+	Logo string `json:"logo,omitempty"`
 }
 
 type Message struct {
@@ -45,6 +50,7 @@ type Message struct {
 	Providers  []string                       `json:"providers,omitempty"`
 	Status     map[string]string              `json:"status,omitempty"`
 	Health     map[string]core.ProviderHealth `json:"health,omitempty"`
+	Meta       map[string]ProviderMeta        `json:"meta,omitempty"`
 	Totals     map[string]int                 `json:"totals,omitempty"`
 	AlertCount int                            `json:"alert_count,omitempty"`
 	Version    string                         `json:"version,omitempty"`
@@ -60,6 +66,7 @@ func New(store *core.Store, providerNames []string, port int, webFS fs.FS) *Serv
 		providerNames:  providerNames,
 		providerStatus: make(map[string]string),
 		providerHealth: make(map[string]core.ProviderHealth),
+		providerMeta:   make(map[string]ProviderMeta),
 		trendAnalyzer:  nil,
 		webFS:          webFS,
 		upgrader: websocket.Upgrader{
@@ -179,6 +186,10 @@ func (s *Server) sendSnapshot(conn *websocket.Conn) {
 	for k, v := range s.providerHealth {
 		health[k] = v
 	}
+	meta := make(map[string]ProviderMeta)
+	for k, v := range s.providerMeta {
+		meta[k] = v
+	}
 	s.statusMu.RUnlock()
 	
 	totals := make(map[string]int)
@@ -206,6 +217,7 @@ func (s *Server) sendSnapshot(conn *websocket.Conn) {
 		Providers:  s.providerNames,
 		Status:     status,
 		Health:     health,
+		Meta:       meta,
 		Totals:     totals,
 		AlertCount: s.store.GetAlertCount(),
 		Version:    s.version,
@@ -226,6 +238,12 @@ func (s *Server) UpdateStatus(providerStatus map[string]string, providerHealth m
 	for k, v := range providerHealth {
 		s.providerHealth[k] = v
 	}
+	s.statusMu.Unlock()
+}
+
+func (s *Server) SetProviderMeta(providerName string, meta ProviderMeta) {
+	s.statusMu.Lock()
+	s.providerMeta[providerName] = meta
 	s.statusMu.Unlock()
 }
 

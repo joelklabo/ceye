@@ -16,6 +16,9 @@ type ProviderConfig struct {
 	Type string `mapstructure:"type"`
 	// DisplayName optionally overrides the provider label shown in the UI.
 	DisplayName string `mapstructure:"display_name"`
+	// Logo is an optional path to a custom SVG logo (e.g. "/logos/jenkins.svg")
+	// Logo should be SVG with 24x24 viewBox for best results
+	Logo string `mapstructure:"logo"`
 
 	// GitHub-specific fields
 	Repos []githubprovider.RepoConfig `mapstructure:"repos"`

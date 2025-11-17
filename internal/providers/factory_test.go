@@ -114,3 +114,19 @@ func TestCreateProviderUnknownType(t *testing.T) {
 		t.Fatalf("expected error for unknown provider type")
 	}
 }
+
+func TestProviderConfig_Logo(t *testing.T) {
+	cfg := ProviderConfig{
+		Type:        "github",
+		DisplayName: "My GitHub",
+		Logo:        "/logos/custom.svg",
+		Repos: []githubprovider.RepoConfig{
+			{Owner: "test", Repo: "repo"},
+		},
+	}
+	
+	// Verify logo field is preserved
+	if cfg.Logo != "/logos/custom.svg" {
+		t.Fatalf("expected logo path to be preserved, got %s", cfg.Logo)
+	}
+}

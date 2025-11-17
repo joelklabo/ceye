@@ -10,7 +10,7 @@ import { Circle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 function App() {
-  const { runs, stats, providers, isConnected, isLoading, lastUpdate, error } = useDashboard()
+  const { runs, stats, providers, meta, isConnected, isLoading, lastUpdate, error } = useDashboard()
 
   // For activity feed, we'll generate from runs for now
   // In the future, this could be its own WebSocket stream
@@ -95,7 +95,7 @@ function App() {
                 <RunsTable runs={runs} />
               </div>
               <div className="space-y-8">
-                <ProviderCards providers={providers} />
+                <ProviderCards providers={providers} meta={meta} />
                 <ActivityFeed items={activityItems} />
               </div>
             </div>

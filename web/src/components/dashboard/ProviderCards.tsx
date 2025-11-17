@@ -1,11 +1,12 @@
 import { motion } from 'framer-motion'
 import { Circle } from 'lucide-react'
-import type { ProviderHealth } from '@/types'
+import type { ProviderHealth, ProviderMeta } from '@/types'
 import { cn } from '@/lib/utils'
 import { ProviderIcon } from '@/components/icons/ProviderIcon'
 
 interface ProviderCardsProps {
   providers: Record<string, ProviderHealth>
+  meta?: Record<string, ProviderMeta>
 }
 
 function formatTime(timestamp: string): string {
@@ -23,7 +24,7 @@ function formatTime(timestamp: string): string {
   return `${diffDays}d ago`
 }
 
-export function ProviderCards({ providers }: ProviderCardsProps) {
+export function ProviderCards({ providers, meta }: ProviderCardsProps) {
   const providerEntries = Object.entries(providers)
 
   if (providerEntries.length === 0) {
@@ -42,6 +43,7 @@ export function ProviderCards({ providers }: ProviderCardsProps) {
         {providerEntries.map(([name, health], index) => {
           const isHealthy = health.ErrorCount === 0
           const lastUpdate = health.LastSuccess || health.LastError
+          const logoPath = meta?.[name]?.logo
 
           return (
             <motion.div
@@ -54,7 +56,7 @@ export function ProviderCards({ providers }: ProviderCardsProps) {
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <ProviderIcon provider={name} size="md" />
+                  <ProviderIcon provider={name} size="md" logoPath={logoPath} />
                   <div>
                     <h3 className="font-medium capitalize">{name}</h3>
                     <p className="text-xs text-muted-foreground mt-1">

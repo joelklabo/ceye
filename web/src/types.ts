@@ -29,6 +29,10 @@ export interface ProviderHealth {
   LastSuccess: string
 }
 
+export interface ProviderMeta {
+  logo?: string
+}
+
 export interface DashboardMessage {
   type: string
   timestamp: string
@@ -36,6 +40,7 @@ export interface DashboardMessage {
   providers?: string[]
   status?: Record<string, string>
   health?: Record<string, ProviderHealth>
+  meta?: Record<string, ProviderMeta>
   totals?: Record<string, number>
   alert_count?: number
   version?: string
