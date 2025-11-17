@@ -130,25 +130,25 @@ Add UI visibility for the alerting system so users can see alert history, debug 
 - [x] Add `store.GetRecentAlerts(limit)` method
 - [x] Update alerting engine to record to store
 
-**Phase B.1.2: TUI Alerts Panel (1.5 hours)** 🎯 **IN PROGRESS**
-- [ ] Create `renderAlertsPanel()` in ui/model.go
-- [ ] Add 'A' key binding to toggle alerts view
-- [ ] Show table with: Time, Severity, Rule, Message
-- [ ] Color-code by severity (red=critical, yellow=warning)
-- [ ] Add "No alerts" empty state
-- [ ] Update help text with 'A' key
+**Phase B.1.2: TUI Alerts Panel (1.5 hours)** ✅ **COMPLETE**
+- [x] Create `renderAlertsPanel()` in ui/model.go
+- [x] Add 'A' key binding to toggle alerts view
+- [x] Show table with: Time, Severity, Rule, Message
+- [x] Color-code by severity (red=critical, yellow=warning)
+- [x] Add "No alerts" empty state
+- [x] Update help text with 'A' key
 
-**Phase B.1.3: Alert Indicator (30 min)**
-- [ ] Add alert count to status bar
-- [ ] Visual indicator (🔴) when alert fired in last 5 min
-- [ ] Flash effect when new alert arrives
+**Phase B.1.3: Alert Indicator (30 min)** ✅ **COMPLETE**
+- [x] Add alert count to status bar
+- [x] Visual indicator (🔴) when alert fired in last 5 min
+- [x] Flash effect when new alert arrives
 
-**Testing**
-- [ ] Unit test AlertRecord storage
-- [ ] Test alert panel rendering
-- [ ] Test keyboard navigation
+**Testing** ✅ **COMPLETE**
+- [x] Unit test AlertRecord storage
+- [x] Test alert panel rendering
+- [x] Test keyboard navigation
 
-### B.2 Web UI Alerts Page (3 hours)
+### B.2 Web UI Alerts Page (3 hours) 🎯 **IN PROGRESS**
 
 **Goal**: Show alert history in web dashboard
 

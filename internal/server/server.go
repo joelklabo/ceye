@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
@@ -33,13 +34,14 @@ type Server struct {
 }
 
 type Message struct {
-	Type      string                        `json:"type"`
-	Timestamp time.Time                     `json:"timestamp"`
-	Runs      []core.Run                    `json:"runs,omitempty"`
-	Providers []string                      `json:"providers,omitempty"`
-	Status    map[string]string             `json:"status,omitempty"`
-	Health    map[string]core.ProviderHealth `json:"health,omitempty"`
-	Totals    map[string]int                `json:"totals,omitempty"`
+	Type       string                         `json:"type"`
+	Timestamp  time.Time                      `json:"timestamp"`
+	Runs       []core.Run                     `json:"runs,omitempty"`
+	Providers  []string                       `json:"providers,omitempty"`
+	Status     map[string]string              `json:"status,omitempty"`
+	Health     map[string]core.ProviderHealth `json:"health,omitempty"`
+	Totals     map[string]int                 `json:"totals,omitempty"`
+	AlertCount int                            `json:"alert_count,omitempty"`
 }
 
 func New(store *core.Store, providerNames []string, port int) *Server {
@@ -76,6 +78,9 @@ func (s *Server) Start(ctx context.Context) error {
 	
 	// Analytics API endpoint
 	mux.HandleFunc("/api/analytics/trends", s.handleAnalyticsTrends)
+	
+	// Alerts API endpoint
+	mux.HandleFunc("/api/alerts/history", s.handleAlertsHistory)
 	
 	// Static files
 	webFS, err := s.getWebFS()
@@ -160,13 +165,14 @@ func (s *Server) sendSnapshot(conn *websocket.Conn) {
 	}
 	
 	msg := Message{
-		Type:      "runs_update",
-		Timestamp: time.Now(),
-		Runs:      runs,
-		Providers: s.providerNames,
-		Status:    status,
-		Health:    health,
-		Totals:    totals,
+		Type:       "runs_update",
+		Timestamp:  time.Now(),
+		Runs:       runs,
+		Providers:  s.providerNames,
+		Status:     status,
+		Health:     health,
+		Totals:     totals,
+		AlertCount: s.store.GetAlertCount(),
 	}
 	
 	if err := conn.WriteJSON(msg); err != nil {
@@ -250,4 +256,52 @@ func (s *Server) handleAnalyticsTrends(w http.ResponseWriter, r *http.Request) {
 	if err := enc.Encode(response); err != nil {
 		log.Printf("Failed to write analytics response: %v", err)
 	}
+}
+
+func (s *Server) handleAlertsHistory(w http.ResponseWriter, r *http.Request) {
+if r.Method != http.MethodGet {
+http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+return
+}
+
+// Parse query parameters
+query := r.URL.Query()
+limitStr := query.Get("limit")
+limit := 50 // default
+if limitStr != "" {
+if parsed, err := strconv.Atoi(limitStr); err == nil && parsed > 0 {
+limit = parsed
+if limit > 200 {
+limit = 200 // max
+}
+}
+}
+
+// Get alerts from store
+alerts := s.store.GetRecentAlerts(limit)
+
+// Convert to JSON-friendly format
+response := make([]map[string]interface{}, len(alerts))
+for i, alert := range alerts {
+response[i] = map[string]interface{}{
+"rule_name":    alert.RuleName,
+"condition":    alert.Condition,
+"message":      alert.Message,
+"severity":     alert.Severity,
+"triggered_at": alert.TriggeredAt.Format(time.RFC3339),
+"run": map[string]interface{}{
+"id":            alert.Run.ID,
+"provider":      alert.Run.Provider,
+"repo":          alert.Run.Repo,
+"workflow_name": alert.Run.WorkflowName,
+"status":        alert.Run.Status,
+"conclusion":    alert.Run.Conclusion,
+"branch":        alert.Run.Branch,
+"url":           alert.Run.URL,
+},
+}
+}
+
+w.Header().Set("Content-Type", "application/json")
+json.NewEncoder(w).Encode(response)
 }
