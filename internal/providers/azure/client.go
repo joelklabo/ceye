@@ -205,8 +205,14 @@ func (c *Client) doRequest(apiURL string, result interface{}) error {
 		}
 
 		if err := json.Unmarshal(data, result); err != nil {
-			// Log first 200 chars of response for debugging
-			preview := string(data)
+			// Check if we got HTML instead of JSON (common auth error)
+			dataStr := strings.TrimSpace(string(data))
+			if strings.HasPrefix(dataStr, "<!DOCTYPE") || strings.HasPrefix(dataStr, "<html") || strings.Contains(dataStr[:min(100, len(dataStr))], "<html") {
+				return fmt.Errorf("authentication required: Azure DevOps returned HTML error page - please set AZURE_PAT environment variable")
+			}
+			
+			// Log first 200 chars of response for debugging other parse errors
+			preview := dataStr
 			if len(preview) > 200 {
 				preview = preview[:200] + "..."
 			}

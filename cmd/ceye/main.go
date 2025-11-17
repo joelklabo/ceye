@@ -78,7 +78,7 @@ func main() {
 	var web bool
 	var webPort int
 	var alertDebug bool
-	var enableWebhooks bool
+	var enableWebhooks = true  // Enable webhooks by default
 	var webhookPort int
 	var webhookSecret string
 	rootCmd := &cobra.Command{
@@ -106,8 +106,8 @@ func main() {
 	rootCmd.PersistentFlags().BoolVar(&web, "web", false, "Start web server instead of TUI")
 	rootCmd.PersistentFlags().IntVar(&webPort, "port", 8080, "Port for web server (requires --web)")
 	rootCmd.PersistentFlags().BoolVar(&alertDebug, "alert-debug", false, "Enable verbose alert debugging (logs all rule evaluations)")
-	rootCmd.PersistentFlags().BoolVar(&enableWebhooks, "webhooks", false, "Enable webhook receiver for push-based updates")
-	rootCmd.PersistentFlags().IntVar(&webhookPort, "webhook-port", 9090, "Port for webhook server (requires --webhooks)")
+	rootCmd.PersistentFlags().BoolVar(&enableWebhooks, "webhooks", true, "Enable webhook receiver for push-based updates (default: true)")
+	rootCmd.PersistentFlags().IntVar(&webhookPort, "webhook-port", 9090, "Port for webhook server")
 	rootCmd.PersistentFlags().StringVar(&webhookSecret, "webhook-secret", "", "GitHub webhook secret for signature verification")
 
 	rootCmd.AddCommand(providerCmd())
@@ -1296,9 +1296,15 @@ func runWebServer(ctx context.Context, store *core.Store, storageBackend *storag
 		serverErr <- srv.Start(ctx)
 	}()
 	
-	// Wait a moment for server to start
-	time.Sleep(100 * time.Millisecond)
-	log.Printf("✓ Web server ready at http://localhost:%d", port)
+	// Check if server started successfully
+	select {
+	case err := <-serverErr:
+		// Server failed immediately (port in use, etc)
+		return fmt.Errorf("web server failed to start: %w", err)
+	case <-time.After(200 * time.Millisecond):
+		// Server started successfully
+		log.Printf("✓ Web server ready at http://localhost:%d", port)
+	}
 	
 	// Open browser
 	time.Sleep(400 * time.Millisecond)
