@@ -189,10 +189,10 @@ Tests are looking for wrong elements or have flaky selectors:
 - [x] StatsCards.tsx - Added test IDs to all stat cards
 - [x] Should fix tests 9-10 (websocket-critical.spec.ts)
 
-**Phase 2: Delete Obsolete Static HTML Tests** (30 minutes)
-- [ ] Delete `e2e/websocket-connection.spec.js` entirely (fixes tests 1-3)
-- [ ] Verify coverage exists in websocket-critical.spec.ts
-- [ ] Commit: "test: Remove obsolete static HTML WebSocket tests"
+**Phase 2: Delete Obsolete Static HTML Tests** (30 minutes) - ✅ **COMPLETE** (Commit: f8189be by Zenith)
+- [x] Delete `e2e/websocket-connection.spec.js` entirely (fixes tests 1-3)
+- [x] Verify coverage exists in websocket-critical.spec.ts
+- [x] Commit: "test: Remove obsolete static HTML WebSocket tests" (f8189be)
 
 **Phase 3: Fix Provider Health Test Selectors** (1.5 hours) - ✅ **COMPLETE** (Commit: 236abdc by Atlas)
 - [x] **Test 4** - Add data-testid="provider-cards-list" to ProviderCards container
